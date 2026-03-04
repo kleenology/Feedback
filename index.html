@@ -6,822 +6,349 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>كلينولوجي - تقييم الخدمة</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;min-height:100vh;color:#222}
+.hide{display:none!important}
 
-- { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+/* ===== FORM PAGE ===== */
+#pgForm{min-height:100vh;background:#f5f5f5}
+.hdr{background:linear-gradient(145deg,#0c4a6e,#0891b2 70%,#22d3ee);padding:36px 20px 28px;text-align:center;border-radius:0 0 24px 24px;margin-bottom:16px}
+.hdr-logo{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;cursor:default;user-select:none}
+.hdr h1{color:#fff;font-size:22px;font-weight:800;margin-bottom:4px}
+.hdr p{color:rgba(255,255,255,0.8);font-size:12px}
 
-body {
-font-family: ‘Noto Kufi Arabic’, Tahoma, Arial, sans-serif;
-background: #f0f2f5;
-min-height: 100vh;
-color: #1a1a2e;
-}
+.form-body{padding:0 14px 100px}
+.card{background:#fff;border-radius:14px;padding:18px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.card-t{font-size:15px;font-weight:700;text-align:center;margin-bottom:14px}
+.card-sub{font-size:11px;color:#999;text-align:center;margin:-8px 0 14px}
 
-.page { display:none; min-height:100vh; }
-.page.active { display:block; }
+/* inputs */
+.fld{margin-bottom:12px}
+.fld:last-child{margin-bottom:0}
+.fld-l{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#444;margin-bottom:6px}
+.fld-l .i{font-size:16px}
+.fld input,.fld textarea{width:100%;padding:11px 12px;border-radius:10px;border:1.5px solid #e5e5e5;font-size:13px;font-family:inherit;background:#fafafa;outline:none;transition:border .2s,box-shadow .2s}
+.fld input:focus,.fld textarea:focus{border-color:#0891b2;box-shadow:0 0 0 3px rgba(8,145,178,0.1);background:#fff}
+.fld textarea{resize:none;line-height:1.7}
 
-/* ============ HEADER ============ */
-.header {
-background: #0d9e6d;
-background-image: linear-gradient(135deg, #064e3b 0%, #0d9e6d 60%, #34d399 100%);
-padding: 40px 24px 48px;
-text-align: center;
-position: relative;
-}
-.header::after {
-content:’’;
-position: absolute; bottom: -20px; left: 0; right: 0;
-height: 40px;
-background: #f0f2f5;
-border-radius: 20px 20px 0 0;
-}
-.logo-wrap {
-width: 68px; height: 68px; border-radius: 50%;
-background: rgba(255,255,255,0.2);
-display: flex; align-items: center; justify-content: center;
-margin: 0 auto 14px;
-font-size: 32px;
-cursor: default; user-select: none;
-}
-.header h1 {
-color: #fff; font-size: 24px; font-weight: 800;
-margin-bottom: 6px; text-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.header p {
-color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 400;
-}
+/* stars */
+.stars{display:flex;gap:4px;justify-content:center;direction:ltr;padding:4px 0}
+.star-b{background:none;border:none;cursor:pointer;padding:3px;transition:transform .15s}
+.star-b:active{transform:scale(1.3)}
+.rt{text-align:center;font-size:13px;font-weight:700;min-height:20px;margin-top:4px}
 
-/* ============ FORM ============ */
-.form-wrap {
-padding: 0 16px 140px;
-margin-top: -10px;
-position: relative; z-index: 2;
-}
-.card {
-background: #fff;
-border-radius: 16px;
-padding: 22px 18px;
-margin-bottom: 14px;
-box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
-}
-.card-title {
-font-size: 16px; font-weight: 700; text-align: center;
-margin-bottom: 16px; color: #1a1a2e;
-}
-.card-sub {
-font-size: 12px; color: #888; text-align: center;
-margin-top: -10px; margin-bottom: 16px;
-}
+/* category */
+.cat{margin-bottom:16px}
+.cat:last-child{margin-bottom:0}
+.cat-l{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#444;margin-bottom:8px}
+.cat-l .i{font-size:16px}
+.cat-btns{display:flex;gap:5px}
+.cat-b{flex:1;padding:9px 2px;border-radius:8px;border:1.5px solid #eee;background:#fafafa;text-align:center;font-size:11px;font-weight:500;color:#bbb;cursor:pointer;font-family:inherit;transition:all .2s}
 
-/* ============ INPUTS ============ */
-.field { margin-bottom: 16px; }
-.field-lbl {
-display: flex; align-items: center; gap: 6px;
-margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #333;
-}
-.field-lbl .ic { font-size: 18px; }
-.field input, .field textarea {
-width: 100%; padding: 13px 14px;
-border-radius: 12px; border: 1.5px solid #e0e0e0;
-font-size: 14px; font-family: inherit;
-background: #fafafa; outline: none;
-transition: border-color 0.2s, box-shadow 0.2s;
-}
-.field input:focus, .field textarea:focus {
-border-color: #0d9e6d;
-box-shadow: 0 0 0 3px rgba(13,158,109,0.12);
-background: #fff;
-}
-.field textarea { resize: vertical; line-height: 1.8; }
+/* recommend */
+.rec-row{display:flex;gap:8px}
+.rec-b{flex:1;padding:12px;border-radius:12px;border:1.5px solid #e5e5e5;background:#fafafa;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#bbb;transition:all .2s}
+.rec-b .e{font-size:20px}
 
-/* ============ STARS ============ */
-.stars {
-display: flex; gap: 6px; justify-content: center;
-direction: ltr; padding: 8px 0;
-}
-.star-btn {
-background: none; border: none; cursor: pointer; padding: 4px;
-transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
-}
-.star-btn:active { transform: scale(1.3); }
-.rating-text {
-text-align: center; margin-top: 8px;
-font-size: 14px; font-weight: 700;
-}
+/* teaser */
+.teaser{background:linear-gradient(135deg,#0c4a6e,#0891b2);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.teaser .e{font-size:24px}
+.teaser .t1{color:#fff;font-size:13px;font-weight:700}
+.teaser .t2{color:rgba(255,255,255,0.65);font-size:11px;margin-top:1px}
 
-/* ============ CATEGORY RATING ============ */
-.cat { margin-bottom: 22px; }
-.cat:last-child { margin-bottom: 0; }
-.cat-label {
-display: flex; align-items: center; gap: 6px;
-margin-bottom: 10px; font-size: 14px; font-weight: 600; color: #333;
-}
-.cat-label .ic { font-size: 18px; }
-.cat-opts { display: flex; gap: 6px; }
-.cat-opt {
-flex: 1; padding: 10px 2px; border-radius: 10px;
-border: 1.5px solid #e8e8e8; background: #fafafa;
-text-align: center; font-size: 12px; font-weight: 500;
-color: #999; cursor: pointer;
-font-family: inherit;
-transition: all 0.2s ease;
-}
-.cat-opt.active {
-font-weight: 700;
-transform: scale(1.04);
-}
+/* error */
+.err{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px;text-align:center;font-size:12px;color:#dc2626;margin-bottom:10px}
 
-/* ============ RECOMMEND ============ */
-.rec-wrap { display: flex; gap: 10px; }
-.rec-btn {
-flex: 1; padding: 14px; border-radius: 14px;
-border: 1.5px solid #e0e0e0; background: #fafafa;
-display: flex; align-items: center; justify-content: center; gap: 8px;
-cursor: pointer; font-family: inherit;
-font-size: 14px; font-weight: 600; color: #999;
-transition: all 0.25s ease;
-}
-.rec-btn .em { font-size: 22px; }
+/* submit */
+.sub-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 14px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:linear-gradient(to top,#f5f5f5 80%,transparent);z-index:50}
+.sub-btn{width:100%;padding:14px;border-radius:12px;border:none;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;background:#0891b2;color:#fff;box-shadow:0 3px 15px rgba(8,145,178,0.3)}
+.sub-btn:active{transform:scale(0.97)}
 
-/* ============ COUPON TEASER ============ */
-.teaser {
-background: linear-gradient(135deg, #064e3b, #0d9e6d);
-border-radius: 14px; padding: 16px 18px;
-display: flex; align-items: center; gap: 12px;
-margin-bottom: 14px;
-}
-.teaser .em { font-size: 28px; }
-.teaser .t1 { color: #fff; font-size: 14px; font-weight: 700; }
-.teaser .t2 { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 2px; }
+/* ===== COUPON PAGE ===== */
+.cpn-pg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#f0f9ff,#e0f2fe 40%,#f0f9ff);padding:20px}
+.cpn-box{text-align:center;max-width:320px;width:100%;animation:fadeUp .5s ease-out}
+.cpn-ic{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#0891b2,#22d3ee);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 6px 24px rgba(8,145,178,0.3);animation:scaleIn .5s cubic-bezier(.34,1.56,.64,1) .2s both}
+.cpn-card{background:linear-gradient(135deg,#0c4a6e,#0891b2 50%,#06b6d4);border-radius:16px;padding:24px 20px;box-shadow:0 8px 28px rgba(8,145,178,0.2);position:relative;overflow:hidden}
+.cpn-card::before{content:’’;position:absolute;top:-12px;right:-12px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.07)}
+.cpn-code{direction:ltr;font-size:26px;font-weight:800;color:#fff;letter-spacing:3px;font-family:monospace;margin-bottom:12px}
+.cpn-sep{border-top:2px dashed rgba(255,255,255,0.2);margin-bottom:12px}
+.cpn-ft{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5)}
+.cpn-acts{margin-top:16px;display:flex;gap:8px}
+.cpn-acts button{flex:1;padding:12px;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.b-cpy{background:#fff;color:#0891b2;border:2px solid #0891b2}
+.b-cpy.ok{background:#0891b2;color:#fff;border-color:#0891b2}
+.b-cls{background:#f1f5f9;color:#64748b;border:none}
 
-/* ============ ERROR ============ */
-.err {
-background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px;
-padding: 12px; text-align: center; font-size: 13px; color: #dc2626;
-margin-bottom: 14px; display: none;
-}
-.err.show { display: block; animation: shake 0.35s ease; }
+/* ===== PIN PAGE ===== */
+.pin-pg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#0f172a,#1e293b);padding:20px}
+.pin-box{text-align:center;max-width:280px;width:100%;animation:fadeUp .4s ease-out}
+.pin-ic{font-size:36px;margin-bottom:14px}
+.pin-tt{color:#fff;font-size:20px;font-weight:800;margin-bottom:4px}
+.pin-st{color:rgba(255,255,255,0.4);font-size:12px;margin-bottom:24px}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:10px}
+.pin-d{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);transition:all .2s}
+.pin-d.on{background:#22d3ee;border-color:#22d3ee;box-shadow:0 0 8px rgba(34,211,238,0.4)}
+.pin-d.bad{background:#ef4444;border-color:#ef4444}
+.pin-er{color:#ef4444;font-size:12px;font-weight:600;height:18px;margin-bottom:16px;opacity:0;transition:opacity .3s}
+.pin-er.show{opacity:1}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:230px;margin:0 auto 18px}
+.pin-k{aspect-ratio:1.4;border-radius:12px;border:none;background:rgba(255,255,255,0.07);color:#fff;font-size:22px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s}
+.pin-k:active{background:rgba(255,255,255,0.18);transform:scale(0.93)}
+.pin-k.mt{background:transparent;cursor:default}
+.pin-k.dl{font-size:18px;color:rgba(255,255,255,0.4)}
+.pin-bk{background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);padding:8px 24px;border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer}
 
-/* ============ SUBMIT BAR ============ */
-.submit-bar {
-position: fixed; bottom: 0; left: 0; right: 0;
-padding: 14px 16px;
-padding-bottom: max(14px, env(safe-area-inset-bottom));
-background: linear-gradient(to top, #f0f2f5 60%, transparent);
-z-index: 50;
-}
-.submit-btn {
-width: 100%; padding: 16px; border-radius: 14px; border: none;
-font-family: inherit; font-size: 16px; font-weight: 700;
-cursor: pointer; transition: all 0.3s ease;
-background: #ccc; color: #fff;
-}
-.submit-btn.ready {
-background: #0d9e6d; color: #fff;
-box-shadow: 0 4px 20px rgba(13,158,109,0.35);
-}
-.submit-btn.ready:active { transform: scale(0.97); }
+/* ===== ADMIN ===== */
+.adm-pg{min-height:100vh;background:#f5f5f5}
+.adm-hd{background:linear-gradient(135deg,#0f172a,#1e293b);padding:18px 14px 10px;color:#fff}
+.adm-tp{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.adm-bk{background:rgba(255,255,255,0.08);border:none;color:#fff;padding:7px 12px;border-radius:8px;font-family:inherit;font-size:11px;cursor:pointer}
+.adm-tabs{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.adm-tabs::-webkit-scrollbar{display:none}
+.adm-tb{padding:8px 12px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,0.35);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s}
+.adm-tb.on{background:rgba(255,255,255,0.12);color:#fff}
+.adm-bd{padding:14px 14px 90px}
+.tc{display:none}.tc.on{display:block}
 
-/* ============ COUPON PAGE ============ */
-.coupon-pg {
-display: none; min-height: 100vh;
-align-items: center; justify-content: center;
-background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 40%, #fff7ed 100%);
-padding: 24px;
-}
-.coupon-pg.active { display: flex; }
-.cpn-content { text-align: center; max-width: 340px; width: 100%; animation: fadeUp 0.5s ease-out; }
-.cpn-icon {
-width: 76px; height: 76px; border-radius: 50%;
-background: linear-gradient(135deg, #0d9e6d, #34d399);
-display: flex; align-items: center; justify-content: center;
-margin: 0 auto 20px;
-box-shadow: 0 8px 30px rgba(13,158,109,0.3);
-animation: scaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
-}
-.cpn-card {
-background: linear-gradient(135deg, #064e3b 0%, #0d9e6d 50%, #10b981 100%);
-border-radius: 18px; padding: 26px 22px;
-box-shadow: 0 10px 35px rgba(13,158,109,0.25);
-position: relative; overflow: hidden;
-}
-.cpn-card::before {
-content:’’; position: absolute; top: -15px; right: -15px;
-width: 70px; height: 70px; border-radius: 50%;
-background: rgba(255,255,255,0.08);
-}
-.cpn-code {
-direction: ltr; font-size: 28px; font-weight: 800;
-color: #fff; letter-spacing: 3px; font-family: monospace;
-margin-bottom: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-.cpn-sep { border-top: 2px dashed rgba(255,255,255,0.25); margin-bottom: 14px; }
-.cpn-foot { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.6); }
-.cpn-acts { margin-top: 18px; display: flex; gap: 10px; }
-.cpn-acts button {
-flex: 1; padding: 14px; border-radius: 14px;
-font-family: inherit; font-size: 14px; font-weight: 700;
-cursor: pointer; transition: all 0.2s ease;
-}
-.btn-cpy { background: #fff; color: #0d9e6d; border: 2px solid #0d9e6d; }
-.btn-cpy.done { background: #0d9e6d; color: #fff; border-color: #0d9e6d; }
-.btn-cls { background: #f1f5f9; color: #64748b; border: none; }
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.sc{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.sc-l{font-size:10px;color:#999;margin-bottom:4px}
+.sc-v{font-size:20px;font-weight:800}
 
-/* ============ PIN PAGE ============ */
-.pin-pg {
-display: none; min-height: 100vh;
-align-items: center; justify-content: center;
-background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-padding: 24px;
-}
-.pin-pg.active { display: flex; }
-.pin-box { text-align: center; max-width: 300px; width: 100%; animation: fadeUp 0.4s ease-out; }
-.pin-icon { font-size: 40px; margin-bottom: 16px; }
-.pin-title { color: #fff; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
-.pin-sub { color: rgba(255,255,255,0.45); font-size: 13px; margin-bottom: 28px; }
-.pin-dots { display: flex; gap: 16px; justify-content: center; margin-bottom: 12px; }
-.pin-dot {
-width: 16px; height: 16px; border-radius: 50%;
-border: 2px solid rgba(255,255,255,0.25);
-transition: all 0.2s ease;
-}
-.pin-dot.on { background: #34d399; border-color: #34d399; box-shadow: 0 0 10px rgba(52,211,153,0.4); }
-.pin-dot.err { background: #ef4444; border-color: #ef4444; }
-.pin-err {
-color: #ef4444; font-size: 13px; font-weight: 600;
-height: 20px; margin-bottom: 18px;
-opacity: 0; transition: opacity 0.3s;
-}
-.pin-err.show { opacity: 1; }
-.pin-grid {
-display: grid; grid-template-columns: repeat(3,1fr);
-gap: 10px; max-width: 250px; margin: 0 auto 22px;
-}
-.pin-k {
-aspect-ratio: 1.3; border-radius: 14px; border: none;
-background: rgba(255,255,255,0.08); color: #fff;
-font-size: 24px; font-weight: 700; cursor: pointer;
-font-family: inherit; transition: all 0.15s ease;
-}
-.pin-k:active { background: rgba(255,255,255,0.2); transform: scale(0.93); }
-.pin-k.empty { background: transparent; cursor: default; }
-.pin-k.del { font-size: 20px; color: rgba(255,255,255,0.5); }
-.pin-back {
-background: none; border: 1px solid rgba(255,255,255,0.12);
-color: rgba(255,255,255,0.45); padding: 10px 28px; border-radius: 10px;
-font-family: inherit; font-size: 13px; cursor: pointer;
-}
+.cc{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);margin-bottom:12px}
+.cc h3{font-size:13px;font-weight:700;text-align:center;margin-bottom:10px}
+.cw{position:relative;width:100%;height:200px}
 
-/* ============ ADMIN ============ */
-.admin-pg { display: none; min-height: 100vh; background: #f0f2f5; }
-.admin-pg.active { display: block; }
-.adm-head {
-background: linear-gradient(135deg, #0f172a, #1e293b);
-padding: 20px 16px 14px; color: #fff;
-}
-.adm-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.adm-back {
-background: rgba(255,255,255,0.1); border: none; color: #fff;
-padding: 8px 14px; border-radius: 8px; font-family: inherit;
-font-size: 12px; cursor: pointer;
-}
-.adm-tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-.adm-tabs::-webkit-scrollbar { display: none; }
-.adm-tab {
-padding: 10px 14px; border-radius: 10px; border: none;
-background: transparent; color: rgba(255,255,255,0.4);
-font-family: inherit; font-size: 12px; font-weight: 600;
-cursor: pointer; white-space: nowrap; transition: all 0.2s;
-}
-.adm-tab.on { background: rgba(255,255,255,0.13); color: #fff; }
-.adm-body { padding: 16px 16px 100px; }
-.tab-c { display: none; }
-.tab-c.on { display: block; }
+.ar{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.ar+.ar{border-top:1px solid #f5f5f5}
+.ar-l{display:flex;align-items:center;gap:5px;font-size:12px;color:#666}
+.ar-r{display:flex;align-items:center;gap:6px}
+.ab{width:80px;height:5px;border-radius:3px;background:#f0f0f0;overflow:hidden}
+.af{height:100%;border-radius:3px;transition:width .5s}
+.av{font-size:13px;font-weight:700;min-width:32px;text-align:left;direction:ltr}
 
-.st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-.st-card {
-background: #fff; border-radius: 14px; padding: 16px;
-box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-}
-.st-lbl { font-size: 11px; color: #999; margin-bottom: 6px; }
-.st-val { font-size: 22px; font-weight: 800; }
+.mc{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);border-right:3px solid #0891b2}
+.mc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.mc-n{font-size:15px;font-weight:700}
+.mc-c{font-size:11px;color:#999}
+.mc-g{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mc-s{text-align:center;padding:6px 3px;background:#f8f8f8;border-radius:6px}
+.mc-sv{font-size:14px;font-weight:800}
+.mc-sl{font-size:9px;color:#999;margin-top:1px}
 
-.ch-card {
-background: #fff; border-radius: 16px; padding: 18px;
-box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 14px;
-}
-.ch-card h3 { font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 12px; }
-.ch-wrap { position: relative; width: 100%; height: 220px; }
+.rc{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);border-right:3px solid #0891b2}
+.rc-t{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.rc-nm{font-size:13px;font-weight:700}
+.rc-dt{font-size:10px;color:#999;margin-top:2px}
+.rc-st{display:flex;align-items:center;gap:3px;font-size:16px;font-weight:800}
+.rc-sc{display:flex;gap:8px;font-size:11px;color:#888;margin-bottom:6px;flex-wrap:wrap}
+.rc-nt{background:#f8f8f8;border-radius:6px;padding:8px 10px;font-size:12px;color:#555;line-height:1.7}
+.rc-cp{margin-top:6px;font-size:10px;color:#8b5cf6;direction:ltr;font-family:monospace;background:#f5f3ff;padding:3px 6px;border-radius:4px;display:inline-block}
 
-.avg-row {
-display: flex; align-items: center; justify-content: space-between;
-padding: 12px 0;
-}
-.avg-row + .avg-row { border-top: 1px solid #f3f3f3; }
-.avg-l { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #555; }
-.avg-r { display: flex; align-items: center; gap: 8px; }
-.avg-bar { width: 90px; height: 6px; border-radius: 3px; background: #f0f0f0; overflow: hidden; }
-.avg-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
-.avg-v { font-size: 14px; font-weight: 700; min-width: 34px; text-align: left; direction: ltr; }
+.cl-bar{position:fixed;bottom:16px;left:14px;right:14px;z-index:50}
+.cl-btn{width:100%;padding:12px;border-radius:10px;background:#fee2e2;color:#dc2626;border:none;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.empty{text-align:center;padding:30px;color:#bbb;font-size:13px}
 
-.mo-card {
-background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 10px;
-box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-border-right: 3px solid #0d9e6d;
-}
-.mo-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.mo-nm { font-size: 16px; font-weight: 700; }
-.mo-cnt { font-size: 12px; color: #999; }
-.mo-scores { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
-.mo-sc { text-align: center; padding: 8px 4px; background: #f8f8f8; border-radius: 8px; }
-.mo-sv { font-size: 16px; font-weight: 800; }
-.mo-sl { font-size: 10px; color: #999; margin-top: 2px; }
-
-.rsp-card {
-background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 10px;
-box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-border-right: 3px solid #0d9e6d;
-}
-.rsp-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-.rsp-nm { font-size: 14px; font-weight: 700; }
-.rsp-dt { font-size: 11px; color: #999; margin-top: 2px; }
-.rsp-star { display: flex; align-items: center; gap: 4px; font-size: 18px; font-weight: 800; }
-.rsp-scores { display: flex; gap: 10px; font-size: 12px; color: #777; margin-bottom: 8px; flex-wrap: wrap; }
-.rsp-note { background: #f8f8f8; border-radius: 8px; padding: 10px; font-size: 13px; color: #555; line-height: 1.8; }
-.rsp-cpn { margin-top: 8px; font-size: 11px; color: #8b5cf6; direction: ltr; font-family: monospace; background: #f5f3ff; padding: 4px 8px; border-radius: 6px; display: inline-block; }
-
-.clr-bar { position: fixed; bottom: 20px; left: 16px; right: 16px; z-index: 50; }
-.clr-btn {
-width: 100%; padding: 14px; border-radius: 12px;
-background: #fee2e2; color: #dc2626; border: none;
-font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
-}
-.empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
-
-@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-@keyframes scaleIn { from{opacity:0;transform:scale(0.5)} to{opacity:1;transform:scale(1)} }
-@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 </style>
 
 </head>
 <body>
 
-<!-- ========== FORM ========== -->
+<!-- FORM -->
 
-<div id="pgForm" class="page active">
-  <div class="header">
-    <div class="logo-wrap" id="logoBtn">✨</div>
-    <h1>كلينولوجي</h1>
-    <p>نحب نسمع رأيك عن خدمتنا</p>
-  </div>
-
-  <div class="form-wrap">
-    <div class="card">
-      <div class="card-title">معلومات الطلب</div>
-      <div class="field">
-        <div class="field-lbl"><span class="ic">👤</span> اسم العميل</div>
-        <input type="text" id="fName" placeholder="اكتب اسم العميل (اختياري)">
-      </div>
-      <div class="field" style="margin-bottom:0;">
-        <div class="field-lbl"><span class="ic">📋</span> رقم الطلب</div>
-        <input type="text" id="fOrder" placeholder="مثال: 1234">
-      </div>
-    </div>
-
-```
-<div class="card">
-  <div class="card-title">كيف تقيّم الخدمة بشكل عام؟</div>
-  <div class="card-sub">اختر من 1 إلى 5 نجوم</div>
-  <div class="stars" id="stars"></div>
-  <div class="rating-text" id="ratingText"></div>
+<div id="pgForm">
+<div class="hdr">
+  <div class="hdr-logo" id="logo">✨</div>
+  <h1>كلينولوجي</h1>
+  <p>نحب نسمع رأيك عن خدمتنا</p>
 </div>
-
-<div class="card">
-  <div class="card-title">تقييم تفصيلي</div>
-  <div class="cat" data-key="cleanliness">
-    <div class="cat-label"><span class="ic">✨</span> مستوى النظافة</div>
-    <div class="cat-opts"></div>
+<div class="form-body">
+  <div class="card">
+    <div class="card-t">معلومات الطلب</div>
+    <div class="fld"><div class="fld-l"><span class="i">👤</span> اسم العميل</div><input id="fN" placeholder="اكتب اسم العميل (اختياري)"></div>
   </div>
-  <div class="cat" data-key="punctuality">
-    <div class="cat-label"><span class="ic">⏰</span> الالتزام بالموعد</div>
-    <div class="cat-opts"></div>
+  <div class="card">
+    <div class="card-t">كيف تقيّم الخدمة بشكل عام؟</div>
+    <div class="card-sub">اختر من 1 إلى 5 نجوم</div>
+    <div class="stars" id="stars"></div>
+    <div class="rt" id="rt"></div>
   </div>
-  <div class="cat" data-key="teamwork">
-    <div class="cat-label"><span class="ic">👥</span> تعامل الفريق</div>
-    <div class="cat-opts"></div>
+  <div class="card">
+    <div class="card-t">تقييم تفصيلي</div>
+    <div class="cat" data-k="cleanliness"><div class="cat-l"><span class="i">✨</span> مستوى النظافة</div><div class="cat-btns"></div></div>
+    <div class="cat" data-k="punctuality"><div class="cat-l"><span class="i">⏰</span> الالتزام بالموعد</div><div class="cat-btns"></div></div>
+    <div class="cat" data-k="teamwork"><div class="cat-l"><span class="i">👥</span> تعامل الفريق</div><div class="cat-btns"></div></div>
   </div>
-</div>
-
-<div class="card">
-  <div class="card-title">هل ترشح خدمتنا لغيرك؟</div>
-  <div class="rec-wrap">
-    <button class="rec-btn" data-v="yes"><span class="em">👍</span> نعم، بالتأكيد</button>
-    <button class="rec-btn" data-v="no"><span class="em">👎</span> لا</button>
-  </div>
-</div>
-
-<div class="card">
-  <div class="card-title" style="margin-bottom:4px;">ملاحظاتك</div>
-  <div class="card-sub">اختياري - شاركنا أي ملاحظة تساعدنا نتطور</div>
-  <div class="field" style="margin-bottom:0;">
-    <textarea id="fNotes" rows="3" placeholder="اكتب ملاحظاتك هنا..."></textarea>
-  </div>
-</div>
-
-<div class="teaser">
-  <span class="em">🎁</span>
-  <div><div class="t1">كوبون خصم 10% هديتك!</div><div class="t2">أرسل تقييمك واحصل على كوبون خصم فوري</div></div>
-</div>
-
-<div class="err" id="errMsg"></div>
-```
-
-  </div>
-
-  <div class="submit-bar">
-    <button class="submit-btn" id="submitBtn">إرسال التقييم 🎁</button>
-  </div>
-</div>
-
-<!-- ========== COUPON ========== -->
-
-<div id="pgCoupon" class="coupon-pg">
-  <div class="cpn-content">
-    <div class="cpn-icon">
-      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-    </div>
-    <h2 style="font-size:24px;font-weight:800;color:#064e3b;margin-bottom:8px;">شكراً لتقييمك!</h2>
-    <p style="font-size:14px;color:#777;margin-bottom:24px;line-height:1.8;">هذا كوبون خصم هديتنا لك على خدمتك القادمة</p>
-    <div class="cpn-card">
-      <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px;">كوبون خصم 10%</div>
-      <div class="cpn-code" id="cpnCode"></div>
-      <div class="cpn-sep"></div>
-      <div class="cpn-foot"><span>كلينولوجي</span><span>صالح لمدة 30 يوم</span></div>
-    </div>
-    <div class="cpn-acts">
-      <button class="btn-cpy" id="cpyBtn" onclick="cpyCoupon()">نسخ الكوبون</button>
-      <button class="btn-cls" onclick="goForm()">إغلاق</button>
+  <div class="card">
+    <div class="card-t">هل ترشح خدمتنا لغيرك؟</div>
+    <div class="rec-row">
+      <button class="rec-b" data-v="1"><span class="e">👍</span> نعم، بالتأكيد</button>
+      <button class="rec-b" data-v="0"><span class="e">👎</span> لا</button>
     </div>
   </div>
+  <div class="card">
+    <div class="card-t" style="margin-bottom:4px">ملاحظاتك</div>
+    <div class="card-sub">اختياري - شاركنا أي ملاحظة تساعدنا نتطور</div>
+    <div class="fld"><textarea id="fNt" rows="3" placeholder="اكتب ملاحظاتك هنا..."></textarea></div>
+  </div>
+  <div class="teaser"><span class="e">🎁</span><div><div class="t1">كوبون خصم 10% هديتك!</div><div class="t2">أرسل تقييمك واحصل على كوبون خصم فوري</div></div></div>
+  <div class="err hide" id="err"></div>
+</div>
+<div class="sub-bar"><button class="sub-btn" id="subBtn">إرسال التقييم 🎁</button></div>
 </div>
 
-<!-- ========== PIN ========== -->
+<!-- COUPON -->
 
-<div id="pgPin" class="pin-pg">
-  <div class="pin-box">
-    <div class="pin-icon">🔒</div>
-    <div class="pin-title">لوحة التحكم</div>
-    <div class="pin-sub">أدخل الرقم السري للدخول</div>
-    <div class="pin-dots" id="pinDots">
-      <span class="pin-dot"></span><span class="pin-dot"></span>
-      <span class="pin-dot"></span><span class="pin-dot"></span>
-    </div>
-    <div class="pin-err" id="pinErr">الرقم السري غير صحيح</div>
-    <div class="pin-grid">
-      <button class="pin-k" onclick="pinIn('1')">1</button>
-      <button class="pin-k" onclick="pinIn('2')">2</button>
-      <button class="pin-k" onclick="pinIn('3')">3</button>
-      <button class="pin-k" onclick="pinIn('4')">4</button>
-      <button class="pin-k" onclick="pinIn('5')">5</button>
-      <button class="pin-k" onclick="pinIn('6')">6</button>
-      <button class="pin-k" onclick="pinIn('7')">7</button>
-      <button class="pin-k" onclick="pinIn('8')">8</button>
-      <button class="pin-k" onclick="pinIn('9')">9</button>
-      <button class="pin-k empty"></button>
-      <button class="pin-k" onclick="pinIn('0')">0</button>
-      <button class="pin-k del" onclick="pinDel()">⌫</button>
-    </div>
-    <button class="pin-back" onclick="goForm()">رجوع</button>
+<div class="cpn-pg hide" id="pgCpn">
+<div class="cpn-box">
+  <div class="cpn-ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+  <h2 style="font-size:22px;font-weight:800;color:#0c4a6e;margin-bottom:6px">شكراً لتقييمك!</h2>
+  <p style="font-size:13px;color:#888;margin-bottom:22px;line-height:1.7">هذا كوبون خصم هديتنا لك على خدمتك القادمة</p>
+  <div class="cpn-card">
+    <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px">كوبون خصم 10%</div>
+    <div class="cpn-code" id="cpnC"></div>
+    <div class="cpn-sep"></div>
+    <div class="cpn-ft"><span>كلينولوجي</span><span>صالح لمدة 30 يوم</span></div>
+  </div>
+  <div class="cpn-acts">
+    <button class="b-cpy" id="cpyB" onclick="doCpy()">نسخ الكوبون</button>
+    <button class="b-cls" onclick="goHome()">إغلاق</button>
   </div>
 </div>
+</div>
 
-<!-- ========== ADMIN ========== -->
+<!-- PIN -->
 
-<div id="pgAdmin" class="admin-pg">
-  <div class="adm-head">
-    <div class="adm-top">
-      <button class="adm-back" onclick="goForm()">→ رجوع</button>
-      <h2 style="font-size:17px;font-weight:700;">لوحة التقييمات</h2>
-      <div style="width:60px;"></div>
-    </div>
-    <div class="adm-tabs" id="admTabs">
-      <button class="adm-tab on" data-t="overview">📊 نظرة عامة</button>
-      <button class="adm-tab" data-t="monthly">📈 التقرير الشهري</button>
-      <button class="adm-tab" data-t="responses">💬 التقييمات</button>
-    </div>
+<div class="pin-pg hide" id="pgPin">
+<div class="pin-box">
+  <div class="pin-ic">🔒</div>
+  <div class="pin-tt">لوحة التحكم</div>
+  <div class="pin-st">أدخل الرقم السري للدخول</div>
+  <div class="pin-dots" id="pDots"><span class="pin-d"></span><span class="pin-d"></span><span class="pin-d"></span><span class="pin-d"></span></div>
+  <div class="pin-er" id="pErr">الرقم السري غير صحيح</div>
+  <div class="pin-grid">
+    <button class="pin-k" onclick="pIn('1')">1</button><button class="pin-k" onclick="pIn('2')">2</button><button class="pin-k" onclick="pIn('3')">3</button>
+    <button class="pin-k" onclick="pIn('4')">4</button><button class="pin-k" onclick="pIn('5')">5</button><button class="pin-k" onclick="pIn('6')">6</button>
+    <button class="pin-k" onclick="pIn('7')">7</button><button class="pin-k" onclick="pIn('8')">8</button><button class="pin-k" onclick="pIn('9')">9</button>
+    <button class="pin-k mt"></button><button class="pin-k" onclick="pIn('0')">0</button><button class="pin-k dl" onclick="pDel()">⌫</button>
   </div>
-  <div class="adm-body">
-    <div class="tab-c on" id="tcOverview"></div>
-    <div class="tab-c" id="tcMonthly"></div>
-    <div class="tab-c" id="tcResponses"></div>
+  <button class="pin-bk" onclick="goHome()">رجوع</button>
+</div>
+</div>
+
+<!-- ADMIN -->
+
+<div class="adm-pg hide" id="pgAdm">
+<div class="adm-hd">
+  <div class="adm-tp">
+    <button class="adm-bk" onclick="goHome()">→ رجوع</button>
+    <span style="font-size:15px;font-weight:700">لوحة التقييمات</span>
+    <span style="width:50px"></span>
   </div>
-  <div class="clr-bar" id="clrBar" style="display:none;">
-    <button class="clr-btn" onclick="clearAll()">مسح جميع التقييمات</button>
+  <div class="adm-tabs">
+    <button class="adm-tb on" data-t="overview">📊 نظرة عامة</button>
+    <button class="adm-tb" data-t="monthly">📈 الشهري</button>
+    <button class="adm-tb" data-t="responses">💬 التقييمات</button>
   </div>
+</div>
+<div class="adm-bd">
+  <div class="tc on" id="tcOverview"></div>
+  <div class="tc" id="tcMonthly"></div>
+  <div class="tc" id="tcResponses"></div>
+</div>
+<div class="cl-bar hide" id="clBar"><button class="cl-btn" onclick="clrAll()">مسح جميع التقييمات</button></div>
 </div>
 
 <script>
-/* ============ DATA ============ */
-const SK = 'kln-fb-v4';
-const PIN = '1994';
-const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-const LVLS = [{v:1,t:'ضعيف',c:'#ef4444'},{v:2,t:'مقبول',c:'#f97316'},{v:3,t:'جيد',c:'#eab308'},{v:4,t:'ممتاز',c:'#22c55e'},{v:5,t:'رائع',c:'#059669'}];
+var SK='kln5',PIN='1994',MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+var LV=[{v:1,t:'ضعيف',c:'#ef4444'},{v:2,t:'مقبول',c:'#f97316'},{v:3,t:'جيد',c:'#eab308'},{v:4,t:'ممتاز',c:'#38bdf8'},{v:5,t:'رائع',c:'#0284c7'}];
+var D=[],S={o:0,c:0,p:0,tw:0,r:null},CH={},CHL=false;
 
-let data = [];
-let st = {overall:0,cleanliness:0,punctuality:0,teamwork:0,rec:null};
-let charts = {};
-let chartReady = false;
+try{var x=localStorage.getItem(SK);if(x)D=JSON.parse(x);}catch(e){}
 
-try { const s = localStorage.getItem(SK); if(s) data = JSON.parse(s); } catch(e){}
+// Pages
+var pages=['pgForm','pgCpn','pgPin','pgAdm'];
+function go(id){pages.forEach(function(p){document.getElementById(p).classList.add('hide');});document.getElementById(id).classList.remove('hide');window.scrollTo(0,0);}
 
-/* ============ STARS ============ */
-(function(){
-  const box = document.getElementById('stars');
-  for(let i=1;i<=5;i++){
-    const b = document.createElement('button');
-    b.className = 'star-btn';
-    b.innerHTML = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
-    b.onclick = () => setStar(i);
-    box.appendChild(b);
-  }
-})();
+// Stars
+(function(){var b=document.getElementById('stars');for(var i=1;i<=5;i++){var s=document.createElement('button');s.className='star-b';s.dataset.i=i;s.innerHTML='<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';s.onclick=function(){setStar(parseInt(this.dataset.i));};b.appendChild(s);}})();
 
-function setStar(v){
-  st.overall = v;
-  document.querySelectorAll('#stars .star-btn svg').forEach((s,i) => {
-    s.setAttribute('fill', i<v ? '#f59e0b' : 'none');
-    s.setAttribute('stroke', i<v ? '#f59e0b' : '#ddd');
-  });
-  const txt = document.getElementById('ratingText');
-  const map = {1:'ضعيف',2:'مقبول',3:'جيد 👍',4:'جيد جداً 👏',5:'ممتاز! 🎉'};
-  const clr = {1:'#ef4444',2:'#ef4444',3:'#eab308',4:'#0d9e6d',5:'#0d9e6d'};
-  txt.textContent = map[v]; txt.style.color = clr[v];
-  checkValid();
-}
+function setStar(v){S.o=v;document.querySelectorAll('.star-b svg').forEach(function(s,i){s.setAttribute('fill',i<v?'#f59e0b':'none');s.setAttribute('stroke',i<v?'#f59e0b':'#ddd');});var t=document.getElementById('rt'),m={1:'ضعيف',2:'مقبول',3:'جيد 👍',4:'جيد جداً 👏',5:'ممتاز! 🎉'},cl={1:'#ef4444',2:'#ef4444',3:'#eab308',4:'#0891b2',5:'#0891b2'};t.textContent=m[v];t.style.color=cl[v];}
 
-/* ============ CATEGORIES ============ */
-document.querySelectorAll('.cat').forEach(cat => {
-  const key = cat.dataset.key;
-  const box = cat.querySelector('.cat-opts');
-  LVLS.forEach(lv => {
-    const b = document.createElement('button');
-    b.className = 'cat-opt'; b.textContent = lv.t; b.dataset.v = lv.v;
-    b.onclick = () => {
-      st[key] = lv.v;
-      box.querySelectorAll('.cat-opt').forEach(o => {
-        o.classList.remove('active');
-        o.style.borderColor = '#e8e8e8'; o.style.background = '#fafafa';
-        o.style.color = '#999'; o.style.boxShadow = 'none';
-      });
-      b.classList.add('active');
-      b.style.borderColor = lv.c; b.style.background = lv.c+'15';
-      b.style.color = lv.c; b.style.boxShadow = '0 2px 10px '+lv.c+'25';
-      checkValid();
-    };
-    box.appendChild(b);
-  });
-});
+// Categories
+document.querySelectorAll('.cat').forEach(function(cat){var k=cat.dataset.k,box=cat.querySelector('.cat-btns');LV.forEach(function(l){var b=document.createElement('button');b.className='cat-b';b.textContent=l.t;b.dataset.v=l.v;b.onclick=function(){S[k==='cleanliness'?'c':k==='punctuality'?'p':'tw']=l.v;box.querySelectorAll('.cat-b').forEach(function(o){o.style.borderColor='#eee';o.style.background='#fafafa';o.style.color='#bbb';o.style.fontWeight='500';o.style.boxShadow='none';});b.style.borderColor=l.c;b.style.background=l.c+'14';b.style.color=l.c;b.style.fontWeight='700';b.style.boxShadow='0 2px 8px '+l.c+'22';};box.appendChild(b);});});
 
-/* ============ RECOMMEND ============ */
-document.querySelectorAll('.rec-btn').forEach(btn => {
-  btn.onclick = () => {
-    const yes = btn.dataset.v === 'yes';
-    st.rec = yes;
-    document.querySelectorAll('.rec-btn').forEach(b => {
-      b.style.borderColor = '#e0e0e0'; b.style.background = '#fafafa';
-      b.style.color = '#999'; b.style.boxShadow = 'none'; b.style.transform = 'scale(1)';
-    });
-    const c = yes ? '#0d9e6d' : '#dc2626';
-    btn.style.borderColor = c; btn.style.background = c+'12';
-    btn.style.color = c; btn.style.boxShadow = '0 3px 14px '+c+'20';
-    btn.style.transform = 'scale(1.02)';
-    checkValid();
-  };
-});
+// Recommend
+document.querySelectorAll('.rec-b').forEach(function(btn){btn.onclick=function(){var yes=btn.dataset.v==='1';S.r=yes;document.querySelectorAll('.rec-b').forEach(function(b){b.style.borderColor='#e5e5e5';b.style.background='#fafafa';b.style.color='#bbb';b.style.boxShadow='none';b.style.transform='scale(1)';});var c=yes?'#0891b2':'#dc2626';btn.style.borderColor=c;btn.style.background=c+'10';btn.style.color=c;btn.style.boxShadow='0 2px 12px '+c+'18';btn.style.transform='scale(1.02)';};});
 
-/* ============ VALIDATION ============ */
-function checkValid(){
-  const ok = st.overall>0 && st.cleanliness>0 && st.punctuality>0 && st.teamwork>0 && st.rec!==null;
-  document.getElementById('submitBtn').className = 'submit-btn'+(ok?' ready':'');
-}
-
-/* ============ SUBMIT ============ */
-document.getElementById('submitBtn').onclick = function(){
-  const e = document.getElementById('errMsg');
-  e.classList.remove('show');
-  if(!st.overall){showErr('الرجاء اختيار التقييم العام');return;}
-  if(!st.cleanliness||!st.punctuality||!st.teamwork){showErr('الرجاء تقييم جميع الخدمات');return;}
-  if(st.rec===null){showErr('الرجاء اختيار هل ترشح الخدمة لغيرك');return;}
-
-  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let cpn='KLN'; for(let i=0;i<6;i++) cpn+=chars[Math.floor(Math.random()*chars.length)];
-
-  data.push({
-    name: document.getElementById('fName').value.trim(),
-    order: document.getElementById('fOrder').value.trim(),
-    overall:st.overall, cleanliness:st.cleanliness,
-    punctuality:st.punctuality, teamwork:st.teamwork,
-    rec:st.rec, notes:document.getElementById('fNotes').value.trim(),
-    coupon:cpn, ts:new Date().toISOString()
-  });
-  try{localStorage.setItem(SK,JSON.stringify(data));}catch(x){}
-
-  document.getElementById('cpnCode').textContent = cpn;
-  nav('pgCoupon');
+// Submit
+document.getElementById('subBtn').onclick=function(){
+  var e=document.getElementById('err');e.classList.add('hide');
+  if(!S.o){sErr('الرجاء اختيار التقييم العام');return;}
+  if(!S.c||!S.p||!S.tw){sErr('الرجاء تقييم جميع الخدمات');return;}
+  if(S.r===null){sErr('الرجاء اختيار هل ترشح الخدمة لغيرك');return;}
+  var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',cp='KLN';for(var i=0;i<6;i++)cp+=ch[Math.floor(Math.random()*ch.length)];
+  D.push({n:document.getElementById('fN').value.trim(),o:S.o,c:S.c,p:S.p,tw:S.tw,r:S.r,nt:document.getElementById('fNt').value.trim(),cp:cp,ts:new Date().toISOString()});
+  try{localStorage.setItem(SK,JSON.stringify(D));}catch(x){}
+  document.getElementById('cpnC').textContent=cp;go('pgCpn');
 };
+function sErr(m){var e=document.getElementById('err');e.textContent=m;e.classList.remove('hide');e.scrollIntoView({behavior:'smooth',block:'center'});}
 
-function showErr(m){
-  const e=document.getElementById('errMsg');
-  e.textContent=m; e.classList.add('show');
-  e.scrollIntoView({behavior:'smooth',block:'center'});
-}
+// Copy
+function doCpy(){var c=document.getElementById('cpnC').textContent,b=document.getElementById('cpyB');try{navigator.clipboard.writeText(c).then(ok).catch(fb);}catch(e){fb();}function fb(){var t=document.createElement('textarea');t.value=c;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);ok();}function ok(){b.textContent='تم النسخ ✓';b.classList.add('ok');setTimeout(function(){b.textContent='نسخ الكوبون';b.classList.remove('ok');},2000);}}
 
-/* ============ COUPON COPY ============ */
-function cpyCoupon(){
-  const code=document.getElementById('cpnCode').textContent;
-  const btn=document.getElementById('cpyBtn');
-  try{
-    navigator.clipboard.writeText(code).then(()=>{ok()}).catch(()=>{fallback()});
-  }catch(e){fallback();}
-  function fallback(){const t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);ok();}
-  function ok(){btn.textContent='تم النسخ ✓';btn.classList.add('done');setTimeout(()=>{btn.textContent='نسخ الكوبون';btn.classList.remove('done');},2000);}
-}
+// Home
+function goHome(){S={o:0,c:0,p:0,tw:0,r:null};['fN','fNt'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#ddd');});document.querySelectorAll('.cat-b').forEach(function(o){o.style.borderColor='#eee';o.style.background='#fafafa';o.style.color='#bbb';o.style.fontWeight='500';o.style.boxShadow='none';});document.querySelectorAll('.rec-b').forEach(function(b){b.style.borderColor='#e5e5e5';b.style.background='#fafafa';b.style.color='#bbb';b.style.boxShadow='none';b.style.transform='scale(1)';});document.getElementById('err').classList.add('hide');go('pgForm');}
 
-/* ============ NAVIGATION ============ */
-function nav(id){
-  document.querySelectorAll('.page,.coupon-pg,.pin-pg,.admin-pg').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
-  if(id==='pgAdmin') loadChart().then(()=>renderAdmin());
-  if(id==='pgPin'){pinCode='';updDots();document.getElementById('pinErr').classList.remove('show');}
-}
+// Logo tap
+var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout(tt);if(tc>=3){tc=0;go('pgPin');}else tt=setTimeout(function(){tc=0;},600);};
 
-function goForm(){
-  st={overall:0,cleanliness:0,punctuality:0,teamwork:0,rec:null};
-  document.getElementById('fName').value='';
-  document.getElementById('fOrder').value='';
-  document.getElementById('fNotes').value='';
-  document.getElementById('ratingText').textContent='';
-  document.querySelectorAll('#stars .star-btn svg').forEach(s=>{s.setAttribute('fill','none');s.setAttribute('stroke','#ddd');});
-  document.querySelectorAll('.cat-opt').forEach(o=>{o.classList.remove('active');o.style.borderColor='#e8e8e8';o.style.background='#fafafa';o.style.color='#999';o.style.boxShadow='none';});
-  document.querySelectorAll('.rec-btn').forEach(b=>{b.style.borderColor='#e0e0e0';b.style.background='#fafafa';b.style.color='#999';b.style.boxShadow='none';b.style.transform='scale(1)';});
-  document.getElementById('errMsg').classList.remove('show');
-  checkValid();
-  nav('pgForm');
-}
+// PIN
+var pc='';
+function pIn(d){if(pc.length>=4)return;pc+=d;pUD();document.getElementById('pErr').classList.remove('show');if(pc.length===4){setTimeout(function(){if(pc===PIN){go('pgAdm');loadCh().then(renderAdm);pc='';}else{var dd=document.getElementById('pDots');dd.style.animation='shake .4s ease';setTimeout(function(){dd.style.animation='';},400);document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('on');d.classList.add('bad');});document.getElementById('pErr').classList.add('show');setTimeout(function(){pc='';pUD();document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('bad');});},800);}},200);}}
+function pDel(){if(!pc.length)return;pc=pc.slice(0,-1);pUD();document.getElementById('pErr').classList.remove('show');}
+function pUD(){document.querySelectorAll('.pin-d').forEach(function(d,i){d.classList.toggle('on',i<pc.length);d.classList.remove('bad');});}
 
-/* ============ LOGO TAP ============ */
-let taps=0,tapT;
-document.getElementById('logoBtn').onclick=()=>{
-  taps++;clearTimeout(tapT);
-  if(taps>=3){taps=0;nav('pgPin');}
-  else tapT=setTimeout(()=>taps=0,600);
-};
+// Admin tabs
+document.querySelectorAll('.adm-tb').forEach(function(t){t.onclick=function(){document.querySelectorAll('.adm-tb').forEach(function(x){x.classList.remove('on');});document.querySelectorAll('.tc').forEach(function(x){x.classList.remove('on');});t.classList.add('on');document.getElementById('tc'+t.dataset.t.charAt(0).toUpperCase()+t.dataset.t.slice(1)).classList.add('on');};});
 
-/* ============ PIN ============ */
-let pinCode='';
-function pinIn(d){
-  if(pinCode.length>=4)return;
-  pinCode+=d; updDots();
-  document.getElementById('pinErr').classList.remove('show');
-  if(pinCode.length===4){
-    setTimeout(()=>{
-      if(pinCode===PIN){nav('pgAdmin');}
-      else{
-        const dd=document.getElementById('pinDots');
-        dd.style.animation='shake 0.4s ease';setTimeout(()=>dd.style.animation='',400);
-        document.querySelectorAll('.pin-dot').forEach(d=>{d.classList.remove('on');d.classList.add('err');});
-        document.getElementById('pinErr').classList.add('show');
-        setTimeout(()=>{pinCode='';updDots();document.querySelectorAll('.pin-dot').forEach(d=>d.classList.remove('err'));},800);
-      }
-    },200);
-  }
-}
-function pinDel(){if(!pinCode.length)return;pinCode=pinCode.slice(0,-1);updDots();document.getElementById('pinErr').classList.remove('show');}
-function updDots(){document.querySelectorAll('.pin-dot').forEach((d,i)=>{d.classList.toggle('on',i<pinCode.length);d.classList.remove('err');});}
+// Chart lazy load
+function loadCh(){return new Promise(function(r){if(CHL){r();return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';s.onload=function(){CHL=true;r();};s.onerror=function(){r();};document.head.appendChild(s);});}
+function kC(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
 
-/* ============ ADMIN TABS ============ */
-document.querySelectorAll('.adm-tab').forEach(tab=>{
-  tab.onclick=()=>{
-    document.querySelectorAll('.adm-tab').forEach(t=>t.classList.remove('on'));
-    document.querySelectorAll('.tab-c').forEach(c=>c.classList.remove('on'));
-    tab.classList.add('on');
-    document.getElementById('tc'+tab.dataset.t.charAt(0).toUpperCase()+tab.dataset.t.slice(1)).classList.add('on');
-  };
-});
+// Render Admin
+function renderAdm(){try{var x=localStorage.getItem(SK);if(x)D=JSON.parse(x);}catch(e){}rOv();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
 
-/* ============ CHART LAZY LOAD ============ */
-function loadChart(){
-  return new Promise(r=>{
-    if(chartReady){r();return;}
-    const s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
-    s.onload=()=>{chartReady=true;r();};
-    s.onerror=()=>r();
-    document.head.appendChild(s);
-  });
-}
-function killChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function avg(a,f){if(!a.length)return 0;return(a.reduce(function(s,r){return s+r[f];},0)/a.length).toFixed(1);}
 
-/* ============ ADMIN RENDER ============ */
-function renderAdmin(){
-  try{const s=localStorage.getItem(SK);if(s)data=JSON.parse(s);}catch(e){}
-  rOverview(); rMonthly(); rResponses();
-  document.getElementById('clrBar').style.display=data.length?'block':'none';
-}
+function rOv(){var el=document.getElementById('tcOverview'),n=D.length,rp=n?Math.round(D.filter(function(r){return r.r;}).length/n*100):0;
+var cats=[{l:'النظافة',k:'c',i:'✨',cl:'#0284c7'},{l:'الالتزام',k:'p',i:'⏰',cl:'#3b82f6'},{l:'التعامل',k:'tw',i:'👥',cl:'#8b5cf6'}];
+var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي التقييمات</div><div class="sc-v">'+n+'</div></div><div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">التقييم العام</div><div class="sc-v">'+avg(D,'o')+' ⭐</div></div><div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%</div></div><div class="sc" style="border-top:3px solid #8b5cf6"><div class="sc-l">الكوبونات</div><div class="sc-v">'+n+'</div></div></div>';
+if(n&&CHL)h+='<div class="cc"><h3>تحليل الأداء</h3><div class="cw"><canvas id="chR"></canvas></div></div>';
+h+='<div class="cc"><h3>متوسط التقييمات</h3>';
+cats.forEach(function(c){var v=avg(D,c.k);h+='<div class="ar"><div class="ar-l"><span>'+c.i+'</span><span>'+c.l+'</span></div><div class="ar-r"><div class="ab"><div class="af" style="width:'+(v/5*100)+'%;background:'+c.cl+'"></div></div><span class="av" style="color:'+c.cl+'">'+v+'/5</span></div></div>';});
+h+='</div>';el.innerHTML=h;
+if(n&&CHL){kC('chR');CH['chR']=new Chart(document.getElementById('chR'),{type:'radar',data:{labels:cats.map(function(c){return c.l;}),datasets:[{data:cats.map(function(c){return parseFloat(avg(D,c.k));}),backgroundColor:'rgba(8,145,178,0.15)',borderColor:'#0891b2',borderWidth:2,pointBackgroundColor:'#0891b2'}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:5,ticks:{stepSize:1,font:{size:9}},pointLabels:{font:{size:11,family:"'Noto Kufi Arabic'"}}}},plugins:{legend:{display:false}}}});}}
 
-function av(arr,f){if(!arr.length)return 0;return(arr.reduce((s,r)=>s+r[f],0)/arr.length).toFixed(1);}
+function rMo(){var el=document.getElementById('tcMonthly'),g={};
+D.forEach(function(r){var d=new Date(r.ts),k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(!g[k])g[k]=[];g[k].push(r);});
+var md=Object.keys(g).sort().map(function(k){var it=g[k],c=it.length,mi=parseInt(k.split('-')[1])-1;return{m:MO[mi],k:k,n:c,o:parseFloat(avg(it,'o')),c:parseFloat(avg(it,'c')),p:parseFloat(avg(it,'p')),tw:parseFloat(avg(it,'tw')),rp:Math.round(it.filter(function(r){return r.r;}).length/c*100)};});
+if(!md.length){el.innerHTML='<div class="empty">لا توجد بيانات كافية</div>';return;}
+var h=CHL?'<div class="cc"><h3>تطور التقييم</h3><div class="cw"><canvas id="chL"></canvas></div></div>':'';
+md.slice().reverse().forEach(function(m){var bc=m.o>=4?'#0284c7':m.o>=3?'#eab308':'#ef4444';h+='<div class="mc" style="border-right-color:'+bc+'"><div class="mc-h"><div class="mc-n">'+m.m+'</div><div class="mc-c">'+m.n+' تقييم</div></div><div class="mc-g"><div class="mc-s"><div class="mc-sv" style="color:#f59e0b">'+m.o+'</div><div class="mc-sl">العام</div></div><div class="mc-s"><div class="mc-sv" style="color:#0284c7">'+m.c+'</div><div class="mc-sl">النظافة</div></div><div class="mc-s"><div class="mc-sv" style="color:#3b82f6">'+m.p+'</div><div class="mc-sl">الموعد</div></div><div class="mc-s"><div class="mc-sv" style="color:#8b5cf6">'+m.tw+'</div><div class="mc-sl">التعامل</div></div></div><div style="margin-top:8px;font-size:11px;color:#999;text-align:center">ترشيح: <b style="color:#0284c7">'+m.rp+'%</b></div></div>';});
+el.innerHTML=h;
+if(CHL&&document.getElementById('chL')){kC('chL');CH['chL']=new Chart(document.getElementById('chL'),{type:'line',data:{labels:md.map(function(m){return m.m;}),datasets:[{label:'العام',data:md.map(function(m){return m.o;}),borderColor:'#0891b2',backgroundColor:'rgba(8,145,178,0.1)',borderWidth:3,pointBackgroundColor:'#0891b2',pointRadius:4,fill:true,tension:.3},{label:'النظافة',data:md.map(function(m){return m.c;}),borderColor:'#3b82f6',borderWidth:2,borderDash:[5,5],pointRadius:3,fill:false,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:5,ticks:{stepSize:1}}},plugins:{legend:{labels:{font:{size:10,family:"'Noto Kufi Arabic'"}}}}}});}}
 
-function rOverview(){
-  const el=document.getElementById('tcOverview');
-  const n=data.length;
-  const rp=n?Math.round(data.filter(r=>r.rec).length/n*100):0;
-  const cats=[{l:'النظافة',k:'cleanliness',ic:'✨',c:'#059669'},{l:'الالتزام بالموعد',k:'punctuality',ic:'⏰',c:'#3b82f6'},{l:'تعامل الفريق',k:'teamwork',ic:'👥',c:'#8b5cf6'}];
+function rRe(){var el=document.getElementById('tcResponses');
+if(!D.length){el.innerHTML='<div class="empty">لا توجد تقييمات بعد</div>';return;}
+var h='';D.slice().reverse().forEach(function(r){var bc=r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');h+='<div class="rc" style="border-right-color:'+bc+'"><div class="rc-t"><div><div class="rc-nm">'+(r.n||'عميل')+'</div><div class="rc-dt">'+dt+'</div></div><div class="rc-st"><span>'+r.o+'</span>⭐</div></div><div class="rc-sc"><span>✨'+r.c+'/5</span><span>⏰'+r.p+'/5</span><span>👥'+r.tw+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span></div>'+(r.nt?'<div class="rc-nt">"'+r.nt+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+r.cp+'</div>':'')+'</div>';});
+el.innerHTML=h;}
 
-  let h=`<div class="st-grid">
-    <div class="st-card" style="border-top:3px solid #3b82f6"><div class="st-lbl">إجمالي التقييمات</div><div class="st-val">${n}</div></div>
-    <div class="st-card" style="border-top:3px solid #f59e0b"><div class="st-lbl">التقييم العام</div><div class="st-val">${av(data,'overall')} ⭐</div></div>
-    <div class="st-card" style="border-top:3px solid #059669"><div class="st-lbl">نسبة الترشيح</div><div class="st-val">${rp}%</div></div>
-    <div class="st-card" style="border-top:3px solid #8b5cf6"><div class="st-lbl">الكوبونات المصدرة</div><div class="st-val">${n}</div></div>
-  </div>`;
-
-  if(n>0&&chartReady) h+=`<div class="ch-card"><h3>تحليل الأداء</h3><div class="ch-wrap"><canvas id="chRadar"></canvas></div></div>`;
-
-  h+=`<div class="ch-card"><h3>متوسط التقييمات</h3>`;
-  cats.forEach(c=>{const v=av(data,c.k);h+=`<div class="avg-row"><div class="avg-l"><span>${c.ic}</span><span>${c.l}</span></div><div class="avg-r"><div class="avg-bar"><div class="avg-fill" style="width:${(v/5)*100}%;background:${c.c}"></div></div><span class="avg-v" style="color:${c.c}">${v}/5</span></div></div>`;});
-  h+=`</div>`;
-  el.innerHTML=h;
-
-  if(n>0&&chartReady){
-    killChart('chRadar');
-    charts['chRadar']=new Chart(document.getElementById('chRadar'),{
-      type:'radar',
-      data:{labels:cats.map(c=>c.l),datasets:[{label:'التقييم',data:cats.map(c=>parseFloat(av(data,c.k))),backgroundColor:'rgba(13,158,109,0.15)',borderColor:'#0d9e6d',borderWidth:2,pointBackgroundColor:'#0d9e6d'}]},
-      options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:5,ticks:{stepSize:1,font:{size:10}},pointLabels:{font:{size:12,family:"'Noto Kufi Arabic'"}}}},plugins:{legend:{display:false}}}
-    });
-  }
-}
-
-function rMonthly(){
-  const el=document.getElementById('tcMonthly');
-  const g={};
-  data.forEach(r=>{const d=new Date(r.ts);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(!g[k])g[k]=[];g[k].push(r);});
-  const md=Object.keys(g).sort().map(k=>{const it=g[k];const c=it.length;const mi=parseInt(k.split('-')[1])-1;return{month:MONTHS[mi],key:k,count:c,overall:parseFloat(av(it,'overall')),cleanliness:parseFloat(av(it,'cleanliness')),punctuality:parseFloat(av(it,'punctuality')),teamwork:parseFloat(av(it,'teamwork')),rp:Math.round(it.filter(r=>r.rec).length/c*100)};});
-
-  if(!md.length){el.innerHTML='<div class="empty">لا توجد بيانات كافية للتقرير الشهري</div>';return;}
-
-  let h=chartReady?`<div class="ch-card"><h3>تطور التقييم العام</h3><div class="ch-wrap"><canvas id="chLine"></canvas></div></div>`:'';
-
-  [...md].reverse().forEach(m=>{
-    const bc=m.overall>=4?'#059669':m.overall>=3?'#eab308':'#ef4444';
-    h+=`<div class="mo-card" style="border-right-color:${bc}">
-      <div class="mo-head"><div class="mo-nm">${m.month}</div><div class="mo-cnt">${m.count} تقييم</div></div>
-      <div class="mo-scores">
-        <div class="mo-sc"><div class="mo-sv" style="color:#f59e0b">${m.overall}</div><div class="mo-sl">العام</div></div>
-        <div class="mo-sc"><div class="mo-sv" style="color:#059669">${m.cleanliness}</div><div class="mo-sl">النظافة</div></div>
-        <div class="mo-sc"><div class="mo-sv" style="color:#3b82f6">${m.punctuality}</div><div class="mo-sl">الموعد</div></div>
-        <div class="mo-sc"><div class="mo-sv" style="color:#8b5cf6">${m.teamwork}</div><div class="mo-sl">التعامل</div></div>
-      </div>
-      <div style="margin-top:10px;font-size:12px;color:#888;text-align:center">نسبة الترشيح: <span style="font-weight:700;color:#059669">${m.rp}%</span></div>
-    </div>`;
-  });
-  el.innerHTML=h;
-
-  if(chartReady&&document.getElementById('chLine')){
-    killChart('chLine');
-    charts['chLine']=new Chart(document.getElementById('chLine'),{
-      type:'line',
-      data:{labels:md.map(m=>m.month),datasets:[
-        {label:'التقييم العام',data:md.map(m=>m.overall),borderColor:'#0d9e6d',backgroundColor:'rgba(13,158,109,0.1)',borderWidth:3,pointBackgroundColor:'#0d9e6d',pointRadius:5,fill:true,tension:0.3},
-        {label:'النظافة',data:md.map(m=>m.cleanliness),borderColor:'#3b82f6',borderWidth:2,borderDash:[5,5],pointBackgroundColor:'#3b82f6',pointRadius:4,fill:false,tension:0.3}
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:5,ticks:{stepSize:1}}},plugins:{legend:{labels:{font:{size:11,family:"'Noto Kufi Arabic'"}}}}}
-    });
-  }
-}
-
-function rResponses(){
-  const el=document.getElementById('tcResponses');
-  if(!data.length){el.innerHTML='<div class="empty">لا توجد تقييمات بعد</div>';return;}
-  let h='';
-  [...data].reverse().forEach(r=>{
-    const bc=r.overall>=4?'#059669':r.overall>=3?'#eab308':'#ef4444';
-    const dt=new Date(r.ts).toLocaleDateString('ar-SA');
-    h+=`<div class="rsp-card" style="border-right-color:${bc}">
-      <div class="rsp-top"><div><div class="rsp-nm">${r.name||'عميل'} ${r.order?'#'+r.order:''}</div><div class="rsp-dt">${dt}</div></div><div class="rsp-star"><span>${r.overall}</span>⭐</div></div>
-      <div class="rsp-scores"><span>✨ ${r.cleanliness}/5</span><span>⏰ ${r.punctuality}/5</span><span>👥 ${r.teamwork}/5</span><span>${r.rec?'👍 يرشح':'👎 لا يرشح'}</span></div>
-      ${r.notes?`<div class="rsp-note">"${r.notes}"</div>`:''}
-      ${r.coupon?`<div class="rsp-cpn">🎟️ ${r.coupon}</div>`:''}
-    </div>`;
-  });
-  el.innerHTML=h;
-}
-
-function clearAll(){
-  if(confirm('هل أنت متأكد من مسح جميع التقييمات؟')){
-    data=[];try{localStorage.removeItem(SK);}catch(e){}renderAdmin();
-  }
-}
+function clrAll(){if(confirm('هل أنت متأكد من مسح جميع التقييمات؟')){D=[];try{localStorage.removeItem(SK);}catch(e){}renderAdm();}}
 </script>
 
 </body>
