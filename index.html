@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>كلينولوجي - تقييم الخدمة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+  :root {
+    --green-900: #064E3B; --green-700: #047857; --green-600: #059669;
+    --green-500: #10B981; --green-400: #34D399; --green-50: #F0FDF4;
+    --slate-900: #0F172A; --slate-800: #1E293B; --slate-700: #334155;
+    --slate-500: #64748B; --slate-400: #94A3B8; --slate-200: #E2E8F0;
+    --slate-100: #F1F5F9; --slate-50: #F8FAFC;
+    --red-500: #EF4444; --red-600: #DC2626; --red-50: #FEF2F2;
+    --amber-500: #F59E0B; --yellow-500: #EAB308;
+    --blue-500: #3B82F6; --purple-500: #8B5CF6;
+    --orange-500: #F97316;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+font-family: ‘Noto Kufi Arabic’, Tahoma, Arial, sans-serif;
+background: linear-gradient(180deg, #FAFBFC 0%, #F1F5F9 100%);
+min-height: 100vh; color: #1E293B;
+-webkit-font-smoothing: antialiased;
+}
+
+.page { display: none; min-height: 100vh; }
+.page.active { display: block; }
+
+/* ===== HEADER ===== */
+.header {
+background: linear-gradient(135deg, var(–green-900) 0%, var(–green-600) 50%, var(–green-400) 100%);
+padding: 32px 24px 40px; text-align: center;
+position: relative; overflow: hidden;
+}
+.header::before {
+content: ‘’; position: absolute; top: -30px; left: -30px;
+width: 120px; height: 120px; border-radius: 50%;
+background: rgba(255,255,255,0.06);
+}
+.header::after {
+content: ‘’; position: absolute; bottom: -20px; right: -20px;
+width: 80px; height: 80px; border-radius: 50%;
+background: rgba(255,255,255,0.04);
+}
+.logo {
+width: 64px; height: 64px; border-radius: 16px;
+background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+display: flex; align-items: center; justify-content: center;
+margin: 0 auto 16px; cursor: default; user-select: none;
+position: relative; z-index: 1; overflow: hidden; padding: 8px;
+}
+.logo img { width: 100%; height: 100%; object-fit: contain; }
+.header h1 { color: white; font-size: 22px; font-weight: 800; margin-bottom: 8px; position: relative; z-index: 1; }
+.header p { color: rgba(255,255,255,0.8); font-size: 13px; position: relative; z-index: 1; }
+
+/* ===== CARDS ===== */
+.form-body { padding: 0 20px 120px; margin-top: -16; }
+.card {
+background: white; border-radius: 20px; padding: 24px 20px;
+margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+.card-title {
+font-size: 15px; font-weight: 700; color: var(–slate-900);
+margin-bottom: 16px; text-align: center;
+}
+.card-title.lg { font-size: 16px; margin-bottom: 4px; }
+.card-subtitle { font-size: 12px; color: var(–slate-400); margin-bottom: 16px; text-align: center; }
+
+/* ===== INPUT FIELDS ===== */
+.field { margin-bottom: 14px; }
+.field-label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.field-label span.icon { font-size: 18px; }
+.field-label span.text { font-weight: 600; font-size: 14px; color: var(–slate-900); }
+.field input {
+width: 100%; padding: 12px 14px; border-radius: 12px;
+border: 2px solid var(–slate-200); font-size: 14px;
+font-family: ‘Noto Kufi Arabic’, sans-serif;
+background: var(–slate-50); transition: all 0.2s ease; outline: none;
+}
+.field input:focus {
+border-color: var(–green-600);
+box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+}
+
+/* ===== STAR RATING ===== */
+.stars { display: flex; gap: 4px; direction: ltr; justify-content: center; }
+.star-btn {
+background: none; border: none; cursor: pointer; padding: 2px;
+transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.star-btn:hover, .star-btn.active { transform: scale(1.25); }
+.star-btn svg { display: block; }
+.rating-label {
+margin-top: 12px; font-size: 13px; font-weight: 600;
+text-align: center; animation: fadeUp 0.3s ease;
+}
+
+/* ===== CATEGORY RATING ===== */
+.cat-rating { margin-bottom: 20px; }
+.cat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.cat-header .icon { font-size: 20px; }
+.cat-header .text { font-weight: 600; font-size: 14px; color: var(–slate-900); }
+.cat-levels { display: flex; gap: 6px; justify-content: center; }
+.cat-btn {
+flex: 1; padding: 10px 4px; border-radius: 10px;
+border: 2px solid var(–slate-200); background: var(–slate-50);
+cursor: pointer; transition: all 0.25s ease;
+font-family: ‘Noto Kufi Arabic’, sans-serif;
+font-size: 11px; font-weight: 500; color: var(–slate-400); white-space: nowrap;
+}
+.cat-btn.selected { transform: scale(1.05); font-weight: 700; }
+
+/* ===== RECOMMEND ===== */
+.rec-btns { display: flex; gap: 12px; justify-content: center; }
+.rec-btn {
+flex: 1; padding: 14px 16px; border-radius: 14px;
+border: 2px solid var(–slate-200); background: var(–slate-50);
+cursor: pointer; transition: all 0.3s ease;
+display: flex; align-items: center; justify-content: center; gap: 8px;
+font-family: ‘Noto Kufi Arabic’, sans-serif; font-weight: 600; font-size: 14px;
+color: var(–slate-400);
+}
+.rec-btn .emoji { font-size: 22px; }
+.rec-btn.selected { transform: scale(1.03); }
+
+/* ===== TEXTAREA ===== */
+.notes-area {
+width: 100%; border-radius: 12px; border: 2px solid var(–slate-200);
+padding: 14px 16px; font-family: ‘Noto Kufi Arabic’, sans-serif;
+font-size: 14px; resize: vertical; transition: all 0.2s ease;
+line-height: 1.8; background: var(–slate-50); outline: none;
+}
+.notes-area:focus {
+border-color: var(–green-600);
+box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+}
+
+/* ===== COUPON TEASER ===== */
+.coupon-teaser {
+background: linear-gradient(135deg, #065F46, var(–green-600));
+border-radius: 16px; padding: 16px 20px; margin-bottom: 12px;
+display: flex; align-items: center; gap: 12px;
+}
+.coupon-teaser .emoji { font-size: 28px; }
+.coupon-teaser .title { color: white; font-size: 14px; font-weight: 700; }
+.coupon-teaser .desc { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 2px; }
+
+/* ===== ERROR ===== */
+.error-msg {
+background: var(–red-50); border: 1px solid #FECACA; border-radius: 12px;
+padding: 12px 16px; margin-bottom: 12px; text-align: center;
+font-size: 13px; color: var(–red-600); animation: fadeUp 0.3s ease;
+display: none;
+}
+.error-msg.show { display: block; }
+
+/* ===== SUBMIT ===== */
+.submit-bar {
+position: fixed; bottom: 0; left: 0; right: 0; padding: 16px 20px;
+padding-bottom: max(16px, env(safe-area-inset-bottom));
+background: linear-gradient(to top, white 70%, transparent);
+z-index: 100;
+}
+.submit-btn {
+width: 100%; padding: 16px; border-radius: 14px; border: none;
+background: var(–slate-200); color: var(–slate-400);
+font-family: ‘Noto Kufi Arabic’, sans-serif; font-weight: 700; font-size: 16px;
+cursor: default; transition: all 0.3s ease;
+}
+.submit-btn.ready {
+background: linear-gradient(135deg, var(–green-600), var(–green-500));
+color: white; cursor: pointer;
+box-shadow: 0 4px 16px rgba(5,150,105,0.3);
+}
+
+/* ===== COUPON PAGE ===== */
+.coupon-page {
+display: none; min-height: 100vh; align-items: center; justify-content: center;
+background: linear-gradient(160deg, #F0FDF4 0%, #ECFDF5 40%, #FFF7ED 100%);
+padding: 24px;
+}
+.coupon-page.active { display: flex; }
+.coupon-content { text-align: center; max-width: 360px; width: 100%; animation: fadeUp 0.6s ease-out; }
+.success-icon {
+width: 80px; height: 80px; border-radius: 50%;
+background: linear-gradient(135deg, var(–green-600), var(–green-500));
+display: flex; align-items: center; justify-content: center;
+margin: 0 auto 20px; box-shadow: 0 8px 32px rgba(5,150,105,0.3);
+animation: scaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+}
+.coupon-card {
+background: linear-gradient(135deg, #065F46 0%, var(–green-600) 50%, var(–green-500) 100%);
+border-radius: 20px; padding: 28px 24px; position: relative; overflow: hidden;
+box-shadow: 0 12px 40px rgba(5,150,105,0.25);
+}
+.coupon-card::before {
+content: ‘’; position: absolute; top: -15px; right: -15px;
+width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.08);
+}
+.coupon-code {
+direction: ltr; font-size: 28px; font-weight: 800; color: white;
+letter-spacing: 3px; margin-bottom: 16px; font-family: monospace;
+text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.coupon-actions { margin-top: 20px; display: flex; gap: 10px; }
+.coupon-actions button {
+flex: 1; padding: 14px; border-radius: 14px;
+font-family: ‘Noto Kufi Arabic’, sans-serif; font-weight: 700;
+font-size: 14px; cursor: pointer; transition: all 0.3s ease;
+}
+.btn-copy { background: white; color: var(–green-600); border: 2px solid var(–green-600); }
+.btn-copy.copied { background: var(–green-600); color: white; border: none; }
+.btn-close { background: var(–slate-100); color: var(–slate-500); border: none; }
+
+/* ===== ADMIN ===== */
+.admin-page { display: none; min-height: 100vh; background: var(–slate-50); }
+.admin-page.active { display: block; }
+.admin-header {
+background: linear-gradient(135deg, var(–slate-900) 0%, var(–slate-800) 100%);
+padding: 20px 16px 12px; color: white;
+}
+.admin-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.admin-back {
+background: rgba(255,255,255,0.1); border: none; color: white;
+padding: 8px 14px; border-radius: 8px; cursor: pointer;
+font-family: ‘Noto Kufi Arabic’, sans-serif; font-size: 12px;
+}
+.admin-tabs { display: flex; gap: 4px; padding: 0; overflow-x: auto; scrollbar-width: none; }
+.admin-tabs::-webkit-scrollbar { display: none; }
+.admin-tab {
+padding: 10px 14px; border-radius: 10px; border: none; white-space: nowrap;
+background: transparent; color: rgba(255,255,255,0.5);
+font-family: ‘Noto Kufi Arabic’, sans-serif; font-size: 12px; font-weight: 600;
+cursor: pointer; transition: all 0.2s ease;
+}
+.admin-tab.active { background: rgba(255,255,255,0.15); color: white; }
+.admin-body { padding: 16px 20px 100px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Stats Grid */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.stat-card {
+background: white; border-radius: 14px; padding: 16px 14px;
+box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.stat-label { font-size: 11px; color: var(–slate-400); margin-bottom: 6px; }
+.stat-value { font-size: 22px; font-weight: 800; color: var(–slate-900); }
+
+/* Chart Card */
+.chart-card {
+background: white; border-radius: 16px; padding: 20px;
+box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 16px;
+}
+.chart-card h3 { font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 14px; }
+.chart-container { position: relative; width: 100%; height: 220px; }
+
+/* Avg Bars */
+.avg-row {
+display: flex; align-items: center; justify-content: space-between;
+padding: 12px 0;
+}
+.avg-row:not(:last-child) { border-bottom: 1px solid var(–slate-100); }
+.avg-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569; }
+.avg-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.avg-bar { width: 100px; height: 6px; border-radius: 3px; background: var(–slate-100); overflow: hidden; }
+.avg-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.avg-val { font-size: 14px; font-weight: 700; min-width: 35px; text-align: left; direction: ltr; }
+
+/* Monthly Cards */
+.month-card {
+background: white; border-radius: 14px; padding: 16px; margin-bottom: 10px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-right: 3px solid var(–green-600);
+}
+.month-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.month-name { font-size: 16px; font-weight: 700; }
+.month-count { font-size: 12px; color: var(–slate-400); }
+.month-scores { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+.month-score { text-align: center; padding: 8px 4px; background: var(–slate-50); border-radius: 8px; }
+.month-score-val { font-size: 16px; font-weight: 800; }
+.month-score-label { color: var(–slate-400); font-size: 10px; margin-top: 2px; }
+
+/* Response Cards */
+.resp-card {
+background: white; border-radius: 14px; padding: 16px; margin-bottom: 10px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-right: 3px solid var(–green-600);
+}
+.resp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.resp-name { font-size: 14px; font-weight: 700; }
+.resp-meta { font-size: 11px; color: var(–slate-400); margin-top: 2px; }
+.resp-star { display: flex; align-items: center; gap: 4px; }
+.resp-star-val { direction: ltr; font-size: 18px; font-weight: 800; }
+.resp-scores { display: flex; gap: 12px; font-size: 12px; color: var(–slate-500); margin-bottom: 8px; flex-wrap: wrap; }
+.resp-notes {
+background: var(–slate-50); border-radius: 8px; padding: 10px 12px;
+font-size: 13px; color: #475569; line-height: 1.8;
+}
+.resp-coupon {
+margin-top: 8px; font-size: 11px; color: var(–purple-500); direction: ltr;
+font-family: monospace; background: #F5F3FF; padding: 4px 8px;
+border-radius: 6px; display: inline-block;
+}
+
+/* Clear btn */
+.clear-bar { position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 100; }
+.clear-btn {
+width: 100%; padding: 14px; border-radius: 12px; background: #FEE2E2;
+color: var(–red-600); border: none; font-family: ‘Noto Kufi Arabic’, sans-serif;
+font-weight: 700; font-size: 14px; cursor: pointer;
+}
+
+.empty-state { text-align: center; padding: 40px; color: var(–slate-400); font-size: 14px; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes scaleIn { from { opacity:0; transform:scale(0.5); } to { opacity:1; transform:scale(1); } }
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes shake { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-8px);} 40%,80%{transform:translateX(8px);} }
+
+/* ===== PIN PAGE ===== */
+.pin-page {
+display: none; min-height: 100vh; align-items: center; justify-content: center;
+background: linear-gradient(135deg, var(–slate-900) 0%, #1a2a3a 50%, var(–slate-800) 100%);
+padding: 24px;
+}
+.pin-page.active { display: flex; }
+.pin-content { text-align: center; max-width: 320px; width: 100%; animation: fadeUp 0.4s ease-out; }
+.pin-icon {
+font-size: 40px; margin-bottom: 16px;
+animation: scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
+}
+.pin-title { color: white; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.pin-subtitle { color: rgba(255,255,255,0.5); font-size: 13px; margin-bottom: 28px; }
+.pin-dots { display: flex; gap: 14px; justify-content: center; margin-bottom: 10px; }
+.pin-dot {
+width: 16px; height: 16px; border-radius: 50%;
+border: 2px solid rgba(255,255,255,0.3); background: transparent;
+transition: all 0.2s ease;
+}
+.pin-dot.filled { background: var(–green-500); border-color: var(–green-500); box-shadow: 0 0 10px rgba(16,185,129,0.4); }
+.pin-dot.error { background: var(–red-500); border-color: var(–red-500); box-shadow: 0 0 10px rgba(239,68,68,0.4); }
+.pin-error {
+color: var(–red-500); font-size: 13px; font-weight: 600;
+margin-bottom: 20px; height: 20px; opacity: 0; transition: opacity 0.3s ease;
+}
+.pin-error.show { opacity: 1; }
+.pin-pad {
+display: grid; grid-template-columns: repeat(3, 1fr);
+gap: 10px; max-width: 260px; margin: 0 auto 24px;
+}
+.pin-key {
+width: 100%; aspect-ratio: 1.3; border-radius: 14px; border: none;
+background: rgba(255,255,255,0.08); color: white;
+font-size: 24px; font-weight: 700; cursor: pointer;
+font-family: ‘Noto Kufi Arabic’, Tahoma, sans-serif;
+transition: all 0.15s ease; -webkit-tap-highlight-color: transparent;
+}
+.pin-key:active { background: rgba(255,255,255,0.2); transform: scale(0.93); }
+.pin-key-empty { background: transparent; cursor: default; }
+.pin-key-del { font-size: 20px; color: rgba(255,255,255,0.6); }
+.pin-back-btn {
+background: transparent; border: 1px solid rgba(255,255,255,0.15);
+color: rgba(255,255,255,0.5); padding: 10px 28px; border-radius: 10px;
+font-family: ‘Noto Kufi Arabic’, Tahoma, sans-serif;
+font-size: 13px; cursor: pointer; transition: all 0.2s ease;
+}
+.pin-back-btn:active { background: rgba(255,255,255,0.05); }
+</style>
+
+</head>
+<body>
+
+<!-- ==================== FORM PAGE ==================== -->
+
+<div id="formPage" class="page active">
+  <div class="header">
+    <div class="logo" id="logoBtn"><span style="font-size:28px;">✨</span></div>
+    <h1>كلينولوجي</h1>
+    <p>نحب نسمع رأيك عن خدمتنا</p>
+  </div>
+
+  <div class="form-body" style="animation: fadeUp 0.5s ease-out;">
+
+```
+<!-- Customer Info -->
+<div class="card">
+  <div class="card-title">معلومات الطلب</div>
+  <div class="field">
+    <div class="field-label"><span class="icon">👤</span><span class="text">اسم العميل</span></div>
+    <input type="text" id="customerName" placeholder="اكتب اسم العميل (اختياري)">
+  </div>
+  <div class="field">
+    <div class="field-label"><span class="icon">📋</span><span class="text">رقم الطلب</span></div>
+    <input type="text" id="orderNumber" placeholder="مثال: 1234">
+  </div>
+</div>
+
+<!-- Overall Rating -->
+<div class="card" style="text-align:center;">
+  <div class="card-title lg">كيف تقيّم الخدمة بشكل عام؟</div>
+  <div class="card-subtitle">اختر من 1 إلى 5 نجوم</div>
+  <div class="stars" id="overallStars"></div>
+  <div class="rating-label" id="overallLabel" style="display:none;"></div>
+</div>
+
+<!-- Category Ratings -->
+<div class="card">
+  <div class="card-title">تقييم تفصيلي</div>
+  <div class="cat-rating" id="catCleanliness" data-key="cleanliness">
+    <div class="cat-header"><span class="icon">✨</span><span class="text">مستوى النظافة</span></div>
+    <div class="cat-levels"></div>
+  </div>
+  <div class="cat-rating" id="catPunctuality" data-key="punctuality">
+    <div class="cat-header"><span class="icon">⏰</span><span class="text">الالتزام بالموعد</span></div>
+    <div class="cat-levels"></div>
+  </div>
+  <div class="cat-rating" id="catTeamwork" data-key="teamwork">
+    <div class="cat-header"><span class="icon">👥</span><span class="text">تعامل الفريق</span></div>
+    <div class="cat-levels"></div>
+  </div>
+</div>
+
+<!-- Recommend -->
+<div class="card">
+  <div class="card-title">هل ترشح خدمتنا لغيرك؟</div>
+  <div class="rec-btns">
+    <button class="rec-btn" data-val="true"><span class="emoji">👍</span><span>نعم، بالتأكيد</span></button>
+    <button class="rec-btn" data-val="false"><span class="emoji">👎</span><span>لا</span></button>
+  </div>
+</div>
+
+<!-- Notes -->
+<div class="card">
+  <div class="card-title" style="margin-bottom:4px;">ملاحظاتك</div>
+  <div class="card-subtitle">اختياري - شاركنا أي ملاحظة تساعدنا نتطور</div>
+  <textarea class="notes-area" id="notesField" rows="4" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+</div>
+
+<!-- Coupon Teaser -->
+<div class="coupon-teaser">
+  <span class="emoji">🎁</span>
+  <div>
+    <div class="title">كوبون خصم 10% هديتك!</div>
+    <div class="desc">أرسل تقييمك واحصل على كوبون خصم فوري</div>
+  </div>
+</div>
+
+<div class="error-msg" id="errorMsg"></div>
+```
+
+  </div>
+
+  <div class="submit-bar">
+    <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">إرسال التقييم 🎁</button>
+  </div>
+</div>
+
+<!-- ==================== COUPON PAGE ==================== -->
+
+<div id="couponPage" class="coupon-page">
+  <div class="coupon-content">
+    <div class="success-icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 style="font-size:24px;font-weight:800;color:var(--green-900);margin-bottom:8px;">شكراً لتقييمك!</h2>
+    <p style="font-size:14px;color:#6B7280;margin-bottom:28px;line-height:1.8;">هذا كوبون خصم هديتنا لك على خدمتك القادمة</p>
+    <div class="coupon-card">
+      <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px;font-weight:500;">كوبون خصم 10%</div>
+      <div class="coupon-code" id="couponCode"></div>
+      <div style="border-top:2px dashed rgba(255,255,255,0.25);margin-bottom:16px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);">كلينولوجي</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);">صالح لمدة 30 يوم</span>
+      </div>
+    </div>
+    <div class="coupon-actions">
+      <button class="btn-copy" id="copyBtn" onclick="copyCoupon()">نسخ الكوبون</button>
+      <button class="btn-close" onclick="resetForm()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PIN PAGE ==================== -->
+
+<div id="pinPage" class="pin-page">
+  <div class="pin-content">
+    <div class="pin-icon">🔒</div>
+    <h2 class="pin-title">لوحة التحكم</h2>
+    <p class="pin-subtitle">أدخل الرقم السري للدخول</p>
+    <div class="pin-dots" id="pinDots">
+      <span class="pin-dot"></span><span class="pin-dot"></span>
+      <span class="pin-dot"></span><span class="pin-dot"></span>
+    </div>
+    <div class="pin-error" id="pinError">الرقم السري غير صحيح</div>
+    <div class="pin-pad" id="pinPad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key pin-key-empty"></button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key pin-key-del" onclick="pinDelete()">⌫</button>
+    </div>
+    <button class="pin-back-btn" onclick="resetForm()">رجوع</button>
+  </div>
+</div>
+
+<!-- ==================== ADMIN PAGE ==================== -->
+
+<div id="adminPage" class="admin-page">
+  <div class="admin-header">
+    <div class="admin-top">
+      <button class="admin-back" onclick="resetForm()">→ رجوع</button>
+      <h2 style="font-size:17px;font-weight:700;">لوحة التقييمات</h2>
+      <div style="width:60px;"></div>
+    </div>
+    <div class="admin-tabs" id="adminTabs">
+      <button class="admin-tab active" data-tab="overview">📊 نظرة عامة</button>
+      <button class="admin-tab" data-tab="monthly">📈 التقرير الشهري</button>
+      <button class="admin-tab" data-tab="responses">💬 التقييمات</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+    <div class="tab-content active" id="tabOverview"></div>
+    <div class="tab-content" id="tabMonthly"></div>
+    <div class="tab-content" id="tabResponses"></div>
+  </div>
+
+  <div class="clear-bar" id="clearBar" style="display:none;">
+    <button class="clear-btn" onclick="clearAll()">مسح جميع التقييمات</button>
+  </div>
+</div>
+
+<script>
+// ==================== DATA ====================
+const STORAGE_KEY = 'kleenology-feedback-v3';
+const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const LEVELS = [
+  { val: 1, label: 'ضعيف', color: '#EF4444' },
+  { val: 2, label: 'مقبول', color: '#F97316' },
+  { val: 3, label: 'جيد', color: '#EAB308' },
+  { val: 4, label: 'ممتاز', color: '#22C55E' },
+  { val: 5, label: 'رائع', color: '#059669' }
+];
+
+let state = { overall: 0, cleanliness: 0, punctuality: 0, teamwork: 0, recommend: null };
+let responses = [];
+let chartInstances = {};
+let chartLoaded = false;
+
+function loadChartJS() {
+  return new Promise((resolve) => {
+    if (chartLoaded) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+    s.onload = () => { chartLoaded = true; resolve(); };
+    s.onerror = () => { chartLoaded = false; resolve(); };
+    document.head.appendChild(s);
+  });
+}
+
+// ==================== STORAGE ====================
+function loadResponses() {
+  try { const d = localStorage.getItem(STORAGE_KEY); if (d) responses = JSON.parse(d); } catch(e) {}
+}
+function saveResponses() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(responses)); } catch(e) {}
+}
+function generateCoupon() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'KLN';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+// ==================== INIT ====================
+loadResponses();
+initStars();
+initCategories();
+initRecButtons();
+initAdminTabs();
+initLogoTap();
+
+// ==================== STARS ====================
+function initStars() {
+  const container = document.getElementById('overallStars');
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'star-btn';
+    btn.innerHTML = `<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+    btn.onclick = () => setOverall(i);
+    btn.onmouseenter = () => highlightStars(i);
+    btn.onmouseleave = () => highlightStars(state.overall);
+    container.appendChild(btn);
+  }
+}
+
+function setOverall(val) {
+  state.overall = val;
+  highlightStars(val);
+  const label = document.getElementById('overallLabel');
+  const labels = { 1: 'ضعيف', 2: 'مقبول', 3: 'جيد 👍', 4: 'جيد جداً 👏', 5: 'ممتاز! 🎉' };
+  const colors = { 1: '#EF4444', 2: '#EF4444', 3: '#EAB308', 4: '#059669', 5: '#059669' };
+  label.textContent = labels[val];
+  label.style.color = colors[val];
+  label.style.display = 'block';
+  updateSubmitBtn();
+}
+
+function highlightStars(val) {
+  const stars = document.querySelectorAll('#overallStars .star-btn');
+  stars.forEach((btn, i) => {
+    const svg = btn.querySelector('svg');
+    if (i < val) {
+      svg.setAttribute('fill', '#F59E0B');
+      svg.setAttribute('stroke', '#F59E0B');
+    } else {
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', '#D1D5DB');
+    }
+  });
+}
+
+// ==================== CATEGORY RATINGS ====================
+function initCategories() {
+  document.querySelectorAll('.cat-rating').forEach(catEl => {
+    const key = catEl.dataset.key;
+    const container = catEl.querySelector('.cat-levels');
+    LEVELS.forEach(level => {
+      const btn = document.createElement('button');
+      btn.className = 'cat-btn';
+      btn.textContent = level.label;
+      btn.dataset.val = level.val;
+      btn.onclick = () => setCatRating(key, level.val);
+      container.appendChild(btn);
+    });
+  });
+}
+
+function setCatRating(key, val) {
+  state[key] = val;
+  const catEl = document.querySelector(`.cat-rating[data-key="${key}"]`);
+  catEl.querySelectorAll('.cat-btn').forEach(btn => {
+    const v = parseInt(btn.dataset.val);
+    const level = LEVELS.find(l => l.val === v);
+    if (v === val) {
+      btn.classList.add('selected');
+      btn.style.borderColor = level.color;
+      btn.style.background = level.color + '18';
+      btn.style.color = level.color;
+      btn.style.boxShadow = `0 2px 12px ${level.color}30`;
+    } else {
+      btn.classList.remove('selected');
+      btn.style.borderColor = '#E2E8F0';
+      btn.style.background = '#FAFBFC';
+      btn.style.color = '#94A3B8';
+      btn.style.boxShadow = 'none';
+      btn.style.transform = 'scale(1)';
+    }
+  });
+  updateSubmitBtn();
+}
+
+// ==================== RECOMMEND ====================
+function initRecButtons() {
+  document.querySelectorAll('.rec-btn').forEach(btn => {
+    btn.onclick = () => {
+      const val = btn.dataset.val === 'true';
+      state.recommend = val;
+      document.querySelectorAll('.rec-btn').forEach(b => {
+        b.classList.remove('selected');
+        b.style.borderColor = '#E2E8F0';
+        b.style.background = '#FAFBFC';
+        b.querySelector('span:last-child').style.color = '#94A3B8';
+        b.style.boxShadow = 'none';
+        b.style.transform = 'scale(1)';
+      });
+      const color = val ? '#059669' : '#DC2626';
+      btn.classList.add('selected');
+      btn.style.borderColor = color;
+      btn.style.background = color + '12';
+      btn.querySelector('span:last-child').style.color = color;
+      btn.style.boxShadow = `0 4px 16px ${color}20`;
+      btn.style.transform = 'scale(1.03)';
+      updateSubmitBtn();
+    };
+  });
+}
+
+// ==================== VALIDATION ====================
+function updateSubmitBtn() {
+  const btn = document.getElementById('submitBtn');
+  const valid = state.overall > 0 && state.cleanliness > 0 && state.punctuality > 0 && state.teamwork > 0 && state.recommend !== null;
+  if (valid) btn.classList.add('ready');
+  else btn.classList.remove('ready');
+}
+
+// ==================== SUBMIT ====================
+function handleSubmit() {
+  const errEl = document.getElementById('errorMsg');
+  errEl.classList.remove('show');
+
+  if (!state.overall) { showError('الرجاء اختيار التقييم العام'); return; }
+  if (!state.cleanliness || !state.punctuality || !state.teamwork) { showError('الرجاء تقييم جميع الخدمات'); return; }
+  if (state.recommend === null) { showError('الرجاء اختيار هل ترشح الخدمة لغيرك'); return; }
+
+  const coupon = generateCoupon();
+  const entry = {
+    customerName: document.getElementById('customerName').value.trim(),
+    orderNumber: document.getElementById('orderNumber').value.trim(),
+    overall: state.overall,
+    cleanliness: state.cleanliness,
+    punctuality: state.punctuality,
+    teamwork: state.teamwork,
+    recommend: state.recommend,
+    notes: document.getElementById('notesField').value.trim(),
+    coupon: coupon,
+    timestamp: new Date().toISOString()
+  };
+
+  responses.push(entry);
+  saveResponses();
+
+  // Show coupon
+  document.getElementById('couponCode').textContent = coupon;
+  showPage('couponPage');
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ==================== COUPON ====================
+function copyCoupon() {
+  const code = document.getElementById('couponCode').textContent;
+  const btn = document.getElementById('copyBtn');
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'تم النسخ ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'نسخ الكوبون'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = code; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent = 'تم النسخ ✓'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'نسخ الكوبون'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ==================== NAVIGATION ====================
+function showPage(id) {
+  document.querySelectorAll('.page, .coupon-page, .admin-page, .pin-page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'adminPage') {
+    loadChartJS().then(() => renderAdmin());
+  }
+  if (id === 'pinPage') {
+    pinCode = '';
+    updatePinDots();
+    document.getElementById('pinError').classList.remove('show');
+  }
+}
+
+function resetForm() {
+  state = { overall: 0, cleanliness: 0, punctuality: 0, teamwork: 0, recommend: null };
+  document.getElementById('customerName').value = '';
+  document.getElementById('orderNumber').value = '';
+  document.getElementById('notesField').value = '';
+  highlightStars(0);
+  document.getElementById('overallLabel').style.display = 'none';
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.remove('selected');
+    b.style.borderColor = '#E2E8F0'; b.style.background = '#FAFBFC';
+    b.style.color = '#94A3B8'; b.style.boxShadow = 'none';
+  });
+  document.querySelectorAll('.rec-btn').forEach(b => {
+    b.classList.remove('selected');
+    b.style.borderColor = '#E2E8F0'; b.style.background = '#FAFBFC';
+    b.querySelector('span:last-child').style.color = '#94A3B8';
+    b.style.boxShadow = 'none'; b.style.transform = 'scale(1)';
+  });
+  document.getElementById('errorMsg').classList.remove('show');
+  updateSubmitBtn();
+  showPage('formPage');
+}
+
+// ==================== ADMIN LOGO TAP ====================
+let tapCount = 0, tapTimer = null;
+function initLogoTap() {
+  document.getElementById('logoBtn').addEventListener('click', () => {
+    tapCount++;
+    clearTimeout(tapTimer);
+    if (tapCount >= 3) { tapCount = 0; showPage('pinPage'); }
+    else { tapTimer = setTimeout(() => tapCount = 0, 600); }
+  });
+}
+
+// ==================== PIN CODE ====================
+const ADMIN_PIN = '1994';
+let pinCode = '';
+
+function pinPress(digit) {
+  if (pinCode.length >= 4) return;
+  pinCode += digit;
+  updatePinDots();
+  document.getElementById('pinError').classList.remove('show');
+
+  if (pinCode.length === 4) {
+    setTimeout(() => {
+      if (pinCode === ADMIN_PIN) {
+        showPage('adminPage');
+      } else {
+        // Wrong PIN - shake + show error
+        const dots = document.getElementById('pinDots');
+        dots.style.animation = 'shake 0.4s ease';
+        setTimeout(() => dots.style.animation = '', 400);
+        document.querySelectorAll('.pin-dot').forEach(d => { d.classList.remove('filled'); d.classList.add('error'); });
+        document.getElementById('pinError').classList.add('show');
+        setTimeout(() => {
+          pinCode = '';
+          updatePinDots();
+          document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('error'));
+        }, 800);
+      }
+    }, 200);
+  }
+}
+
+function pinDelete() {
+  if (pinCode.length === 0) return;
+  pinCode = pinCode.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pinError').classList.remove('show');
+}
+
+function updatePinDots() {
+  document.querySelectorAll('.pin-dot').forEach((dot, i) => {
+    dot.classList.toggle('filled', i < pinCode.length);
+    dot.classList.remove('error');
+  });
+}
+
+// ==================== ADMIN TABS ====================
+function initAdminTabs() {
+  document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1)).classList.add('active');
+    };
+  });
+}
+
+// ==================== ADMIN RENDER ====================
+function renderAdmin() {
+  loadResponses();
+  renderOverview();
+  renderMonthly();
+  renderResponses();
+  document.getElementById('clearBar').style.display = responses.length > 0 ? 'block' : 'none';
+}
+
+function avg(arr, field) {
+  if (!arr.length) return 0;
+  return (arr.reduce((s, r) => s + r[field], 0) / arr.length).toFixed(1);
+}
+
+function renderOverview() {
+  const el = document.getElementById('tabOverview');
+  const total = responses.length;
+  const recPct = total ? Math.round((responses.filter(r => r.recommend).length / total) * 100) : 0;
+
+  let html = `
+    <div class="stats-grid">
+      <div class="stat-card" style="border-top:3px solid #3B82F6;"><div class="stat-label">إجمالي التقييمات</div><div class="stat-value">${total}</div></div>
+      <div class="stat-card" style="border-top:3px solid #F59E0B;"><div class="stat-label">التقييم العام</div><div class="stat-value">${avg(responses,'overall')} ⭐</div></div>
+      <div class="stat-card" style="border-top:3px solid #059669;"><div class="stat-label">نسبة الترشيح</div><div class="stat-value">${recPct}%</div></div>
+      <div class="stat-card" style="border-top:3px solid #8B5CF6;"><div class="stat-label">الكوبونات المصدرة</div><div class="stat-value">${total}</div></div>
+    </div>`;
+
+  if (total > 0 && chartLoaded) {
+    html += `<div class="chart-card"><h3>تحليل الأداء</h3><div class="chart-container"><canvas id="radarChart"></canvas></div></div>`;
+  }
+
+  const cats = [
+    { label: 'النظافة', key: 'cleanliness', icon: '✨', color: '#059669' },
+    { label: 'الالتزام بالموعد', key: 'punctuality', icon: '⏰', color: '#3B82F6' },
+    { label: 'تعامل الفريق', key: 'teamwork', icon: '👥', color: '#8B5CF6' }
+  ];
+
+  html += `<div class="chart-card"><h3>متوسط التقييمات</h3>`;
+  cats.forEach(cat => {
+    const v = avg(responses, cat.key);
+    html += `<div class="avg-row">
+      <div class="avg-label"><span>${cat.icon}</span><span>${cat.label}</span></div>
+      <div class="avg-bar-wrap">
+        <div class="avg-bar"><div class="avg-bar-fill" style="width:${(v/5)*100}%;background:${cat.color};"></div></div>
+        <span class="avg-val" style="color:${cat.color};">${v}/5</span>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+  el.innerHTML = html;
+
+  if (total > 0 && chartLoaded) {
+    destroyChart('radarChart');
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    chartInstances['radarChart'] = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: cats.map(c => c.label),
+        datasets: [{ label: 'التقييم', data: cats.map(c => parseFloat(avg(responses, c.key))),
+          backgroundColor: 'rgba(5,150,105,0.15)', borderColor: '#059669', borderWidth: 2, pointBackgroundColor: '#059669' }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        scales: { r: { min: 0, max: 5, ticks: { stepSize: 1, font: { size: 10 } },
+          pointLabels: { font: { size: 12, family: "'Noto Kufi Arabic'" } } } },
+        plugins: { legend: { display: false } } }
+    });
+  }
+}
+
+function renderMonthly() {
+  const el = document.getElementById('tabMonthly');
+  const grouped = {};
+  responses.forEach(r => {
+    const d = new Date(r.timestamp);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(r);
+  });
+
+  const monthlyData = Object.keys(grouped).sort().map(key => {
+    const items = grouped[key];
+    const c = items.length;
+    const monthIdx = parseInt(key.split('-')[1]) - 1;
+    return { month: MONTHS_AR[monthIdx], key, count: c,
+      overall: parseFloat(avg(items, 'overall')),
+      cleanliness: parseFloat(avg(items, 'cleanliness')),
+      punctuality: parseFloat(avg(items, 'punctuality')),
+      teamwork: parseFloat(avg(items, 'teamwork')),
+      recommendPct: Math.round((items.filter(r => r.recommend).length / c) * 100) };
+  });
+
+  if (monthlyData.length === 0) {
+    el.innerHTML = `<div class="empty-state">لا توجد بيانات كافية للتقرير الشهري</div>`;
+    return;
+  }
+
+  let html = chartLoaded ? `<div class="chart-card"><h3>تطور التقييم العام</h3><div class="chart-container"><canvas id="monthlyChart"></canvas></div></div>` : '';
+
+  [...monthlyData].reverse().forEach(m => {
+    const borderColor = m.overall >= 4 ? '#059669' : m.overall >= 3 ? '#EAB308' : '#EF4444';
+    html += `<div class="month-card" style="border-right-color:${borderColor};">
+      <div class="month-header"><div class="month-name">${m.month}</div><div class="month-count">${m.count} تقييم</div></div>
+      <div class="month-scores">
+        <div class="month-score"><div class="month-score-val" style="color:#F59E0B;">${m.overall}</div><div class="month-score-label">العام</div></div>
+        <div class="month-score"><div class="month-score-val" style="color:#059669;">${m.cleanliness}</div><div class="month-score-label">النظافة</div></div>
+        <div class="month-score"><div class="month-score-val" style="color:#3B82F6;">${m.punctuality}</div><div class="month-score-label">الموعد</div></div>
+        <div class="month-score"><div class="month-score-val" style="color:#8B5CF6;">${m.teamwork}</div><div class="month-score-label">التعامل</div></div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#64748B;text-align:center;">نسبة الترشيح: <span style="font-weight:700;color:#059669;">${m.recommendPct}%</span></div>
+    </div>`;
+  });
+
+  el.innerHTML = html;
+
+  if (chartLoaded && document.getElementById('monthlyChart')) {
+    destroyChart('monthlyChart');
+    const ctx = document.getElementById('monthlyChart').getContext('2d');
+  chartInstances['monthlyChart'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: monthlyData.map(m => m.month),
+      datasets: [
+        { label: 'التقييم العام', data: monthlyData.map(m => m.overall),
+          borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.1)', borderWidth: 3,
+          pointBackgroundColor: '#059669', pointRadius: 5, fill: true, tension: 0.3 },
+        { label: 'النظافة', data: monthlyData.map(m => m.cleanliness),
+          borderColor: '#3B82F6', borderWidth: 2, borderDash: [5,5],
+          pointBackgroundColor: '#3B82F6', pointRadius: 4, fill: false, tension: 0.3 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } },
+      plugins: { legend: { labels: { font: { size: 11, family: "'Noto Kufi Arabic'" } } } } }
+  });
+  }
+}
+
+function renderResponses() {
+  const el = document.getElementById('tabResponses');
+  if (responses.length === 0) {
+    el.innerHTML = `<div class="empty-state">لا توجد تقييمات بعد</div>`;
+    return;
+  }
+
+  let html = '';
+  [...responses].reverse().forEach(r => {
+    const borderColor = r.overall >= 4 ? '#059669' : r.overall >= 3 ? '#EAB308' : '#EF4444';
+    const date = new Date(r.timestamp).toLocaleDateString('ar-SA');
+    html += `<div class="resp-card" style="border-right-color:${borderColor};">
+      <div class="resp-header">
+        <div>
+          <div class="resp-name">${r.customerName || 'عميل'} ${r.orderNumber ? '#' + r.orderNumber : ''}</div>
+          <div class="resp-meta">${date}</div>
+        </div>
+        <div class="resp-star"><span class="resp-star-val">${r.overall}</span><span>⭐</span></div>
+      </div>
+      <div class="resp-scores">
+        <span>✨ ${r.cleanliness}/5</span><span>⏰ ${r.punctuality}/5</span>
+        <span>👥 ${r.teamwork}/5</span><span>${r.recommend ? '👍 يرشح' : '👎 لا يرشح'}</span>
+      </div>
+      ${r.notes ? `<div class="resp-notes">"${r.notes}"</div>` : ''}
+      ${r.coupon ? `<div class="resp-coupon">🎟️ ${r.coupon}</div>` : ''}
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+function clearAll() {
+  if (confirm('هل أنت متأكد من مسح جميع التقييمات؟')) {
+    responses = [];
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    renderAdmin();
+  }
+}
+</script>
+
+</body>
+</html>
