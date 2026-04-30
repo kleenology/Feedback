@@ -149,6 +149,13 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .cl-bar{position:fixed;bottom:16px;left:14px;right:14px;z-index:50}
 .cl-btn{width:100%;padding:12px;border-radius:10px;background:#fee2e2;color:#dc2626;border:none;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
 .empty{text-align:center;padding:30px;color:#bbb;font-size:13px}
+.trend{font-size:12px;font-weight:700;margin-right:3px;vertical-align:middle}
+.trend.up{color:#22c55e}
+.trend.dn{color:#ef4444}
+.trend.eq{color:#94a3b8}
+.sc-sub{font-size:10px;color:#bbb;margin-top:3px}
+.worst-box{padding:8px 0}
+.worst-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 
 /* coupon verify */
 .cpn-search{display:flex;gap:8px;margin-bottom:16px}
@@ -358,9 +365,31 @@ function loadData(){
 function renderAdm(){rOv();rCp();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
 function avg(a,f){if(!a.length)return 0;return(a.reduce(function(s,r){return s+r[f];},0)/a.length).toFixed(1);}
 
-function rOv(){var el=document.getElementById('tcOverview'),n=D.length,rp=n?Math.round(D.filter(function(r){return r.r;}).length/n*100):0;
+function rOv(){
+var el=document.getElementById('tcOverview'),n=D.length;
+var now=new Date();
+var curM=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+var prevDate=new Date(now.getFullYear(),now.getMonth()-1,1);
+var prevM=prevDate.getFullYear()+'-'+String(prevDate.getMonth()+1).padStart(2,'0');
+var curData=D.filter(function(r){return r.ts.slice(0,7)===curM;});
+var prevData=D.filter(function(r){return r.ts.slice(0,7)===prevM;});
+var curN=curData.length,prevN=prevData.length;
+var curAvg=curN?parseFloat(avg(curData,'o')):0,prevAvg=prevN?parseFloat(avg(prevData,'o')):0;
+var rp=n?Math.round(D.filter(function(r){return r.r;}).length/n*100):0;
+var curRp=curN?Math.round(curData.filter(function(r){return r.r;}).length/curN*100):0;
+var prevRp=prevN?Math.round(prevData.filter(function(r){return r.r;}).length/prevN*100):0;
+var neg=n?Math.round(D.filter(function(r){return r.o<3;}).length/n*100):0;
+var curNeg=curN?Math.round(curData.filter(function(r){return r.o<3;}).length/curN*100):0;
+var prevNeg=prevN?Math.round(prevData.filter(function(r){return r.o<3;}).length/prevN*100):0;
+function tr(cur,prev,rev){if(!prevN)return '';var up=rev?cur<prev:cur>prev,dn=rev?cur>prev:cur<prev;return up?'<span class="trend up">↑</span>':dn?'<span class="trend dn">↓</span>':'<span class="trend eq">→</span>';}
 var cats=[{l:'النظافة',k:'c',i:'✨',cl:'#0284c7'},{l:'الالتزام',k:'p',i:'⏰',cl:'#3b82f6'},{l:'التعامل',k:'tw',i:'👥',cl:'#8b5cf6'}];
-var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي التقييمات</div><div class="sc-v">'+n+'</div></div><div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">التقييم العام</div><div class="sc-v">'+avg(D,'o')+' ⭐</div></div><div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%</div></div><div class="sc" style="border-top:3px solid #8b5cf6"><div class="sc-l">الكوبونات</div><div class="sc-v">'+n+'</div></div></div>';
+var h='<div class="sg">';
+h+='<div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي التقييمات</div><div class="sc-v">'+n+tr(curN,prevN,false)+'</div><div class="sc-sub">هذا الشهر: '+curN+'</div></div>';
+h+='<div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">التقييم العام</div><div class="sc-v">'+avg(D,'o')+'⭐'+tr(curAvg,prevAvg,false)+'</div><div class="sc-sub">هذا الشهر: '+curAvg+'</div></div>';
+h+='<div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%'+tr(curRp,prevRp,false)+'</div><div class="sc-sub">هذا الشهر: '+curRp+'%</div></div>';
+h+='<div class="sc" style="border-top:3px solid #ef4444"><div class="sc-l">تقييمات سلبية</div><div class="sc-v" style="color:#ef4444">'+neg+'%'+tr(curNeg,prevNeg,true)+'</div><div class="sc-sub">هذا الشهر: '+curNeg+'%</div></div>';
+h+='</div>';
+if(curData.length){var worst=curData.reduce(function(a,b){return a.o<b.o?a:b;});var wc=worst.o>=4?'#0284c7':worst.o>=3?'#eab308':'#ef4444';h+='<div class="cc" style="border-right:3px solid #ef4444"><h3>⚠️ أسوأ تقييم هذا الشهر</h3><div class="worst-box"><div class="worst-hd"><span style="font-weight:700;font-size:13px">'+(worst.n||'عميل')+'</span><span style="font-size:16px;font-weight:800;color:'+wc+'">'+worst.o+' ⭐</span></div>'+(worst.nt?'<div class="rc-nt">"'+worst.nt+'"</div>':'')+'<div style="margin-top:6px;font-size:11px;color:#999">'+new Date(worst.ts).toLocaleDateString('ar-SA')+'</div></div></div>';}
 if(n&&CHL)h+='<div class="cc"><h3>تحليل الأداء</h3><div class="cw"><canvas id="chR"></canvas></div></div>';
 h+='<div class="cc"><h3>متوسط التقييمات</h3>';
 cats.forEach(function(c){var v=avg(D,c.k);h+='<div class="ar"><div class="ar-l"><span>'+c.i+'</span><span>'+c.l+'</span></div><div class="ar-r"><div class="ab"><div class="af" style="width:'+(v/5*100)+'%;background:'+c.cl+'"></div></div><span class="av" style="color:'+c.cl+'">'+v+'/5</span></div></div>';});
