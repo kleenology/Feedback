@@ -157,6 +157,30 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .worst-box{padding:8px 0}
 .worst-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 
+/* appointments */
+.fld select{width:100%;padding:11px 12px;border-radius:10px;border:1.5px solid #e5e5e5;font-size:13px;font-family:inherit;background:#fafafa;outline:none}
+.fld input[type="date"],.fld input[type="time"]{width:100%;padding:11px 12px;border-radius:10px;border:1.5px solid #e5e5e5;font-size:13px;font-family:inherit;background:#fafafa;outline:none;margin-bottom:6px}
+.appt-c{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);border-right:3px solid #0891b2}
+.appt-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.appt-nm{font-size:14px;font-weight:700}
+.appt-dt{font-size:11px;color:#999;margin-top:2px}
+.appt-type{font-size:11px;background:#f0f9ff;color:#0891b2;padding:3px 8px;border-radius:6px;font-weight:600;white-space:nowrap}
+.appt-done{border-right-color:#22c55e;opacity:0.7}
+.appt-done-btn{padding:6px 14px;border-radius:8px;border:none;background:#f0fdf4;color:#22c55e;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer}
+
+/* customers */
+.cust-c{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.cust-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cust-nm{font-size:14px;font-weight:700}
+.cust-badge{padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700}
+.cust-badge.new{background:#f0f9ff;color:#0891b2}
+.cust-badge.regular{background:#f0fdf4;color:#16a34a}
+.cust-badge.vip{background:#fdf4ff;color:#9333ea}
+.cust-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cust-stat{text-align:center;background:#f8f8f8;border-radius:8px;padding:8px}
+.cust-stat-v{font-size:13px;font-weight:800}
+.cust-stat-l{font-size:9px;color:#999;margin-top:2px}
+
 /* coupon verify */
 .cpn-search{display:flex;gap:8px;margin-bottom:16px}
 .cpn-search input{flex:1;padding:12px;border-radius:10px;border:1.5px solid #e5e5e5;font-size:14px;font-family:inherit;direction:ltr;text-align:center;letter-spacing:2px;font-weight:700;text-transform:uppercase;outline:none}
@@ -281,6 +305,8 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <button class="adm-tb" data-t="coupons">🎟️ الكوبونات</button>
     <button class="adm-tb" data-t="monthly">📈 الشهري</button>
     <button class="adm-tb" data-t="responses">💬 التقييمات</button>
+    <button class="adm-tb" data-t="appointments">📅 الجدولة</button>
+    <button class="adm-tb" data-t="customers">👥 العملاء</button>
   </div>
 </div>
 <div class="adm-bd">
@@ -299,6 +325,8 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
   </div>
   <div class="tc" id="tcMonthly"></div>
   <div class="tc" id="tcResponses"></div>
+  <div class="tc" id="tcAppointments"></div>
+  <div class="tc" id="tcCustomers"></div>
 </div>
 <div class="cl-bar hide" id="clBar"><button class="cl-btn" onclick="clrAll()">مسح جميع التقييمات</button></div>
 </div>
@@ -312,7 +340,7 @@ firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANLSmcynnIxGwT8YCs",authDom
 var db=firebase.firestore();
 var PIN='1994',MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var LV=[{v:1,t:'ضعيف',c:'#ef4444'},{v:2,t:'مقبول',c:'#f97316'},{v:3,t:'جيد',c:'#eab308'},{v:4,t:'ممتاز',c:'#38bdf8'},{v:5,t:'رائع',c:'#0284c7'}];
-var D=[],S={o:0,c:0,p:0,tw:0,r:null},CH={},CHL=false,USED={},pendingCpn='';
+var D=[],S={o:0,c:0,p:0,tw:0,r:null},CH={},CHL=false,USED={},pendingCpn='',APPTS=[];
 
 var pages=['pgForm','pgCpn','pgPin','pgAdm'];
 function go(id){pages.forEach(function(p){document.getElementById(p).classList.add('hide');});document.getElementById(id).classList.remove('hide');window.scrollTo(0,0);}
@@ -346,7 +374,7 @@ function goHome(){S={o:0,c:0,p:0,tw:0,r:null};['fN','fNt'].forEach(function(id){
 var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout(tt);if(tc>=3){tc=0;go('pgPin');}else tt=setTimeout(function(){tc=0;},600);};
 
 var pc='';
-function pIn(d){if(pc.length>=4)return;pc+=d;pUD();document.getElementById('pErr').classList.remove('show');if(pc.length===4){setTimeout(function(){if(pc===PIN){go('pgAdm');loadCh().then(function(){return loadData();}).then(renderAdm);pc='';}else{var dd=document.getElementById('pDots');dd.style.animation='shake .4s ease';setTimeout(function(){dd.style.animation='';},400);document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('on');d.classList.add('bad');});document.getElementById('pErr').classList.add('show');setTimeout(function(){pc='';pUD();document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('bad');});},800);}},200);}}
+function pIn(d){if(pc.length>=4)return;pc+=d;pUD();document.getElementById('pErr').classList.remove('show');if(pc.length===4){setTimeout(function(){if(pc===PIN){go('pgAdm');loadCh().then(function(){return loadData();}).then(loadAppts).then(renderAdm);pc='';}else{var dd=document.getElementById('pDots');dd.style.animation='shake .4s ease';setTimeout(function(){dd.style.animation='';},400);document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('on');d.classList.add('bad');});document.getElementById('pErr').classList.add('show');setTimeout(function(){pc='';pUD();document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('bad');});},800);}},200);}}
 function pDel(){if(!pc.length)return;pc=pc.slice(0,-1);pUD();document.getElementById('pErr').classList.remove('show');}
 function pUD(){document.querySelectorAll('.pin-d').forEach(function(d,i){d.classList.toggle('on',i<pc.length);d.classList.remove('bad');});}
 
@@ -362,7 +390,7 @@ function loadData(){
   }).catch(function(e){console.log('Load error:',e);});
 }
 
-function renderAdm(){rOv();rCp();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
+function renderAdm(){rOv();rCp();rMo();rRe();rAppts();rCustomers();document.getElementById('clBar').classList.toggle('hide',!D.length);}
 function avg(a,f){if(!a.length)return 0;return(a.reduce(function(s,r){return s+r[f];},0)/a.length).toFixed(1);}
 
 function rOv(){
@@ -443,6 +471,98 @@ db.collection('reviews').doc(found._id).update({used:true,usedAt:new Date().toIS
   alert('تم تسجيل استخدام الكوبون '+pendingCpn+' بنجاح ✓');
   pendingCpn='';rCp();
 }).catch(function(){alert('خطأ في الحفظ، حاول مرة ثانية');});}
+
+function loadAppts(){
+APPTS=[];
+return db.collection('appointments').orderBy('date','asc').get().then(function(snap){
+  snap.forEach(function(doc){var a=doc.data();a._id=doc.id;APPTS.push(a);});
+}).catch(function(e){console.log('Appts error:',e);});
+}
+
+function rAppts(){
+var el=document.getElementById('tcAppointments');
+var now=new Date();now.setHours(0,0,0,0);
+var svcs=['🏠 تنظيف منزل','🪑 سجاد وموكيت','❄️ مكيفات','🪟 واجهات زجاج','🏢 شقق وفلل'];
+var upcoming=APPTS.filter(function(a){return !a.done&&new Date(a.date+'T00:00:00')>=now;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+var past=APPTS.filter(function(a){return a.done||new Date(a.date+'T00:00:00')<now;}).sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,10);
+var h='<div class="cc"><h3>➕ إضافة موعد</h3>';
+h+='<div class="fld"><div class="fld-l">👤 اسم العميل</div><input id="apN" placeholder="اسم العميل"></div>';
+h+='<div class="fld"><div class="fld-l">🧹 نوع الخدمة</div><select id="apS"><option value="">-- اختر الخدمة --</option>';
+svcs.forEach(function(s){h+='<option value="'+s+'">'+s+'</option>';});
+h+='</select></div>';
+h+='<div class="fld"><div class="fld-l">📅 التاريخ</div><input type="date" id="apD"></div>';
+h+='<div class="fld"><div class="fld-l">🕐 الوقت</div><input type="time" id="apT"></div>';
+h+='<div class="fld"><div class="fld-l">📝 ملاحظات</div><textarea id="apNt" rows="2" placeholder="اختياري"></textarea></div>';
+h+='<button type="button" onclick="addAppt()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#0891b2;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px">حفظ الموعد ✓</button>';
+h+='</div>';
+h+='<div class="cc"><h3>📅 المواعيد القادمة ('+upcoming.length+')</h3>';
+if(!upcoming.length){h+='<div class="empty">لا توجد مواعيد قادمة</div>';}
+else{upcoming.forEach(function(a){
+  var dt=new Date(a.date+'T00:00:00').toLocaleDateString('ar-SA');
+  h+='<div class="appt-c"><div class="appt-hd"><div><div class="appt-nm">'+(a.name||'عميل')+'</div><div class="appt-dt">'+dt+(a.time?' - '+a.time:'')+'</div></div><span class="appt-type">'+(a.svc||'خدمة')+'</span></div>';
+  if(a.notes)h+='<div style="font-size:11px;color:#888;margin-top:4px">'+a.notes+'</div>';
+  h+='<div style="margin-top:8px;text-align:left"><button type="button" class="appt-done-btn" onclick="markApptDone(\''+a._id+'\')">تم التنفيذ ✓</button></div></div>';
+});}
+h+='</div>';
+if(past.length){h+='<div class="cc"><h3>✅ المنجزة</h3>';
+past.forEach(function(a){var dt=new Date(a.date+'T00:00:00').toLocaleDateString('ar-SA');h+='<div class="appt-c appt-done"><div class="appt-hd"><div><div class="appt-nm">'+(a.name||'عميل')+'</div><div class="appt-dt">'+dt+'</div></div><span class="appt-type">'+(a.svc||'خدمة')+'</span></div></div>';});h+='</div>';}
+el.innerHTML=h;
+}
+
+function addAppt(){
+var n=document.getElementById('apN').value.trim();
+var s=document.getElementById('apS').value;
+var d=document.getElementById('apD').value;
+var t=document.getElementById('apT').value;
+var nt=document.getElementById('apNt').value.trim();
+if(!n||!s||!d){alert('الرجاء تعبئة الاسم والخدمة والتاريخ');return;}
+db.collection('appointments').add({name:n,svc:s,date:d,time:t,notes:nt,done:false,ts:new Date().toISOString()}).then(function(ref){
+  APPTS.push({_id:ref.id,name:n,svc:s,date:d,time:t,notes:nt,done:false,ts:new Date().toISOString()});
+  rAppts();
+}).catch(function(){alert('خطأ في الحفظ، حاول مرة ثانية');});
+}
+
+function markApptDone(id){
+db.collection('appointments').doc(id).update({done:true}).then(function(){
+  var a=APPTS.find(function(x){return x._id===id;});
+  if(a)a.done=true;
+  rAppts();
+}).catch(function(){alert('خطأ في التحديث');});
+}
+
+function rCustomers(){
+var el=document.getElementById('tcCustomers');
+if(!D.length){el.innerHTML='<div class="empty">لا توجد بيانات</div>';return;}
+var map={};
+D.forEach(function(r){
+  var raw=(r.n||'').trim();if(!raw)return;
+  var key=raw.toLowerCase();
+  if(!map[key])map[key]={name:raw,reviews:[]};
+  map[key].reviews.push(r);
+});
+var customers=Object.values(map).sort(function(a,b){return b.reviews.length-a.reviews.length;});
+var newC=customers.filter(function(c){return c.reviews.length===1;}).length;
+var regC=customers.filter(function(c){return c.reviews.length>=2&&c.reviews.length<=3;}).length;
+var vipC=customers.filter(function(c){return c.reviews.length>=4;}).length;
+var h='<div class="sg">';
+h+='<div class="sc" style="border-top:3px solid #0891b2"><div class="sc-l">جدد</div><div class="sc-v" style="color:#0891b2">'+newC+'</div></div>';
+h+='<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">منتظمين</div><div class="sc-v" style="color:#16a34a">'+regC+'</div></div>';
+h+='<div class="sc" style="border-top:3px solid #9333ea"><div class="sc-l">VIP</div><div class="sc-v" style="color:#9333ea">'+vipC+'</div></div>';
+h+='<div class="sc" style="border-top:3px solid #64748b"><div class="sc-l">إجمالي</div><div class="sc-v">'+customers.length+'</div></div>';
+h+='</div>';
+customers.forEach(function(c){
+  var cnt=c.reviews.length;
+  var avgO=(c.reviews.reduce(function(s,r){return s+r.o;},0)/cnt).toFixed(1);
+  var last=c.reviews.reduce(function(a,b){return a.ts>b.ts?a:b;});
+  var cls=cnt>=4?'vip':cnt>=2?'regular':'new';
+  var clsTxt=cnt>=4?'⭐ VIP':cnt>=2?'منتظم':'جديد';
+  h+='<div class="cust-c"><div class="cust-hd"><span class="cust-nm">'+c.name+'</span><span class="cust-badge '+cls+'">'+clsTxt+'</span></div>';
+  h+='<div class="cust-stats"><div class="cust-stat"><div class="cust-stat-v" style="color:#f59e0b">'+avgO+' ⭐</div><div class="cust-stat-l">متوسط</div></div>';
+  h+='<div class="cust-stat"><div class="cust-stat-v">'+cnt+'</div><div class="cust-stat-l">زيارة</div></div>';
+  h+='<div class="cust-stat"><div class="cust-stat-v" style="color:#888;font-size:10px">'+new Date(last.ts).toLocaleDateString('ar-SA')+'</div><div class="cust-stat-l">آخر زيارة</div></div></div></div>';
+});
+el.innerHTML=h;
+}
 
 function clrAll(){
 if(!confirm('هل أنت متأكد من مسح جميع التقييمات؟'))return;
