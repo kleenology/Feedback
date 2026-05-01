@@ -221,6 +221,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
   <div class="card">
     <div class="card-t">معلومات الطلب</div>
     <div class="fld"><div class="fld-l"><span class="i">👤</span> اسم العميل</div><input id="fN" placeholder="اكتب اسم العميل (اختياري)"></div>
+    <div class="fld"><div class="fld-l"><span class="i">📱</span> رقم الجوال</div><input id="fP" type="tel" inputmode="tel" placeholder="اختياري"></div>
   </div>
   <div class="card">
     <div class="card-t">كيف تقيّم الخدمة بشكل عام؟</div>
@@ -358,7 +359,7 @@ document.getElementById('subBtn').onclick=function(){
   if(!S.c||!S.p||!S.tw){sErr('الرجاء تقييم جميع الخدمات');return;}
   if(S.r===null){sErr('الرجاء اختيار هل ترشح الخدمة لغيرك');return;}
   var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',cp='KLN';for(var i=0;i<6;i++)cp+=ch[Math.floor(Math.random()*ch.length)];
-  var entry={n:document.getElementById('fN').value.trim(),o:S.o,c:S.c,p:S.p,tw:S.tw,r:S.r,nt:document.getElementById('fNt').value.trim(),cp:cp,ts:new Date().toISOString(),used:false};
+  var entry={n:document.getElementById('fN').value.trim(),ph:document.getElementById('fP').value.trim(),o:S.o,c:S.c,p:S.p,tw:S.tw,r:S.r,nt:document.getElementById('fNt').value.trim(),cp:cp,ts:new Date().toISOString(),used:false};
   var btn=document.getElementById('subBtn');btn.textContent='جاري الإرسال...';btn.disabled=true;
   db.collection('reviews').add(entry).then(function(){
     document.getElementById('cpnC').textContent=cp;go('pgCpn');
@@ -369,7 +370,7 @@ function sErr(m){var e=document.getElementById('err');e.textContent=m;e.classLis
 
 function doCpy(){var c=document.getElementById('cpnC').textContent,b=document.getElementById('cpyB');try{navigator.clipboard.writeText(c).then(ok).catch(fb);}catch(e){fb();}function fb(){var t=document.createElement('textarea');t.value=c;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);ok();}function ok(){b.textContent='تم النسخ ✓';b.classList.add('ok');setTimeout(function(){b.textContent='نسخ الكوبون';b.classList.remove('ok');},2000);}}
 
-function goHome(){S={o:0,c:0,p:0,tw:0,r:null};['fN','fNt'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#ddd');});document.querySelectorAll('.cat-b').forEach(function(o){o.style.borderColor='#eee';o.style.background='#fafafa';o.style.color='#bbb';o.style.fontWeight='500';o.style.boxShadow='none';});document.querySelectorAll('.rec-b').forEach(function(b){b.style.borderColor='#e5e5e5';b.style.background='#fafafa';b.style.color='#bbb';b.style.boxShadow='none';b.style.transform='scale(1)';});document.getElementById('err').classList.add('hide');go('pgForm');}
+function goHome(){S={o:0,c:0,p:0,tw:0,r:null};['fN','fP','fNt'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#ddd');});document.querySelectorAll('.cat-b').forEach(function(o){o.style.borderColor='#eee';o.style.background='#fafafa';o.style.color='#bbb';o.style.fontWeight='500';o.style.boxShadow='none';});document.querySelectorAll('.rec-b').forEach(function(b){b.style.borderColor='#e5e5e5';b.style.background='#fafafa';b.style.color='#bbb';b.style.boxShadow='none';b.style.transform='scale(1)';});document.getElementById('err').classList.add('hide');go('pgForm');}
 
 var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout(tt);if(tc>=3){tc=0;go('pgPin');}else tt=setTimeout(function(){tc=0;},600);};
 
@@ -435,7 +436,7 @@ if(CHL&&document.getElementById('chL')){try{kC('chL');CH['chL']=new Chart(docume
 
 function rRe(){var el=document.getElementById('tcResponses');
 if(!D.length){el.innerHTML='<div class="empty">لا توجد تقييمات بعد</div>';return;}
-var h='';D.slice().reverse().forEach(function(r){var bc=r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');h+='<div class="rc" style="border-right-color:'+bc+'"><div class="rc-t"><div><div class="rc-nm">'+(r.n||'عميل')+'</div><div class="rc-dt">'+dt+'</div></div><div class="rc-st"><span>'+r.o+'</span>⭐</div></div><div class="rc-sc"><span>✨'+r.c+'/5</span><span>⏰'+r.p+'/5</span><span>👥'+r.tw+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span></div>'+(r.nt?'<div class="rc-nt">"'+r.nt+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+r.cp+'</div>':'')+'</div>';});
+var h='';D.slice().reverse().forEach(function(r){var bc=r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');h+='<div class="rc" style="border-right-color:'+bc+'"><div class="rc-t"><div><div class="rc-nm">'+(r.n||'عميل')+(r.ph?'<span style="font-size:10px;color:#0891b2;margin-right:6px;direction:ltr;font-family:monospace"> 📱'+r.ph+'</span>':'')+'</div><div class="rc-dt">'+dt+'</div></div><div class="rc-st"><span>'+r.o+'</span>⭐</div></div><div class="rc-sc"><span>✨'+r.c+'/5</span><span>⏰'+r.p+'/5</span><span>👥'+r.tw+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span></div>'+(r.nt?'<div class="rc-nt">"'+r.nt+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+r.cp+'</div>':'')+'</div>';});
 el.innerHTML=h;}
 
 function rCp(){
@@ -536,9 +537,13 @@ var el=document.getElementById('tcCustomers');
 if(!D.length){el.innerHTML='<div class="empty">لا توجد بيانات</div>';return;}
 var map={};
 D.forEach(function(r){
-  var raw=(r.n||'').trim();if(!raw)return;
-  var key=raw.toLowerCase();
-  if(!map[key])map[key]={name:raw,reviews:[]};
+  var ph=(r.ph||'').replace(/\D/g,'');
+  var raw=(r.n||'').trim();
+  if(!ph&&!raw)return;
+  var key=ph||raw.toLowerCase();
+  if(!map[key])map[key]={name:raw||'عميل',phone:ph,reviews:[]};
+  if(raw&&!map[key].name)map[key].name=raw;
+  if(ph&&!map[key].phone)map[key].phone=ph;
   map[key].reviews.push(r);
 });
 var customers=Object.values(map).sort(function(a,b){return b.reviews.length-a.reviews.length;});
@@ -557,7 +562,7 @@ customers.forEach(function(c){
   var last=c.reviews.reduce(function(a,b){return a.ts>b.ts?a:b;});
   var cls=cnt>=4?'vip':cnt>=2?'regular':'new';
   var clsTxt=cnt>=4?'⭐ VIP':cnt>=2?'منتظم':'جديد';
-  h+='<div class="cust-c"><div class="cust-hd"><span class="cust-nm">'+c.name+'</span><span class="cust-badge '+cls+'">'+clsTxt+'</span></div>';
+  h+='<div class="cust-c"><div class="cust-hd"><span class="cust-nm">'+c.name+(c.phone?'<span style="font-size:10px;color:#0891b2;display:block;font-family:monospace;direction:ltr">📱 '+c.phone+'</span>':'')+'</span><span class="cust-badge '+cls+'">'+clsTxt+'</span></div>';
   h+='<div class="cust-stats"><div class="cust-stat"><div class="cust-stat-v" style="color:#f59e0b">'+avgO+' ⭐</div><div class="cust-stat-l">متوسط</div></div>';
   h+='<div class="cust-stat"><div class="cust-stat-v">'+cnt+'</div><div class="cust-stat-l">زيارة</div></div>';
   h+='<div class="cust-stat"><div class="cust-stat-v" style="color:#888;font-size:10px">'+new Date(last.ts).toLocaleDateString('ar-SA')+'</div><div class="cust-stat-l">آخر زيارة</div></div></div></div>';
