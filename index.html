@@ -474,8 +474,8 @@ db.collection('reviews').doc(found._id).update({used:true,usedAt:new Date().toIS
 
 function loadAppts(){
 APPTS=[];
-return db.collection('appointments').orderBy('date','asc').get().then(function(snap){
-  snap.forEach(function(doc){var a=doc.data();a._id=doc.id;APPTS.push(a);});
+return db.collection('reviews').doc('__appts__').get().then(function(doc){
+  if(doc.exists&&doc.data().items)APPTS=doc.data().items;
 }).catch(function(e){console.log('Appts error:',e);});
 }
 
@@ -509,6 +509,10 @@ past.forEach(function(a){var dt=new Date(a.date+'T00:00:00').toLocaleDateString(
 el.innerHTML=h;
 }
 
+function saveAppts(){
+return db.collection('reviews').doc('__appts__').set({items:APPTS}).catch(function(){alert('خطأ في الحفظ، حاول مرة ثانية');});
+}
+
 function addAppt(){
 var n=document.getElementById('apN').value.trim();
 var s=document.getElementById('apS').value;
@@ -516,18 +520,15 @@ var d=document.getElementById('apD').value;
 var t=document.getElementById('apT').value;
 var nt=document.getElementById('apNt').value.trim();
 if(!n||!s||!d){alert('الرجاء تعبئة الاسم والخدمة والتاريخ');return;}
-db.collection('appointments').add({name:n,svc:s,date:d,time:t,notes:nt,done:false,ts:new Date().toISOString()}).then(function(ref){
-  APPTS.push({_id:ref.id,name:n,svc:s,date:d,time:t,notes:nt,done:false,ts:new Date().toISOString()});
-  rAppts();
-}).catch(function(){alert('خطأ في الحفظ، حاول مرة ثانية');});
+var id='ap'+Date.now();
+APPTS.push({_id:id,name:n,svc:s,date:d,time:t,notes:nt,done:false,ts:new Date().toISOString()});
+saveAppts().then(function(){rAppts();});
 }
 
 function markApptDone(id){
-db.collection('appointments').doc(id).update({done:true}).then(function(){
-  var a=APPTS.find(function(x){return x._id===id;});
-  if(a)a.done=true;
-  rAppts();
-}).catch(function(){alert('خطأ في التحديث');});
+var a=APPTS.find(function(x){return x._id===id;});
+if(a)a.done=true;
+saveAppts().then(function(){rAppts();});
 }
 
 function rCustomers(){
