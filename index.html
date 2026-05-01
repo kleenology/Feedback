@@ -63,17 +63,25 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 /* steps */
 .prog-wrap{height:5px;background:#e5e5e5}
 .prog-bar{height:100%;background:linear-gradient(90deg,#0891b2,#22d3ee);transition:width .4s ease}
-.step-num{text-align:center;font-size:11px;color:#bbb;padding:10px 0 0;letter-spacing:.5px}
-.step-pg{padding:16px 14px 110px;animation:slideIn .3s ease}
+.step-num{text-align:center;font-size:11px;color:#bbb;padding:12px 0 0;letter-spacing:.5px}
+.step-pg{padding:14px 16px 120px;animation:slideIn .3s ease;min-height:60vh}
 .step-pg.hide{display:none!important}
-.step-icon{font-size:54px;text-align:center;margin-bottom:12px}
+.step-icon{font-size:52px;text-align:center;margin-bottom:10px}
 .step-ttl{font-size:20px;font-weight:800;text-align:center;color:#0c4a6e;margin-bottom:6px}
-.step-sub{font-size:13px;color:#aaa;text-align:center;margin-bottom:26px;line-height:1.6}
-.nav-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 14px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:linear-gradient(to top,#f5f5f5 85%,transparent);z-index:50;display:flex;gap:10px}
-.nav-bk{flex:1;padding:14px;border-radius:12px;border:1.5px solid #e5e5e5;background:#fff;font-family:inherit;font-size:14px;font-weight:700;color:#666;cursor:pointer;transition:all .2s}
-.nav-nx{flex:2;padding:14px;border-radius:12px;border:none;background:#0891b2;color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 3px 15px rgba(8,145,178,0.3);transition:all .2s}
-.nav-nx:active,.nav-bk:active{transform:scale(0.97)}
-@keyframes slideIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
+.step-sub{font-size:13px;color:#aaa;text-align:center;margin-bottom:22px;line-height:1.7}
+.stars{display:flex;gap:6px;justify-content:center;direction:ltr;padding:8px 0}
+.star-b{background:none;border:none;cursor:pointer;padding:4px;transition:transform .15s;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.cat-btns{display:flex;gap:6px;flex-wrap:nowrap}
+.cat-b{flex:1;padding:11px 2px;border-radius:8px;border:1.5px solid #eee;background:#fafafa;text-align:center;font-size:11px;font-weight:500;color:#bbb;cursor:pointer;font-family:inherit;transition:all .2s;min-height:40px}
+.rec-row{display:flex;gap:12px}
+.rec-b{flex:1;padding:16px 10px;border-radius:14px;border:1.5px solid #e5e5e5;background:#fafafa;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#bbb;transition:all .2s;min-height:64px}
+.rec-b .e{font-size:24px}
+.nav-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:linear-gradient(to top,#f5f5f5 80%,transparent);z-index:50;display:flex;gap:10px}
+.nav-bk{flex:1;padding:15px;border-radius:12px;border:1.5px solid #e5e5e5;background:#fff;font-family:inherit;font-size:14px;font-weight:700;color:#666;cursor:pointer;transition:all .2s;min-height:50px}
+.nav-nx{flex:2;padding:15px;border-radius:12px;border:none;background:#0891b2;color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 3px 15px rgba(8,145,178,0.3);transition:all .2s;min-height:50px}
+.nav-nx:active{transform:scale(0.97);background:#0779a1}
+.nav-bk:active{transform:scale(0.97)}
+@keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
 
 /* ===== COUPON PAGE ===== */
 .cpn-pg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#f0f9ff,#e0f2fe 40%,#f0f9ff);padding:20px}
@@ -231,14 +239,22 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 <div class="step-num" id="stepNum">الخطوة 1 من 4</div>
 
 <div class="step-pg" id="sp1">
+  <div class="step-icon">👋</div>
+  <div class="step-ttl">أهلاً بك!</div>
+  <div class="step-sub">عرّفنا على نفسك حتى نتواصل معك<br><span style="font-size:11px">الحقول اختيارية</span></div>
+  <div class="fld"><div class="fld-l"><span class="i">👤</span> الاسم</div><input id="fN" placeholder="اكتب اسمك"></div>
+  <div class="fld"><div class="fld-l"><span class="i">📱</span> رقم الجوال</div><input id="fP" type="tel" inputmode="tel" placeholder="05xxxxxxxx"></div>
+</div>
+
+<div class="step-pg hide" id="sp2">
   <div class="step-icon">⭐</div>
   <div class="step-ttl">كيف تقيّم خدمتنا؟</div>
-  <div class="step-sub">اختر من 1 إلى 5 نجوم</div>
+  <div class="step-sub">اضغط على النجوم لتقييم تجربتك</div>
   <div class="stars" id="stars"></div>
   <div class="rt" id="rt"></div>
 </div>
 
-<div class="step-pg hide" id="sp2">
+<div class="step-pg hide" id="sp3">
   <div class="step-icon">🔍</div>
   <div class="step-ttl">تقييم تفصيلي</div>
   <div class="step-sub">قيّم كل جانب من جوانب الخدمة</div>
@@ -247,23 +263,15 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
   <div class="cat" data-k="teamwork"><div class="cat-l"><span class="i">👥</span> تعامل الفريق</div><div class="cat-btns"></div></div>
 </div>
 
-<div class="step-pg hide" id="sp3">
-  <div class="step-icon">🤝</div>
-  <div class="step-ttl">هل ترشح خدمتنا لغيرك؟</div>
-  <div class="step-sub">رأيك يساعدنا نتطور</div>
-  <div class="rec-row">
-    <button class="rec-b" data-v="1"><span class="e">👍</span> نعم، بالتأكيد</button>
-    <button class="rec-b" data-v="0"><span class="e">👎</span> لا</button>
-  </div>
-</div>
-
 <div class="step-pg hide" id="sp4">
   <div class="step-icon">🎁</div>
   <div class="step-ttl">خطوة أخيرة!</div>
-  <div class="step-sub">أكمل بياناتك واحصل على كوبون خصم 10% هديتنا لك</div>
-  <div class="fld"><div class="fld-l"><span class="i">👤</span> اسم العميل</div><input id="fN" placeholder="اكتب اسمك (اختياري)"></div>
-  <div class="fld"><div class="fld-l"><span class="i">📱</span> رقم الجوال</div><input id="fP" type="tel" inputmode="tel" placeholder="اختياري"></div>
-  <div class="fld"><div class="fld-l"><span class="i">📝</span> ملاحظاتك</div><textarea id="fNt" rows="3" placeholder="شاركنا أي ملاحظة تساعدنا نتطور (اختياري)"></textarea></div>
+  <div class="step-sub">رأيك الأخير يضمن لك كوبون خصم 10%</div>
+  <div class="rec-row">
+    <button class="rec-b" data-v="1"><span class="e">👍</span> نعم، أرشّح</button>
+    <button class="rec-b" data-v="0"><span class="e">👎</span> لا</button>
+  </div>
+  <div class="fld" style="margin-top:18px"><div class="fld-l"><span class="i">📝</span> ملاحظاتك</div><textarea id="fNt" rows="3" placeholder="شاركنا أي ملاحظة تساعدنا نتطور (اختياري)"></textarea></div>
 </div>
 
 <div class="err hide" id="err"></div>
@@ -387,10 +395,11 @@ function goStep(n){
 }
 function prevStep(){if(CUR_STEP>1)goStep(CUR_STEP-1);}
 function nextStep(){
-  if(CUR_STEP===1){if(!S.o){sErr('الرجاء اختيار التقييم العام');return;}goStep(2);}
-  else if(CUR_STEP===2){if(!S.c||!S.p||!S.tw){sErr('الرجاء تقييم جميع الخدمات');return;}goStep(3);}
-  else if(CUR_STEP===3){if(S.r===null){sErr('الرجاء اختيار هل ترشح الخدمة لغيرك');return;}goStep(4);}
-  else if(CUR_STEP===4){
+  if(CUR_STEP===1){goStep(2);}
+  else if(CUR_STEP===2){if(!S.o){sErr('الرجاء اختيار التقييم العام');return;}goStep(3);}
+  else if(CUR_STEP===3){if(!S.c||!S.p||!S.tw){sErr('الرجاء تقييم جميع الخدمات');return;}goStep(4);}
+  else if(CUR_STEP===4){if(S.r===null){sErr('الرجاء اختيار هل ترشح الخدمة لغيرك');return;}
+
     var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',cp='KLN';for(var i=0;i<6;i++)cp+=ch[Math.floor(Math.random()*ch.length)];
     var entry={n:document.getElementById('fN').value.trim(),ph:document.getElementById('fP').value.trim(),o:S.o,c:S.c,p:S.p,tw:S.tw,r:S.r,nt:document.getElementById('fNt').value.trim(),cp:cp,ts:new Date().toISOString(),used:false};
     var btn=document.getElementById('navNx');btn.textContent='جاري الإرسال...';btn.disabled=true;
