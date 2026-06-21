@@ -397,6 +397,7 @@ body.dark .appt-type{background:#0c2233}
 firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANLSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"});
 var db=firebase.firestore();
 var PIN_HASH='1bc3201a9f24a2fe48f634f90d406aaf6cbf5e36e292870ecba98d74b065ee1b'; // sha256("1994")
+var PIN_B64='MTk5NA=='; // btoa("1994") — fallback for non-HTTPS
 var MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var LV=[{v:1,t:'ضعيف',c:'#ef4444'},{v:2,t:'مقبول',c:'#f97316'},{v:3,t:'جيد',c:'#eab308'},{v:4,t:'ممتاز',c:'#38bdf8'},{v:5,t:'رائع',c:'#0284c7'}];
 var SVCS=['🏠 تنظيف منزل','🪑 سجاد وموكيت','❄️ مكيفات','🪟 واجهات زجاج','🏢 شقق وفلل'];
@@ -405,7 +406,7 @@ var FILT={star:0,rec:'all'};
 
 /* ── utils ── */
 function esc(s){var d=document.createElement('div');d.appendChild(document.createTextNode(s||''));return d.innerHTML;}
-function hashPin(pin){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');});}
+function hashPin(pin){if(window.isSecureContext&&crypto&&crypto.subtle){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');});}return Promise.resolve(btoa(pin));}
 function toast(msg,type){var t=document.createElement('div');t.textContent=msg;t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;z-index:999;animation:fadeUp .3s ease;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.15);'+(type==='ok'?'background:#0891b2;color:#fff':'background:#dc2626;color:#fff');document.body.appendChild(t);setTimeout(function(){t.remove();},2500);}
 
 /* ── confetti ── */
@@ -492,7 +493,7 @@ var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout
 
 /* ── PIN ── */
 var pc='';
-function pIn(d){if(pc.length>=4)return;pc+=d;pUD();document.getElementById('pErr').classList.remove('show');if(pc.length===4){setTimeout(function(){hashPin(pc).then(function(h){if(h===PIN_HASH){go('pgAdm');showAdmLoading();loadCh().then(function(){return subscribeData();});pc='';}else{var dd=document.getElementById('pDots');dd.style.animation='shake .4s ease';setTimeout(function(){dd.style.animation='';},400);document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('on');d.classList.add('bad');});document.getElementById('pErr').classList.add('show');setTimeout(function(){pc='';pUD();document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('bad');});},800);}});},200);}}
+function pIn(d){if(pc.length>=4)return;pc+=d;pUD();document.getElementById('pErr').classList.remove('show');if(pc.length===4){setTimeout(function(){hashPin(pc).then(function(h){if(h===PIN_HASH||h===PIN_B64){go('pgAdm');showAdmLoading();loadCh().then(function(){return subscribeData();});pc='';}else{var dd=document.getElementById('pDots');dd.style.animation='shake .4s ease';setTimeout(function(){dd.style.animation='';},400);document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('on');d.classList.add('bad');});document.getElementById('pErr').classList.add('show');setTimeout(function(){pc='';pUD();document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('bad');});},800);}});},200);}}
 function pDel(){if(!pc.length)return;pc=pc.slice(0,-1);pUD();document.getElementById('pErr').classList.remove('show');}
 function pUD(){document.querySelectorAll('.pin-d').forEach(function(d,i){d.classList.toggle('on',i<pc.length);d.classList.remove('bad');});}
 
