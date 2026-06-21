@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>كلينولوجي - تقييم الخدمة</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap');
@@ -375,12 +378,12 @@ body.dark .appt-type{background:#0c2233}
   <div class="tc" id="tcMonthly"></div>
   <div class="tc" id="tcResponses">
     <div class="flt-bar" id="fltBar">
-      <button class="fb on" onclick="setFilt(0,'all')">الكل</button>
-      <button class="fb" onclick="setFilt(5,'all')">⭐ 5</button>
-      <button class="fb" onclick="setFilt(4,'all')">⭐ 4</button>
-      <button class="fb" onclick="setFilt(3,'all')">⭐ 3</button>
-      <button class="fb" onclick="setFilt(0,'yes')">👍 يرشح</button>
-      <button class="fb" onclick="setFilt(0,'no')">👎 لا يرشح</button>
+      <button class="fb on" onclick="setFilt(0,'all',this)">الكل</button>
+      <button class="fb" onclick="setFilt(5,'all',this)">⭐ 5</button>
+      <button class="fb" onclick="setFilt(4,'all',this)">⭐ 4</button>
+      <button class="fb" onclick="setFilt(3,'all',this)">⭐ 3</button>
+      <button class="fb" onclick="setFilt(0,'yes',this)">👍 يرشح</button>
+      <button class="fb" onclick="setFilt(0,'no',this)">👎 لا يرشح</button>
       <button class="fb exp" onclick="exportCSV()">⬇️ CSV</button>
     </div>
     <div id="resList"></div>
@@ -507,14 +510,14 @@ function kC(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
 function subscribeData(){
   if(UNSUB)UNSUB();
   return new Promise(function(resolve){
-    var first=true;
+    var first=true,prevRevCount=-1;
     UNSUB=db.collection('reviews').orderBy('ts','asc').onSnapshot(function(snap){
       D=[];USED={};APPTS=[];
       snap.forEach(function(doc){var r=doc.data();r._id=doc.id;if(r._type==='appt'){APPTS.push(r);}else{D.push(r);if(r.used)USED[r.cp]=r.usedAt||r.ts;}});
       document.getElementById('liveDot').style.display='inline-block';
       renderAdm();
-      if(first){first=false;resolve();}
-      else toast('تم استلام تقييم جديد 🔔','ok');
+      if(first){first=false;prevRevCount=D.length;resolve();}
+      else{if(D.length>prevRevCount)toast('تم استلام تقييم جديد 🔔','ok');prevRevCount=D.length;}
     },function(e){console.log('Snapshot error:',e);resolve();});
   });
 }
@@ -592,7 +595,7 @@ function rMo(){
 }
 
 /* ── responses + filter ── */
-function setFilt(star,rec){FILT.star=star;FILT.rec=rec;document.querySelectorAll('.fb:not(.exp)').forEach(function(b){b.classList.remove('on');});event.target.classList.add('on');rRe();}
+function setFilt(star,rec,el){FILT.star=star;FILT.rec=rec;document.querySelectorAll('.fb:not(.exp)').forEach(function(b){b.classList.remove('on');});el.classList.add('on');rRe();}
 function rRe(){
   var src=D.slice().reverse().filter(function(r){if(FILT.star&&r.o!==FILT.star)return false;if(FILT.rec==='yes'&&!r.r)return false;if(FILT.rec==='no'&&r.r)return false;return true;});
   var el=document.getElementById('resList');
