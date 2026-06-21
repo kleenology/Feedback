@@ -367,9 +367,17 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 <script>
 firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANLSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"});
 var db=firebase.firestore();
-var PIN='1994',MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+// PIN stored as SHA-256 hash — never compare plain text in client-side code
+var PIN_HASH='1bc3201a9f24a2fe48f634f90d406aaf6cbf5e36e292870ecba98d74b065ee1b'; // sha256("1994")
+var MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var LV=[{v:1,t:'ضعيف',c:'#ef4444'},{v:2,t:'مقبول',c:'#f97316'},{v:3,t:'جيد',c:'#eab308'},{v:4,t:'ممتاز',c:'#38bdf8'},{v:5,t:'رائع',c:'#0284c7'}];
 var D=[],S={o:0,c:0,p:0,tw:0,r:null},CH={},CHL=false,USED={},pendingCpn='',APPTS=[];
+
+function esc(s){var d=document.createElement('div');d.appendChild(document.createTextNode(s||''));return d.innerHTML;}
+
+function hashPin(pin){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin)).then(function(buf){return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');});}
+
+function toast(msg,type){var t=document.createElement('div');t.textContent=msg;t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;z-index:999;animation:fadeUp .3s ease;white-space:nowrap;'+(type==='ok'?'background:#0891b2;color:#fff':'background:#dc2626;color:#fff');document.body.appendChild(t);setTimeout(function(){t.remove();},2500);}
 
 var pages=['pgForm','pgCpn','pgPin','pgAdm'];
 function go(id){pages.forEach(function(p){document.getElementById(p).classList.add('hide');});document.getElementById(id).classList.remove('hide');window.scrollTo(0,0);}
@@ -395,7 +403,7 @@ function goStep(n){
 }
 function prevStep(){if(CUR_STEP>1)goStep(CUR_STEP-1);}
 function nextStep(){
-  if(CUR_STEP===1){goStep(2);}
+  if(CUR_STEP===1){var ph=document.getElementById('fP').value.trim();if(ph&&!/^05\d{8}$/.test(ph)){sErr('رقم الجوال غير صحيح، يجب أن يبدأ بـ 05 ويتكون من 10 أرقام');return;}goStep(2);}
   else if(CUR_STEP===2){if(!S.o){sErr('الرجاء اختيار التقييم العام');return;}goStep(3);}
   else if(CUR_STEP===3){if(!S.c||!S.p||!S.tw){sErr('الرجاء تقييم جميع الخدمات');return;}goStep(4);}
   else if(CUR_STEP===4){if(S.r===null){sErr('الرجاء اختيار هل ترشح الخدمة لغيرك');return;}
@@ -433,7 +441,7 @@ go('pgForm');
 var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout(tt);if(tc>=3){tc=0;go('pgPin');}else tt=setTimeout(function(){tc=0;},600);};
 
 var pc='';
-function pIn(d){if(pc.length>=4)return;pc+=d;pUD();document.getElementById('pErr').classList.remove('show');if(pc.length===4){setTimeout(function(){if(pc===PIN){go('pgAdm');loadCh().then(function(){return loadData();}).then(renderAdm);pc='';}else{var dd=document.getElementById('pDots');dd.style.animation='shake .4s ease';setTimeout(function(){dd.style.animation='';},400);document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('on');d.classList.add('bad');});document.getElementById('pErr').classList.add('show');setTimeout(function(){pc='';pUD();document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('bad');});},800);}},200);}}
+function pIn(d){if(pc.length>=4)return;pc+=d;pUD();document.getElementById('pErr').classList.remove('show');if(pc.length===4){setTimeout(function(){hashPin(pc).then(function(h){if(h===PIN_HASH){go('pgAdm');showAdmLoading();loadCh().then(function(){return loadData();}).then(renderAdm);pc='';}else{var dd=document.getElementById('pDots');dd.style.animation='shake .4s ease';setTimeout(function(){dd.style.animation='';},400);document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('on');d.classList.add('bad');});document.getElementById('pErr').classList.add('show');setTimeout(function(){pc='';pUD();document.querySelectorAll('.pin-d').forEach(function(d){d.classList.remove('bad');});},800);}});},200);}}
 function pDel(){if(!pc.length)return;pc=pc.slice(0,-1);pUD();document.getElementById('pErr').classList.remove('show');}
 function pUD(){document.querySelectorAll('.pin-d').forEach(function(d,i){d.classList.toggle('on',i<pc.length);d.classList.remove('bad');});}
 
@@ -449,6 +457,7 @@ function loadData(){
   }).catch(function(e){console.log('Load error:',e);});
 }
 
+function showAdmLoading(){['tcOverview','tcMonthly','tcResponses','tcAppointments','tcCustomers'].forEach(function(id){document.getElementById(id).innerHTML='<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px;margin-bottom:8px">⏳</div><div style="font-size:13px">جاري التحميل...</div></div>';});document.getElementById('tcCoupons').querySelector('#cpnStats').innerHTML='';document.getElementById('tcCoupons').querySelector('#cpnList').innerHTML='';}
 function renderAdm(){rOv();rCp();rMo();rRe();rAppts();rCustomers();document.getElementById('clBar').classList.toggle('hide',!D.length);}
 function avg(a,f){if(!a.length)return 0;return(a.reduce(function(s,r){return s+r[f];},0)/a.length).toFixed(1);}
 
@@ -476,7 +485,7 @@ h+='<div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">ال�
 h+='<div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%'+tr(curRp,prevRp,false)+'</div><div class="sc-sub">هذا الشهر: '+curRp+'%</div></div>';
 h+='<div class="sc" style="border-top:3px solid #ef4444"><div class="sc-l">تقييمات سلبية</div><div class="sc-v" style="color:#ef4444">'+neg+'%'+tr(curNeg,prevNeg,true)+'</div><div class="sc-sub">هذا الشهر: '+curNeg+'%</div></div>';
 h+='</div>';
-if(curData.length){var worst=curData.reduce(function(a,b){return a.o<b.o?a:b;});var wc=worst.o>=4?'#0284c7':worst.o>=3?'#eab308':'#ef4444';h+='<div class="cc" style="border-right:3px solid #ef4444"><h3>⚠️ أسوأ تقييم هذا الشهر</h3><div class="worst-box"><div class="worst-hd"><span style="font-weight:700;font-size:13px">'+(worst.n||'عميل')+'</span><span style="font-size:16px;font-weight:800;color:'+wc+'">'+worst.o+' ⭐</span></div>'+(worst.nt?'<div class="rc-nt">"'+worst.nt+'"</div>':'')+'<div style="margin-top:6px;font-size:11px;color:#999">'+new Date(worst.ts).toLocaleDateString('ar-SA')+'</div></div></div>';}
+if(curData.length){var worst=curData.reduce(function(a,b){return a.o<b.o?a:b;});var wc=worst.o>=4?'#0284c7':worst.o>=3?'#eab308':'#ef4444';h+='<div class="cc" style="border-right:3px solid #ef4444"><h3>⚠️ أسوأ تقييم هذا الشهر</h3><div class="worst-box"><div class="worst-hd"><span style="font-weight:700;font-size:13px">'+esc(worst.n||'عميل')+'</span><span style="font-size:16px;font-weight:800;color:'+wc+'">'+worst.o+' ⭐</span></div>'+(worst.nt?'<div class="rc-nt">"'+esc(worst.nt)+'"</div>':'')+'<div style="margin-top:6px;font-size:11px;color:#999">'+new Date(worst.ts).toLocaleDateString('ar-SA')+'</div></div></div>';}
 if(n&&CHL)h+='<div class="cc"><h3>تحليل الأداء</h3><div class="cw"><canvas id="chR"></canvas></div></div>';
 h+='<div class="cc"><h3>متوسط التقييمات</h3>';
 cats.forEach(function(c){var v=avg(D,c.k);h+='<div class="ar"><div class="ar-l"><span>'+c.i+'</span><span>'+c.l+'</span></div><div class="ar-r"><div class="ab"><div class="af" style="width:'+(v/5*100)+'%;background:'+c.cl+'"></div></div><span class="av" style="color:'+c.cl+'">'+v+'/5</span></div></div>';});
@@ -494,7 +503,7 @@ if(CHL&&document.getElementById('chL')){try{kC('chL');CH['chL']=new Chart(docume
 
 function rRe(){var el=document.getElementById('tcResponses');
 if(!D.length){el.innerHTML='<div class="empty">لا توجد تقييمات بعد</div>';return;}
-var h='';D.slice().reverse().forEach(function(r){var bc=r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');h+='<div class="rc" style="border-right-color:'+bc+'"><div class="rc-t"><div><div class="rc-nm">'+(r.n||'عميل')+(r.ph?'<span style="font-size:10px;color:#0891b2;margin-right:6px;direction:ltr;font-family:monospace"> 📱'+r.ph+'</span>':'')+'</div><div class="rc-dt">'+dt+'</div></div><div class="rc-st"><span>'+r.o+'</span>⭐</div></div><div class="rc-sc"><span>✨'+r.c+'/5</span><span>⏰'+r.p+'/5</span><span>👥'+r.tw+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span></div>'+(r.nt?'<div class="rc-nt">"'+r.nt+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+r.cp+'</div>':'')+'</div>';});
+var h='';D.slice().reverse().forEach(function(r){var bc=r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');h+='<div class="rc" style="border-right-color:'+bc+'"><div class="rc-t"><div><div class="rc-nm">'+esc(r.n||'عميل')+(r.ph?'<span style="font-size:10px;color:#0891b2;margin-right:6px;direction:ltr;font-family:monospace"> 📱'+esc(r.ph)+'</span>':'')+'</div><div class="rc-dt">'+dt+'</div></div><div class="rc-st"><span>'+r.o+'</span>⭐</div></div><div class="rc-sc"><span>✨'+r.c+'/5</span><span>⏰'+r.p+'/5</span><span>👥'+r.tw+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span></div>'+(r.nt?'<div class="rc-nt">"'+esc(r.nt)+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+esc(r.cp)+'</div>':'')+'</div>';});
 el.innerHTML=h;}
 
 function rCp(){
@@ -527,9 +536,9 @@ var found=D.find(function(r){return r.cp===pendingCpn;});
 if(!found||!found._id)return;
 db.collection('reviews').doc(found._id).update({used:true,usedAt:new Date().toISOString()}).then(function(){
   found.used=true;found.usedAt=new Date().toISOString();
-  alert('تم تسجيل استخدام الكوبون '+pendingCpn+' بنجاح ✓');
+  toast('تم تسجيل استخدام الكوبون '+pendingCpn+' بنجاح ✓','ok');
   pendingCpn='';rCp();
-}).catch(function(){alert('خطأ في الحفظ، حاول مرة ثانية');});}
+}).catch(function(){toast('خطأ في الحفظ، حاول مرة ثانية','err');});}
 
 
 function rAppts(){
@@ -568,19 +577,21 @@ var s=document.getElementById('apS').value;
 var d=document.getElementById('apD').value;
 var t=document.getElementById('apT').value;
 var nt=document.getElementById('apNt').value.trim();
-if(!n||!s||!d){alert('الرجاء تعبئة الاسم والخدمة والتاريخ');return;}
+if(!n||!s||!d){toast('الرجاء تعبئة الاسم والخدمة والتاريخ','err');return;}
 db.collection('reviews').add({_type:'appt',name:n,svc:s,date:d,time:t,notes:nt,done:false,ts:new Date().toISOString()}).then(function(ref){
   APPTS.push({_id:ref.id,_type:'appt',name:n,svc:s,date:d,time:t,notes:nt,done:false,ts:new Date().toISOString()});
+  toast('تم حفظ الموعد بنجاح ✓','ok');
   rAppts();
-}).catch(function(){alert('خطأ في الحفظ، حاول مرة ثانية');});
+}).catch(function(){toast('خطأ في الحفظ، حاول مرة ثانية','err');});
 }
 
 function markApptDone(id){
 db.collection('reviews').doc(id).update({done:true}).then(function(){
   var a=APPTS.find(function(x){return x._id===id;});
   if(a)a.done=true;
+  toast('تم تسجيل التنفيذ ✓','ok');
   rAppts();
-}).catch(function(){alert('خطأ في التحديث');});
+}).catch(function(){toast('خطأ في التحديث','err');});
 }
 
 function rCustomers(){
@@ -613,7 +624,7 @@ customers.forEach(function(c){
   var last=c.reviews.reduce(function(a,b){return a.ts>b.ts?a:b;});
   var cls=cnt>=4?'vip':cnt>=2?'regular':'new';
   var clsTxt=cnt>=4?'⭐ VIP':cnt>=2?'منتظم':'جديد';
-  h+='<div class="cust-c"><div class="cust-hd"><span class="cust-nm">'+c.name+(c.phone?'<span style="font-size:10px;color:#0891b2;display:block;font-family:monospace;direction:ltr">📱 '+c.phone+'</span>':'')+'</span><span class="cust-badge '+cls+'">'+clsTxt+'</span></div>';
+  h+='<div class="cust-c"><div class="cust-hd"><span class="cust-nm">'+esc(c.name)+(c.phone?'<span style="font-size:10px;color:#0891b2;display:block;font-family:monospace;direction:ltr">📱 '+esc(c.phone)+'</span>':'')+'</span><span class="cust-badge '+cls+'">'+clsTxt+'</span></div>';
   h+='<div class="cust-stats"><div class="cust-stat"><div class="cust-stat-v" style="color:#f59e0b">'+avgO+' ⭐</div><div class="cust-stat-l">متوسط</div></div>';
   h+='<div class="cust-stat"><div class="cust-stat-v">'+cnt+'</div><div class="cust-stat-l">زيارة</div></div>';
   h+='<div class="cust-stat"><div class="cust-stat-v" style="color:#888;font-size:10px">'+new Date(last.ts).toLocaleDateString('ar-SA')+'</div><div class="cust-stat-l">آخر زيارة</div></div></div></div>';
@@ -625,7 +636,7 @@ function clrAll(){
 if(!confirm('هل أنت متأكد من مسح جميع التقييمات؟'))return;
 var batch=db.batch();
 D.forEach(function(r){if(r._id)batch.delete(db.collection('reviews').doc(r._id));});
-batch.commit().then(function(){D=[];USED={};renderAdm();}).catch(function(){alert('خطأ في المسح');});}
+batch.commit().then(function(){D=[];USED={};renderAdm();toast('تم مسح التقييمات','ok');}).catch(function(){toast('خطأ في المسح','err');});}
 
 document.addEventListener('paste',function(){setTimeout(function(){var el=document.getElementById('cpnInput');if(el&&el===document.activeElement){el.value=el.value.replace(/\s/g,'').toUpperCase();verifyCpn();}},300);});
 </script>
