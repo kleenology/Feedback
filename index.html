@@ -421,7 +421,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function friendCode(cp){return cp?'KLNF'+String(cp).slice(3):'';}
 function baseFromFriend(code){return code&&code.indexOf('KLNF')===0?'KLN'+code.slice(4):'';}
 function refCount(r){return r?(r.rcCount||(r.rcUsed?1:0)):0;}
-var BIZ={name:'كلينولوجي',phone:'',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','تنظيف بعد التشطيب']};
+var BIZ={name:'كلينولوجي',phone:'0537519929',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','تنظيف بعد التشطيب']};
 var LASTREV={o:0,n:'',cp:''};
 var LV=[{v:1,t:'ضعيف',c:'#ef4444',e:'😖'},{v:2,t:'مقبول',c:'#f97316',e:'😕'},{v:3,t:'جيد',c:'#eab308',e:'🙂'},{v:4,t:'ممتاز',c:'#29a9e1',e:'😄'},{v:5,t:'رائع',c:'#0f7cb8',e:'🤩'}];
 var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all',RVT='',TKS=[],CURT='',TMONTH='',TARGETS={};
