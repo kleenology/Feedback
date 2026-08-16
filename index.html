@@ -619,7 +619,18 @@ function shareTeamReport(i){
     x.beginPath();x.arc(730,210,110,0,7);x.fill();
     x.beginPath();x.arc(640,30,50,0,7);x.fill();
     x.save();x.shadowColor='rgba(0,0,0,0.2)';x.shadowBlur=16;x.shadowOffsetY=5;x.fillStyle='#fff';rr(300,38,200,132,24);x.fill();x.restore();
-    if(logo){var s=Math.min(170/logo.width,112/logo.height),w=logo.width*s,h=logo.height*s;x.drawImage(logo,300+(200-w)/2,38+(132-h)/2,w,h);}
+    if(logo){
+      var s=Math.min(170/logo.width,112/logo.height),w=logo.width*s,h=logo.height*s;
+      /* تصغير تدريجي (النصف كل مرة) يحافظ على حدة الشعار بدل التصغير دفعة واحدة */
+      var src=logo,tw=logo.width,th=logo.height,dw=Math.round(w*SC),dh=Math.round(h*SC);
+      while(tw/2>dw){
+        var tmp=document.createElement('canvas');tmp.width=Math.round(tw/2);tmp.height=Math.round(th/2);
+        var tx2=tmp.getContext('2d');tx2.imageSmoothingEnabled=true;tx2.imageSmoothingQuality='high';
+        tx2.drawImage(src,0,0,tmp.width,tmp.height);
+        src=tmp;tw=tmp.width;th=tmp.height;
+      }
+      x.drawImage(src,300+(200-w)/2,38+(132-h)/2,w,h);
+    }
     x.direction='rtl';x.textAlign='center';
     x.fillStyle='#fff';x.font='bold 30px "Noto Kufi Arabic"';x.fillText('تقرير أداء الفريق',400,225);
     x.fillStyle='#0b3954';x.font='bold 44px "Noto Kufi Arabic"';x.fillText('👷 '+k,400,335);
