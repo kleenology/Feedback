@@ -345,7 +345,7 @@ firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDom
 var db=firebase.firestore(),auth=firebase.auth();
 var MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var SUBMIT_COOLDOWN_MS=60*60*1000; /* حد الإرسال المتكرر من نفس الجهاز: ساعة واحدة */
-var TEAMS=[]; /* أسماء الفرق — عبّئها مثل ['فريق أحمد','فريق سالم'] ويظهر سؤال الفريق تلقائياً في النموذج */
+var TEAMS=['فريق أبو رزان']; /* أسماء الفرق — أضف أسماء جديدة هنا ويظهر سؤال الفريق تلقائياً في النموذج */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var LV=[{v:1,t:'ضعيف',c:'#ef4444'},{v:2,t:'مقبول',c:'#f97316'},{v:3,t:'جيد',c:'#eab308'},{v:4,t:'ممتاز',c:'#38bdf8'},{v:5,t:'رائع',c:'#0284c7'}];
 var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all';
