@@ -38,7 +38,8 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .fld textarea{resize:none;line-height:1.7}
 
 /* stars */
-.stars{display:flex;gap:9px;justify-content:center;direction:ltr;padding:6px 0 2px}
+.stars{display:flex;gap:9px;justify-content:center;direction:rtl;padding:6px 0 2px}
+.stars-hint{display:flex;justify-content:space-between;direction:rtl;width:236px;margin:0 auto;font-size:10px;color:#a9bfcc;font-weight:700}
 .star-b{background:none;border:none;cursor:pointer;padding:2px;transition:transform .15s}
 .star-b:active{transform:scale(1.25)}
 .star-b.pop{animation:starPop .35s ease}
@@ -230,6 +231,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div class="card-t">كيف تقيّم الخدمة بشكل عام؟</div>
     <div class="card-sub">اختر من 1 إلى 5 نجوم</div>
     <div class="stars" id="stars"></div>
+    <div class="stars-hint"><span>👎 ضعيف</span><span>ممتاز 👍</span></div>
     <div class="rt" id="rt"></div>
   </div>
   <div class="card">
