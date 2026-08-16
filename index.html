@@ -603,7 +603,7 @@ function shareTeamReport(i,saveOnly){
   var ov=parseFloat(avg(list,'o'))||0;
   var grade=ov>=4.5?{t:'🏆 أداء استثنائي',c:'#16a34a'}:ov>=4?{t:'💪 أداء رائع',c:'#29a9e1'}:ov>=3?{t:'🚀 أداء جيد',c:'#d99e00'}:{t:'📈 يحتاج تطوير',c:'#f97316'};
   var msg=ov>=4.5?'فخورون فيكم! استمروا على هذا المستوى المميز 🌟':ov>=4?'شغل ممتاز! خطوة بسيطة وتوصلون القمة 🏆':ov>=3?'أداؤكم جيد — ونثق أنكم تقدرون أكثر 💪':'كل فريق يمر بتحديات — معاً نرجع أقوى 💪';
-  var SC=2; /* دقة عالية: الرسم بمقاس 800×1240 والإخراج بضعفين (1600×2480) */
+  var SC=3; /* دقة عالية: الرسم بمقاس 800×1240 والإخراج بثلاثة أضعاف (2400×3720) */
   var cv=document.createElement('canvas');cv.width=800*SC;cv.height=1240*SC;
   var x=cv.getContext('2d');
   x.scale(SC,SC);
@@ -628,6 +628,7 @@ function shareTeamReport(i,saveOnly){
         var tmp=document.createElement('canvas');tmp.width=Math.round(tw/2);tmp.height=Math.round(th/2);
         var tx2=tmp.getContext('2d');tx2.imageSmoothingEnabled=true;tx2.imageSmoothingQuality='high';
         tx2.drawImage(src,0,0,tmp.width,tmp.height);
+        if(src!==logo){src.width=0;src.height=0;}
         src=tmp;tw=tmp.width;th=tmp.height;
       }
       x.drawImage(src,300+(200-w)/2,38+(132-h)/2,w,h);
