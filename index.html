@@ -213,8 +213,8 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 <div class="form-body">
   <div class="card">
     <div class="card-t">معلومات الطلب</div>
-    <div class="fld"><div class="fld-l"><span class="i">👤</span> اسم العميل</div><input id="fN" placeholder="اكتب اسم العميل (اختياري)" maxlength="100"></div>
-    <div class="fld"><div class="fld-l"><span class="i">📱</span> رقم الجوال</div><input id="fP" type="tel" inputmode="tel" placeholder="05xxxxxxxx (اختياري)" maxlength="20"></div>
+    <div class="fld"><div class="fld-l"><span class="i">👤</span> اسم العميل <span style="color:#dc2626">*</span></div><input id="fN" placeholder="اكتب اسمك" maxlength="100"></div>
+    <div class="fld"><div class="fld-l"><span class="i">📱</span> رقم الجوال <span style="color:#dc2626">*</span></div><input id="fP" type="tel" inputmode="tel" placeholder="05xxxxxxxx" maxlength="20"></div>
   </div>
   <div class="card">
     <div class="card-t">كيف تقيّم الخدمة بشكل عام؟</div>
@@ -373,6 +373,10 @@ document.querySelectorAll('.rec-b').forEach(function(btn){btn.onclick=function()
 
 document.getElementById('subBtn').onclick=function(){
   var e=document.getElementById('err');e.classList.add('hide');
+  if(!document.getElementById('fN').value.trim()){sErr('الرجاء كتابة اسمك');return;}
+  var phDigits=document.getElementById('fP').value.replace(/\D/g,'');
+  var phOk=(phDigits.indexOf('05')===0&&phDigits.length===10)||(phDigits.indexOf('5')===0&&phDigits.length===9)||(phDigits.indexOf('9665')===0&&phDigits.length===12)||(phDigits.indexOf('009665')===0&&phDigits.length===14);
+  if(!phOk){sErr('الرجاء إدخال رقم جوال صحيح (مثال: 05xxxxxxxx)');return;}
   if(!S.o){sErr('الرجاء اختيار التقييم العام');return;}
   if(!S.c||!S.p||!S.tw){sErr('الرجاء تقييم جميع الخدمات');return;}
   if(S.r===null){sErr('الرجاء اختيار هل ترشح الخدمة لغيرك');return;}

@@ -14,8 +14,8 @@ service cloud.firestore {
         request.resource.data.p is int && request.resource.data.p >= 1 && request.resource.data.p <= 5 &&
         request.resource.data.tw is int && request.resource.data.tw >= 1 && request.resource.data.tw <= 5 &&
         request.resource.data.r is bool &&
-        request.resource.data.n is string && request.resource.data.n.size() <= 100 &&
-        request.resource.data.ph is string && request.resource.data.ph.size() <= 20 &&
+        request.resource.data.n is string && request.resource.data.n.size() >= 1 && request.resource.data.n.size() <= 100 &&
+        request.resource.data.ph is string && request.resource.data.ph.size() >= 9 && request.resource.data.ph.size() <= 20 &&
         request.resource.data.nt is string && request.resource.data.nt.size() <= 1000 &&
         request.resource.data.cp is string && request.resource.data.cp.size() == 9 &&
         request.resource.data.ts is string && request.resource.data.ts.size() <= 40 &&
