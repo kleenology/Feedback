@@ -485,7 +485,8 @@ function togglePub(id){
 }
 
 function renderAdm(){rOv();rCp();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
-function avg(a,f){if(!a.length)return 0;return(a.reduce(function(s,r){return s+r[f];},0)/a.length).toFixed(1);}
+function avg(a,f){var s=0,n=0;a.forEach(function(r){var v=Number(r[f]);if(isFinite(v)&&v>=1&&v<=5){s+=v;n++;}});return n?(s/n).toFixed(1):'0';}
+function num(v){v=Number(v);return isFinite(v)&&v>=1&&v<=5?v:'-';}
 
 function rOv(){var el=document.getElementById('tcOverview'),n=D.length,rp=n?Math.round(D.filter(function(r){return r.r;}).length/n*100):0;
 var fl=D.filter(isFlag).length;
@@ -510,7 +511,7 @@ el.innerHTML=h;
 if(n>0&&CHL){try{kC('chR');CH['chR']=new Chart(document.getElementById('chR'),{type:'radar',data:{labels:cats.map(function(c){return c.l;}),datasets:[{data:cats.map(function(c){return parseFloat(avg(D,c.k));}),backgroundColor:'rgba(8,145,178,0.15)',borderColor:'#0891b2',borderWidth:2,pointBackgroundColor:'#0891b2'}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:5,ticks:{stepSize:1,font:{size:9}},pointLabels:{font:{size:11,family:"'Noto Kufi Arabic'"}}}},plugins:{legend:{display:false}}}});}catch(e){}}}
 
 function rMo(){var el=document.getElementById('tcMonthly'),g={};
-D.forEach(function(r){var d=new Date(r.ts),k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(!g[k])g[k]=[];g[k].push(r);});
+D.forEach(function(r){var d=new Date(r.ts);if(isNaN(d))return;var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(!g[k])g[k]=[];g[k].push(r);});
 var md=Object.keys(g).sort().map(function(k){var it=g[k],c=it.length,mi=parseInt(k.split('-')[1])-1;return{m:MO[mi],k:k,n:c,o:parseFloat(avg(it,'o')),c:parseFloat(avg(it,'c')),p:parseFloat(avg(it,'p')),tw:parseFloat(avg(it,'tw')),rp:Math.round(it.filter(function(r){return r.r;}).length/c*100)};});
 if(!md.length){el.innerHTML='<div class="empty">لا توجد بيانات كافية</div>';return;}
 var h=CHL?'<div class="cc"><h3>تطور التقييم</h3><div class="cw"><canvas id="chL"></canvas></div></div>':'';
@@ -530,7 +531,7 @@ var list=D.slice().reverse().filter(function(r){
 if(!list.length){el.innerHTML='<div class="empty">'+(D.length?'لا توجد نتائج مطابقة':'لا توجد تقييمات بعد')+'</div>';return;}
 var h='';
 list.forEach(function(r){
-  var bc=isFlag(r)?'#dc2626':r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');
+  var bc=isFlag(r)?'#dc2626':r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dd=new Date(r.ts),dt=isNaN(dd)?'-':dd.toLocaleDateString('ar-SA');
   var badge='';
   if(r.o<=2)badge=r.handled?'<span class="ok-badge">✓ تمت المعالجة</span> ':'<span class="flag-badge">🚨 يحتاج متابعة</span> ';
   var acts='';
@@ -542,7 +543,7 @@ list.forEach(function(r){
     acts+='<button class="act-b b-del" onclick="delReview(\''+r._id+'\')">🗑 حذف</button>';
     acts+='</div>';
   }
-  h+='<div class="rc" style="border-right-color:'+bc+'">'+badge+'<div class="rc-t"><div><div class="rc-nm">'+esc(r.n||'عميل')+'</div><div class="rc-dt">'+dt+(r.ph?' · 📱 '+esc(r.ph):'')+'</div></div><div class="rc-st"><span>'+esc(r.o)+'</span>⭐</div></div><div class="rc-sc"><span>✨'+esc(r.c)+'/5</span><span>⏰'+esc(r.p)+'/5</span><span>👥'+esc(r.tw)+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span>'+(r.tm?'<span>👷 '+esc(r.tm)+'</span>':'')+'</div>'+(r.nt?'<div class="rc-nt">"'+esc(r.nt)+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+esc(r.cp)+'</div>':'')+acts+'</div>';
+  h+='<div class="rc" style="border-right-color:'+bc+'">'+badge+'<div class="rc-t"><div><div class="rc-nm">'+esc(r.n||'عميل')+'</div><div class="rc-dt">'+dt+(r.ph?' · 📱 '+esc(r.ph):'')+'</div></div><div class="rc-st"><span>'+num(r.o)+'</span>⭐</div></div><div class="rc-sc"><span>✨'+num(r.c)+'/5</span><span>⏰'+num(r.p)+'/5</span><span>👥'+num(r.tw)+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span>'+(r.tm?'<span>👷 '+esc(r.tm)+'</span>':'')+'</div>'+(r.nt?'<div class="rc-nt">"'+esc(r.nt)+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+esc(r.cp)+'</div>':'')+acts+'</div>';
 });
 el.innerHTML=h;}
 
