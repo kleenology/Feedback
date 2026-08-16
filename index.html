@@ -92,6 +92,8 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .b-cpy{background:#fff;color:#1173b5;border:2px solid #29a9e1}
 .b-cpy.ok{background:#1173b5;color:#fff;border-color:#1173b5}
 .b-cls{background:#f1f5f9;color:#64748b;border:none}
+.b-wa-save{width:100%;margin-top:10px;padding:13px;border-radius:12px;border:none;background:#25d366;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 3px 14px rgba(37,211,102,0.3)}
+.b-wa-save:active{transform:scale(0.98)}
 
 /* ===== PIN PAGE ===== */
 .pin-pg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#0f172a,#1e293b);padding:20px}
@@ -180,6 +182,12 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .cpn-badge{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700}
 .cpn-badge.active{background:#f0f9ff;color:#0891b2}
 .cpn-badge.used{background:#fefce8;color:#b45309}
+.exp-item{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-right:3px solid #f5a301}
+.exp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.exp-nm{font-size:13px;font-weight:700}
+.exp-code{font-family:monospace;direction:ltr;font-size:12px;color:#0f7cb8;font-weight:700;margin-top:2px}
+.exp-days{font-size:10px;font-weight:800;padding:4px 9px;border-radius:6px;white-space:nowrap}
+.exp-wa{display:inline-block;margin-top:9px;padding:9px 14px;border-radius:9px;background:#dcfce7;color:#16a34a;font-size:11.5px;font-weight:700;text-decoration:none}
 
 /* team select */
 .team-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
@@ -300,6 +308,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <button class="b-cpy" id="cpyB" onclick="doCpy()">نسخ الكوبون</button>
     <button class="b-cls" onclick="goHome()">إغلاق</button>
   </div>
+  <button class="b-wa-save" onclick="saveCpnWa()">💬 احفظ كوبونك في واتساب</button>
 </div>
 </div>
 
@@ -346,6 +355,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
       </div>
     </div>
     <div id="cpnStats"></div>
+    <div id="cpnExpiring"></div>
     <div id="cpnList"></div>
   </div>
   <div class="tc" id="tcMonthly"></div>
@@ -436,6 +446,12 @@ document.getElementById('subBtn').onclick=function(){
 };
 function sErr(m){var e=document.getElementById('err');e.textContent=m;e.classList.remove('hide');e.scrollIntoView({behavior:'smooth',block:'center'});}
 
+function saveCpnWa(){
+  var c=document.getElementById('cpnC').textContent;
+  var exp=new Date();exp.setDate(exp.getDate()+30);
+  var t='🎁 كوبون خصم 10% من كلينولوجي\n\nالكود: '+c+'\nصالح حتى: '+exp.toLocaleDateString('ar-SA')+'\n\nاحتفظ بهذي الرسالة واستخدم الكود في خدمتك القادمة ✨';
+  window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');
+}
 function doCpy(){var c=document.getElementById('cpnC').textContent,b=document.getElementById('cpyB');try{navigator.clipboard.writeText(c).then(ok).catch(fb);}catch(e){fb();}function fb(){var t=document.createElement('textarea');t.value=c;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);ok();}function ok(){b.textContent='تم النسخ ✓';b.classList.add('ok');setTimeout(function(){b.textContent='نسخ الكوبون';b.classList.remove('ok');},2000);}}
 
 function goHome(){if(UNSUB){UNSUB();UNSUB=null;}S={o:0,c:0,p:0,tw:0,r:null,tm:''};['fN','fP','fNt'].forEach(function(id){document.getElementById(id).value='';});document.querySelectorAll('.team-b').forEach(function(b){b.classList.remove('on');});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#cfdce5');});document.querySelectorAll('.cat-b').forEach(function(o){o.classList.remove('on');});document.querySelectorAll('.cat-val').forEach(function(l){l.textContent='';});document.querySelectorAll('.rec-b').forEach(function(b){b.classList.remove('on');});document.getElementById('err').classList.add('hide');go('pgForm');}
@@ -565,6 +581,7 @@ function rOv(){var el=document.getElementById('tcOverview'),n=D.length,rp=n?Math
 var fl=D.filter(isFlag).length;
 var cats=[{l:'النظافة',k:'c',i:'✨',cl:'#0284c7'},{l:'الالتزام',k:'p',i:'⏰',cl:'#3b82f6'},{l:'التعامل',k:'tw',i:'👥',cl:'#8b5cf6'}];
 var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي التقييمات</div><div class="sc-v">'+n+'</div></div><div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">التقييم العام</div><div class="sc-v">'+avg(D,'o')+' ⭐</div></div><div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%</div></div><div class="sc" style="border-top:3px solid '+(fl?'#dc2626':'#16a34a')+'"><div class="sc-l">تحتاج متابعة</div><div class="sc-v" style="color:'+(fl?'#dc2626':'#16a34a')+'">'+fl+'</div></div></div>';
+if(n)h+='<button type="button" class="exp-btn" style="background:linear-gradient(135deg,#1173b5,#29a9e1);color:#fff;border-color:#1173b5" onclick="shareCompanyReport()">📋 تقرير الشركة الشهري (صورة)</button>';
 h+='<a class="exp-btn" style="display:block;text-align:center;text-decoration:none" href="reviews.html" target="_blank">🌐 فتح صفحة عرض التقييمات</a>';
 if(TEAMS.length&&D.some(function(r){return isTestReview(r)||!r.tm;})){
   h+='<button type="button" class="exp-btn" style="border-color:#f5a301;color:#9a6b00" onclick="fixData()">🛠 ترتيب البيانات: حذف التجريبية وتعيين '+esc(TEAMS[0])+' للكل</button>';
@@ -676,14 +693,26 @@ function renderTeamDetail(k){
     '<button type="button" class="td-btn" style="margin-top:6px;border-color:#f5b301;color:#9a6b00" onclick="setTeamTarget('+idx+')">🎯 '+(tg?'تعديل هدف الفريق':'تحديد هدف شهري للفريق')+'</button>'+
     (tg?'<button type="button" class="td-btn" style="margin-top:6px;border-color:#e5c9c9;color:#b45454" onclick="clearTeamTarget('+idx+')">حذف الهدف</button>':'')+'</div>';
 }
-function shareTeamReport(i,saveOnly){
-  var k=TKS[i];if(!k)return;
-  var month=TMONTH,list=teamList(k,month);
-  if(!list.length){month='';list=teamList(k,'');}
+function allMonths(){
+  var seen={};D.forEach(function(r){var key=mKey(r.ts);if(key)seen[key]=1;});
+  return Object.keys(seen).sort().reverse();
+}
+function shareCompanyReport(saveOnly){
+  var ms=allMonths();
+  if(!ms.length){showToast('لا توجد بيانات بعد');return;}
+  shareTeamReport(-1,saveOnly,ms[0]);
+}
+function shareTeamReport(i,saveOnly,forceMonth){
+  var company=(i<0),k=company?'كلينولوجي':TKS[i];
+  if(!k)return;
+  var month=forceMonth!==undefined?forceMonth:TMONTH;
+  var pick=function(m){return company?D.filter(function(r){return !m||mKey(r.ts)===m;}):teamList(k,m);};
+  var list=pick(month);
+  if(!list.length){month='';list=pick('');}
   if(!list.length)return;
   var cmpTxt='',cmpCol='';
   if(month){
-    var plist=teamList(k,prevKey(month));
+    var plist=pick(prevKey(month));
     if(plist.length){
       var dv=(parseFloat(avg(list,'o'))-parseFloat(avg(plist,'o'))).toFixed(1);
       if(dv>0){cmpTxt='▲ تحسّن '+dv+' عن '+mLabel(prevKey(month));cmpCol='#16a34a';}
@@ -696,10 +725,19 @@ function shareTeamReport(i,saveOnly){
   var cats=[{l:'النظافة',v:parseFloat(avg(list,'c')),c:'#29a9e1'},{l:'الالتزام بالموعد',v:parseFloat(avg(list,'p')),c:'#3b82f6'},{l:'تعامل الفريق',v:parseFloat(avg(list,'tw')),c:'#8b5cf6'}];
   var ov=parseFloat(avg(list,'o'))||0;
   var grade=ov>=4.5?{t:'🏆 أداء استثنائي',c:'#16a34a'}:ov>=4?{t:'💪 أداء رائع',c:'#29a9e1'}:ov>=3?{t:'🚀 أداء جيد',c:'#d99e00'}:{t:'📈 يحتاج تطوير',c:'#f97316'};
-  var msg=ov>=4.5?'فخورون فيكم! استمروا على هذا المستوى المميز 🌟':ov>=4?'شغل ممتاز! خطوة بسيطة وتوصلون القمة 🏆':ov>=3?'أداؤكم جيد — ونثق أنكم تقدرون أكثر 💪':'كل فريق يمر بتحديات — معاً نرجع أقوى 💪';
-  var tgt=month?TARGETS[k]:null;
+  var msg=company
+    ?(ov>=4.5?'شهر مميز — شكراً لكل من ساهم في هذا المستوى 🌟':ov>=4?'نتائج ممتازة، ونكمل نحو الأفضل 🏆':ov>=3?'نتائج جيدة وأمامنا فرص للتحسين 💪':'شهر فيه تحديات — خطتنا القادمة ترفع المستوى 💪')
+    :(ov>=4.5?'فخورون فيكم! استمروا على هذا المستوى المميز 🌟':ov>=4?'شغل ممتاز! خطوة بسيطة وتوصلون القمة 🏆':ov>=3?'أداؤكم جيد — ونثق أنكم تقدرون أكثر 💪':'كل فريق يمر بتحديات — معاً نرجع أقوى 💪');
+  var tgt=(month&&!company)?TARGETS[k]:null;
+  var teamRows=[];
+  if(company){
+    var tgc={};list.forEach(function(r){if(r.tm){if(!tgc[r.tm])tgc[r.tm]=[];tgc[r.tm].push(r);}});
+    teamRows=Object.keys(tgc).sort(function(a,b){return avg(tgc[b],'o')-avg(tgc[a],'o');})
+      .slice(0,4).map(function(t){return {n:t,v:parseFloat(avg(tgc[t],'o'))||0,c:tgc[t].length};});
+  }
   var H=1150;
   if(tgt)H+=(tgt.count?185:110)+20;
+  if(teamRows.length)H+=(75+teamRows.length*46)+20;
   if(cmpTxt||fl)H+=42;
   H+=103;
   var SC=3; /* دقة عالية: الإخراج بثلاثة أضعاف مقاس الرسم */
@@ -733,8 +771,8 @@ function shareTeamReport(i,saveOnly){
       x.drawImage(src,300+(200-w)/2,38+(132-h)/2,w,h);
     }
     x.direction='rtl';x.textAlign='center';
-    x.fillStyle='#fff';x.font='bold 30px "Noto Kufi Arabic"';x.fillText('تقرير أداء الفريق',400,225);
-    x.fillStyle='#0b3954';x.font='bold 44px "Noto Kufi Arabic"';x.fillText('👷 '+k,400,335);
+    x.fillStyle='#fff';x.font='bold 30px "Noto Kufi Arabic"';x.fillText(company?'التقرير الشهري':'تقرير أداء الفريق',400,225);
+    x.fillStyle='#0b3954';x.font='bold 44px "Noto Kufi Arabic"';x.fillText(company?'📋 تقرير الشركة':'👷 '+k,400,335);
     x.fillStyle='#0f7cb8';x.font='bold 22px "Noto Kufi Arabic"';x.fillText('📅 '+(month?mLabel(month):'كل الفترات'),400,372);
     x.font='bold 24px "Noto Kufi Arabic"';
     var gw=x.measureText(grade.t).width+70;
@@ -775,6 +813,21 @@ function shareTeamReport(i,saveOnly){
       x.textAlign='center';
     });
     var by=1150;
+    if(teamRows.length){
+      var trh=75+teamRows.length*46;
+      card(60,by,680,trh,22);
+      x.fillStyle='#0b3954';x.font='bold 24px "Noto Kufi Arabic"';x.fillText('👷 أداء الفرق',400,by+43);
+      teamRows.forEach(function(t,ti){
+        var ty=by+90+ti*46;
+        x.textAlign='right';x.fillStyle='#345a72';x.font='bold 19px "Noto Kufi Arabic"';
+        x.fillText(t.n+' ('+t.c+')',700,ty+6);
+        x.fillStyle='#e9eef3';rr(200,ty-8,280,14,7);x.fill();
+        if(t.v>0){x.fillStyle='#29a9e1';rr(200+280*(1-t.v/5),ty-8,280*(t.v/5),14,7);x.fill();}
+        x.textAlign='left';x.fillStyle='#0f7cb8';x.font='bold 19px "Noto Kufi Arabic"';x.fillText(t.v+'/5',110,ty+6);
+        x.textAlign='center';
+      });
+      by+=trh+20;
+    }
     if(tgt){
       var th=tgt.count?185:110;
       card(60,by,680,th,20);
@@ -881,13 +934,20 @@ el.innerHTML=h;}
 document.getElementById('rvSearch').addEventListener('input',function(){RVQ=this.value.trim();rRe();});
 document.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){RVF=c.dataset.f;document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});c.classList.add('on');rRe();};});
 
-function waLink(ph,nm){
+function waNum(ph){
   var d=String(ph||'').replace(/\D/g,'');
   if(d.indexOf('00')===0)d=d.slice(2);
   if(d.indexOf('05')===0)d='966'+d.slice(1);
   else if(d.length===9&&d.indexOf('5')===0)d='966'+d;
+  return d;
+}
+function cpnWaLink(r,ex){
+  var t='مرحباً '+(r.n||'عميلنا العزيز')+' 🌟\nمعك فريق كلينولوجي\n\nنذكّرك أن كوبون الخصم 10% الخاص بك ينتهي قريباً:\n🎟️ الكود: '+r.cp+'\n📅 صالح حتى: '+ex.toLocaleDateString('ar-SA')+'\n\nاحجز خدمتك الآن واستفد من الخصم قبل انتهائه ✨';
+  return 'https://wa.me/'+waNum(r.ph)+'?text='+encodeURIComponent(t);
+}
+function waLink(ph,nm){
   var t=encodeURIComponent('مرحباً '+(nm||'عميلنا العزيز')+'، معك فريق كلينولوجي 🌟 اطلعنا على تقييمك ونعتذر إن كانت الخدمة أقل من توقعاتك. نحب نسمع ملاحظاتك ونعالجها بأسرع وقت 🙏');
-  return 'https://wa.me/'+d+'?text='+t;
+  return 'https://wa.me/'+waNum(ph)+'?text='+t;
 }
 
 function markHandled(id,v){
@@ -919,6 +979,28 @@ var totalCp=D.filter(function(r){return r.cp;}).length;
 var usedCp=D.filter(function(r){return r.used;}).length;
 var activeCp=totalCp-usedCp;
 document.getElementById('cpnStats').innerHTML='<div class="sg"><div class="sc" style="border-top:3px solid #0891b2"><div class="sc-l">كوبونات صالحة</div><div class="sc-v" style="color:#0891b2">'+activeCp+'</div></div><div class="sc" style="border-top:3px solid #b45309"><div class="sc-l">كوبونات مستخدمة</div><div class="sc-v" style="color:#b45309">'+usedCp+'</div></div></div>';
+/* كوبونات صالحة تنتهي خلال 10 أيام — فرصة لإرجاع العميل */
+var now=new Date(),soon=[];
+D.forEach(function(r){
+  if(!r.cp||r.used)return;
+  var ex=new Date(r.ts);if(isNaN(ex))return;
+  ex.setDate(ex.getDate()+30);
+  var days=Math.ceil((ex-now)/86400000);
+  if(days>=0&&days<=10)soon.push({r:r,days:days,ex:ex});
+});
+soon.sort(function(a,b){return a.days-b.days;});
+var eh='';
+if(soon.length){
+  eh='<div class="cc"><h3>⏳ كوبونات تنتهي قريباً ('+soon.length+')</h3><div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">ذكّر العميل قبل ما ينتهي كوبونه — فرصة لحجز جديد</div>';
+  soon.forEach(function(s){
+    var col=s.days<=3?'#dc2626':'#b45309',bg=s.days<=3?'#fef2f2':'#fffbeb';
+    eh+='<div class="exp-item" style="border-right-color:'+col+'"><div class="exp-top"><div><div class="exp-nm">'+esc(s.r.n||'عميل')+'</div><div class="exp-code">'+esc(s.r.cp)+'</div></div><span class="exp-days" style="background:'+bg+';color:'+col+'">'+(s.days===0?'ينتهي اليوم':'باقي '+s.days+' يوم')+'</span></div>'+
+      (s.r.ph?'<a class="exp-wa" target="_blank" rel="noopener" href="'+cpnWaLink(s.r,s.ex)+'">💬 تذكير بواتساب</a>':'<div style="font-size:10px;color:#bbb;margin-top:8px">لا يوجد رقم جوال</div>')+
+      '</div>';
+  });
+  eh+='</div>';
+}
+document.getElementById('cpnExpiring').innerHTML=eh;
 var h='<div class="cc"><h3>جميع الكوبونات</h3>';
 if(!D.length){h+='<div class="empty">لا توجد كوبونات</div>';}
 else{D.slice().reverse().forEach(function(r){if(!r.cp)return;h+='<div class="cpn-list-item"><div><div class="cpn-list-code">'+esc(r.cp)+'</div><div class="cpn-list-name">'+esc(r.n||'عميل')+' · '+new Date(r.ts).toLocaleDateString('ar-SA')+'</div></div><span class="cpn-badge '+(r.used?'used':'active')+'">'+(r.used?'مستخدم ✓':'صالح')+'</span></div>';});}
