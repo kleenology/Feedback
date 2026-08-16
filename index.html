@@ -589,8 +589,72 @@ function renderTeamDetail(k){
     tdCell(avg(list,'tw'),'التعامل','#8b5cf6')+
     '</div>'+
     (fl?'<div style="font-size:11px;font-weight:700;color:#dc2626;text-align:center;margin-bottom:8px">🚨 '+fl+' تقييم يحتاج متابعة</div>':'')+
-    '<button type="button" class="td-btn" onclick="viewTeamReviews('+TKS.indexOf(k)+')">💬 عرض تقييمات الفريق</button></div>';
+    '<button type="button" class="td-btn" onclick="viewTeamReviews('+TKS.indexOf(k)+')">💬 عرض تقييمات الفريق</button>'+
+    '<button type="button" class="td-btn" style="margin-top:6px;background:linear-gradient(135deg,#1173b5,#29a9e1);color:#fff;border-color:#1173b5" onclick="shareTeamReport('+TKS.indexOf(k)+')">📤 مشاركة تقرير الفريق (صورة)</button></div>';
 }
+function shareTeamReport(i){
+  var k=TKS[i];if(!k)return;
+  var list=D.filter(function(r){return r.tm===k;});
+  if(!list.length)return;
+  var rp=Math.round(list.filter(function(r){return r.r;}).length/list.length*100);
+  var fl=list.filter(isFlag).length;
+  var cats=[{l:'النظافة',v:parseFloat(avg(list,'c')),c:'#29a9e1'},{l:'الالتزام بالموعد',v:parseFloat(avg(list,'p')),c:'#3b82f6'},{l:'تعامل الفريق',v:parseFloat(avg(list,'tw')),c:'#8b5cf6'}];
+  var cv=document.createElement('canvas');cv.width=800;cv.height=1060;
+  var x=cv.getContext('2d');
+  function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+  function draw(logo){
+    x.fillStyle='#f3f7fa';x.fillRect(0,0,800,1060);
+    var g=x.createLinearGradient(0,0,800,240);g.addColorStop(0,'#083b66');g.addColorStop(1,'#29a9e1');
+    x.fillStyle=g;x.fillRect(0,0,800,250);
+    x.fillStyle='#fff';rr(300,35,200,130,22);x.fill();
+    if(logo){var s=Math.min(170/logo.width,110/logo.height),w=logo.width*s,h=logo.height*s;x.drawImage(logo,300+(200-w)/2,35+(130-h)/2,w,h);}
+    x.direction='rtl';x.textAlign='center';
+    x.fillStyle='#fff';x.font='bold 30px "Noto Kufi Arabic"';x.fillText('تقرير أداء الفريق',400,215);
+    x.fillStyle='#0b3954';x.font='bold 40px "Noto Kufi Arabic"';x.fillText('👷 '+k,400,325);
+    x.fillStyle='#8aa2b2';x.font='20px "Noto Kufi Arabic"';x.fillText(new Date().toLocaleDateString('ar-SA'),400,362);
+    var tiles=[{v:String(list.length),l:'عدد التقييمات',c:'#345a72'},{v:avg(list,'o')+' ⭐',l:'التقييم العام',c:'#e0a300'},{v:rp+'%',l:'نسبة الترشيح',c:'#0f7cb8'}];
+    tiles.forEach(function(t,ti){
+      var tx=60+ti*233;
+      x.fillStyle='#fff';rr(tx,400,213,130,18);x.fill();
+      x.fillStyle=t.c;x.font='bold 40px "Noto Kufi Arabic"';x.fillText(t.v,tx+106,462);
+      x.fillStyle='#8aa2b2';x.font='18px "Noto Kufi Arabic"';x.fillText(t.l,tx+106,505);
+    });
+    x.fillStyle='#fff';rr(60,565,680,330,18);x.fill();
+    x.fillStyle='#0b3954';x.font='bold 24px "Noto Kufi Arabic"';x.fillText('التقييم التفصيلي',400,615);
+    cats.forEach(function(c2,ci){
+      var y=670+ci*75;
+      x.textAlign='right';x.fillStyle='#345';x.font='bold 21px "Noto Kufi Arabic"';x.fillText(c2.l,700,y+8);
+      x.fillStyle='#e9eef3';rr(190,y-8,290,16,8);x.fill();
+      var v=isFinite(c2.v)?c2.v:0;
+      if(v>0){x.fillStyle=c2.c;rr(190+290*(1-v/5),y-8,290*(v/5),16,8);x.fill();}
+      x.textAlign='left';x.fillStyle=c2.c;x.font='bold 22px "Noto Kufi Arabic"';x.fillText(v+'/5',100,y+8);
+      x.textAlign='center';
+    });
+    if(fl){x.fillStyle='#dc2626';x.font='bold 22px "Noto Kufi Arabic"';x.fillText('🚨 '+fl+' تقييم يحتاج متابعة',400,940);}
+    else{x.fillStyle='#16a34a';x.font='bold 22px "Noto Kufi Arabic"';x.fillText('✓ لا توجد ملاحظات معلقة',400,940);}
+    x.fillStyle='#a9bfcc';x.font='18px "Noto Kufi Arabic"';x.fillText('Kleenology — نظام تقييم الخدمة',400,1010);
+    cv.toBlob(function(b){
+      if(!b){alert('تعذر إنشاء الصورة');return;}
+      var f;
+      try{f=new File([b],'kleenology-team-report.png',{type:'image/png'});}catch(e){f=null;}
+      if(f&&navigator.canShare&&navigator.canShare({files:[f]})&&navigator.share){
+        navigator.share({files:[f],title:'تقرير أداء الفريق'}).catch(function(){});
+      }else{
+        var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='kleenology-team-report.png';
+        document.body.appendChild(a);a.click();a.remove();
+        setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+      }
+    },'image/png');
+  }
+  var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+  ready.then(function(){
+    var img=new Image();
+    img.onload=function(){draw(img);};
+    img.onerror=function(){draw(null);};
+    img.src='logo.png';
+  });
+}
+
 function viewTeamReviews(i){
   RVT=TKS[i]||'';
   var tb=document.querySelector('.adm-tb[data-t="responses"]');if(tb)tb.click();
