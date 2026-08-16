@@ -430,7 +430,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function friendCode(cp){return cp?'KLNF'+String(cp).slice(3):'';}
 function baseFromFriend(code){return code&&code.indexOf('KLNF')===0?'KLN'+code.slice(4):'';}
 function refCount(r){return r?(r.rcCount||(r.rcUsed?1:0)):0;}
-var BIZ={name:'كلينولوجي',phone:'0537519929',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','تنظيف بعد التشطيب']};
+var BIZ={name:'كلينولوجي',rep:'عبد الهادي',phone:'0537519929',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','تنظيف بعد التشطيب']};
 var WINBACK={off:'15%',valid:7}; /* عرض دعوة العملاء الغائبين — عدّل النسبة أو المدة من هنا */
 var LASTREV={o:0,n:'',cp:''};
 var LV=[{v:1,t:'ضعيف',c:'#ef4444',e:'😖'},{v:2,t:'مقبول',c:'#f97316',e:'😕'},{v:3,t:'جيد',c:'#eab308',e:'🙂'},{v:4,t:'ممتاز',c:'#29a9e1',e:'😄'},{v:5,t:'رائع',c:'#0f7cb8',e:'🤩'}];
@@ -864,7 +864,7 @@ function rCu(){
   el.innerHTML=h;
 }
 /* تحية حسب وقت الإرسال */
-function greetAr(){var h=new Date().getHours();return h<12?'صباح الخير':h<17?'مرحباً':'مساك الله بالخير';}
+function greetAr(){var h=new Date().getHours();return h<12?'صباحك خير':h<17?'هلا وغلا':'مساك الله بالخير';}
 /* مدة الغياب بصيغة مفهومة: أيام لأقل من شهرين، وشهور بعدها */
 function awayFor(d){
   d=Math.max(1,Math.floor(Number(d)||0));
@@ -872,11 +872,15 @@ function awayFor(d){
   var m=Math.round(d/30);
   return 'قرابة '+(m===2?'شهرين':m<=10?m+' أشهر':m+' شهر');
 }
+/* عدد مرات الخدمة بصياغة عربية سليمة */
+function timesFor(n){n=Math.max(1,Math.floor(Number(n)||0));return n===2?'مرتين':n<=10?n+' مرات':n+' مرة';}
+/* التقييم: الدرجة الكاملة تُكتب نجوماً، والكسرية من 5 */
+function starsFor(v){v=Number(v)||0;return v===Math.round(v)?v+' نجوم':v+' من 5';}
 function backWaLink(c){
-  var t=greetAr()+' '+(c.n||'عميلنا العزيز')+' 🌟\nمعك '+BIZ.name+
-    '\n\nصار لك '+awayFor(c.days)+' ما شرفتنا — حبينا نطمن عليك 😊'+
-    '\nجهزنا لك خصم '+WINBACK.off+' على حجزك القادم، صالح لمدة '+WINBACK.valid+' أيام.'+
-    '\n\nتبي نرتب لك موعد؟ رد بكلمة (حجز) ونتكفل بالباقي ✨';
+  var t=greetAr()+' '+(c.n||'يا غالي')+' 🌟\nمعك '+BIZ.rep+' من '+BIZ.name+
+    '\n\nأنت من عملائنا اللي نعتز فيهم — '+(c.count>1?'خدمناك '+timesFor(c.count):'جربتنا مرة وحدة')+' وتقييمك لنا '+starsFor(c.avg)+' 🙏'+
+    '\nوصار لك '+awayFor(c.days)+' ما شرفتنا، فحبينا نخصّك بخصم '+WINBACK.off+' على طلبك الجاي، صالح '+WINBACK.valid+' أيام.'+
+    '\n\nاكتب (حجز) وحنا نكفيك الباقي ✨';
   return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
 }
 function avg(a,f){var s=0,n=0;a.forEach(function(r){var v=Number(r[f]);if(isFinite(v)&&v>=1&&v<=5){s+=v;n++;}});return n?(s/n).toFixed(1):'0';}
