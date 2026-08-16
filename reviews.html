@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كلينولوجي - آراء عملائنا</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;min-height:100vh;color:#222}
+.hdr{background:linear-gradient(145deg,#0c4a6e,#0891b2 70%,#22d3ee);padding:36px 20px 28px;text-align:center;border-radius:0 0 24px 24px;margin-bottom:16px}
+.hdr-logo{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;user-select:none}
+.hdr h1{color:#fff;font-size:22px;font-weight:800;margin-bottom:4px}
+.hdr p{color:rgba(255,255,255,0.8);font-size:12px}
+.body{padding:0 14px 40px;max-width:520px;margin:0 auto}
+.sum{background:#fff;border-radius:14px;padding:20px 16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);text-align:center;animation:fadeUp .4s ease}
+.sum-v{font-size:38px;font-weight:800;color:#0c4a6e;line-height:1.2}
+.sum-stars{font-size:20px;letter-spacing:2px;margin:4px 0}
+.sum-c{font-size:12px;color:#999}
+.rv{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-right:3px solid #0891b2;animation:fadeUp .4s ease}
+.rv-t{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.rv-nm{font-size:14px;font-weight:700}
+.rv-dt{font-size:10px;color:#aaa;margin-top:2px}
+.rv-stars{font-size:14px;letter-spacing:1px}
+.rv-nt{font-size:13px;color:#555;line-height:1.8;background:#f8fafc;border-radius:8px;padding:10px 12px;margin-top:6px}
+.st-on{color:#f59e0b}
+.st-off{color:#ddd}
+.empty{text-align:center;padding:50px 20px;color:#bbb;font-size:14px}
+.cta{display:block;text-align:center;background:#0891b2;color:#fff;text-decoration:none;padding:14px;border-radius:12px;font-size:14px;font-weight:700;margin-top:18px;box-shadow:0 3px 15px rgba(8,145,178,0.3)}
+.ldr{text-align:center;padding:50px;color:#bbb;font-size:13px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">✨</div>
+  <h1>آراء عملائنا</h1>
+  <p>تقييمات حقيقية من عملاء كلينولوجي</p>
+</div>
+
+<div class="body">
+  <div id="content"><div class="ldr">جاري التحميل...</div></div>
+  <a class="cta" href="index.html">⭐ جرّبت خدمتنا؟ شاركنا رأيك واحصل على كوبون خصم</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"});
+var db=firebase.firestore();
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function stars(v){var h='';for(var i=1;i<=5;i++)h+='<span class="'+(i<=v?'st-on':'st-off')+'">★</span>';return h;}
+
+db.collection('public_reviews').orderBy('ts','desc').limit(100).get().then(function(snap){
+  var el=document.getElementById('content'),list=[];
+  snap.forEach(function(doc){list.push(doc.data());});
+  if(!list.length){el.innerHTML='<div class="empty">لا توجد تقييمات منشورة بعد</div>';return;}
+  var sum=list.reduce(function(s,r){return s+(r.o||0);},0),av=(sum/list.length).toFixed(1);
+  var h='<div class="sum"><div class="sum-v">'+av+'</div><div class="sum-stars">'+stars(Math.round(av))+'</div><div class="sum-c">من '+list.length+' تقييم</div></div>';
+  list.forEach(function(r){
+    var dt='';try{dt=new Date(r.ts).toLocaleDateString('ar-SA');}catch(e){}
+    h+='<div class="rv"><div class="rv-t"><div><div class="rv-nm">'+esc(r.n||'عميل كلينولوجي')+'</div><div class="rv-dt">'+dt+'</div></div><div class="rv-stars">'+stars(r.o||0)+'</div></div>'+(r.nt?'<div class="rv-nt">"'+esc(r.nt)+'"</div>':'')+'</div>';
+  });
+  el.innerHTML=h;
+}).catch(function(e){
+  console.log('Load error:',e);
+  document.getElementById('content').innerHTML='<div class="empty">تعذّر تحميل التقييمات، حاول لاحقاً</div>';
+});
+</script>
+
+</body>
+</html>

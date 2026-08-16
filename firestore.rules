@@ -24,6 +24,14 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null;
     }
 
+    // التقييمات المنشورة في صفحة العرض العامة
+    match /public_reviews/{reviewId} {
+      // أي زائر يقدر يقرأها (هذا هدفها)
+      allow read: if true;
+      // النشر والإخفاء للأدمن فقط
+      allow write: if request.auth != null;
+    }
+
     // أي مجموعة أخرى: ممنوعة بالكامل
     match /{document=**} {
       allow read, write: if false;

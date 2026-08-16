@@ -168,6 +168,11 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .cpn-badge.active{background:#f0f9ff;color:#0891b2}
 .cpn-badge.used{background:#fefce8;color:#b45309}
 
+/* toast + publish */
+.toast{position:fixed;top:14px;left:14px;right:14px;z-index:200;background:#0c4a6e;color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 6px 24px rgba(0,0,0,0.25);font-size:13px;font-weight:600;animation:fadeUp .3s ease}
+.pub-btn{margin-top:8px;padding:8px 12px;border-radius:8px;border:1.5px solid #0891b2;background:#fff;color:#0891b2;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s}
+.pub-btn.on{background:#0891b2;color:#fff}
+
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes scaleIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
@@ -215,6 +220,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div class="fld"><textarea id="fNt" rows="3" placeholder="اكتب ملاحظاتك هنا..."></textarea></div>
   </div>
   <div class="teaser"><span class="e">🎁</span><div><div class="t1">كوبون خصم 10% هديتك!</div><div class="t2">أرسل تقييمك واحصل على كوبون خصم فوري</div></div></div>
+  <div style="text-align:center;margin:2px 0 8px"><a href="reviews.html" style="font-size:12px;color:#0891b2;font-weight:600;text-decoration:none">⭐ شاهد آراء عملائنا</a></div>
   <div class="err hide" id="err"></div>
 </div>
 <div class="sub-bar"><button class="sub-btn" id="subBtn">إرسال التقييم 🎁</button></div>
@@ -304,7 +310,7 @@ var MO=['يناير','فبراير','مارس','أبريل','مايو','يوني
 var SUBMIT_COOLDOWN_MS=60*60*1000; /* حد الإرسال المتكرر من نفس الجهاز: ساعة واحدة */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var LV=[{v:1,t:'ضعيف',c:'#ef4444'},{v:2,t:'مقبول',c:'#f97316'},{v:3,t:'جيد',c:'#eab308'},{v:4,t:'ممتاز',c:'#38bdf8'},{v:5,t:'رائع',c:'#0284c7'}];
-var D=[],S={o:0,c:0,p:0,tw:0,r:null},CH={},CHL=false,USED={},pendingCpn='';
+var D=[],S={o:0,c:0,p:0,tw:0,r:null},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true;
 
 var pages=['pgForm','pgCpn','pgLogin','pgAdm'];
 function go(id){pages.forEach(function(p){document.getElementById(p).classList.add('hide');});document.getElementById(id).classList.remove('hide');window.scrollTo(0,0);}
@@ -338,11 +344,15 @@ function sErr(m){var e=document.getElementById('err');e.textContent=m;e.classLis
 
 function doCpy(){var c=document.getElementById('cpnC').textContent,b=document.getElementById('cpyB');try{navigator.clipboard.writeText(c).then(ok).catch(fb);}catch(e){fb();}function fb(){var t=document.createElement('textarea');t.value=c;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);ok();}function ok(){b.textContent='تم النسخ ✓';b.classList.add('ok');setTimeout(function(){b.textContent='نسخ الكوبون';b.classList.remove('ok');},2000);}}
 
-function goHome(){S={o:0,c:0,p:0,tw:0,r:null};['fN','fP','fNt'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#ddd');});document.querySelectorAll('.cat-b').forEach(function(o){o.style.borderColor='#eee';o.style.background='#fafafa';o.style.color='#bbb';o.style.fontWeight='500';o.style.boxShadow='none';});document.querySelectorAll('.rec-b').forEach(function(b){b.style.borderColor='#e5e5e5';b.style.background='#fafafa';b.style.color='#bbb';b.style.boxShadow='none';b.style.transform='scale(1)';});document.getElementById('err').classList.add('hide');go('pgForm');}
+function goHome(){if(UNSUB){UNSUB();UNSUB=null;}S={o:0,c:0,p:0,tw:0,r:null};['fN','fP','fNt'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#ddd');});document.querySelectorAll('.cat-b').forEach(function(o){o.style.borderColor='#eee';o.style.background='#fafafa';o.style.color='#bbb';o.style.fontWeight='500';o.style.boxShadow='none';});document.querySelectorAll('.rec-b').forEach(function(b){b.style.borderColor='#e5e5e5';b.style.background='#fafafa';b.style.color='#bbb';b.style.boxShadow='none';b.style.transform='scale(1)';});document.getElementById('err').classList.add('hide');go('pgForm');}
 
 var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout(tt);if(tc>=3){tc=0;if(auth.currentUser){openAdmin();}else{go('pgLogin');}}else tt=setTimeout(function(){tc=0;},600);};
 
-function openAdmin(){go('pgAdm');loadCh().then(function(){return loadData();}).then(renderAdm);}
+function openAdmin(){
+go('pgAdm');
+if(window.Notification&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
+loadCh().then(function(){return loadPub();}).then(startLive);
+}
 function doLogin(){
 var em=document.getElementById('lgEmail').value.trim(),pw=document.getElementById('lgPass').value;
 var er=document.getElementById('lgErr'),btn=document.getElementById('lgBtn');
@@ -371,14 +381,53 @@ document.querySelectorAll('.adm-tb').forEach(function(t){t.onclick=function(){do
 function loadCh(){return new Promise(function(r){if(CHL){r();return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';s.onload=function(){CHL=true;r();};s.onerror=function(){r();};document.head.appendChild(s);});}
 function kC(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
 
-function loadData(){
-  D=[];USED={};
-  return db.collection('reviews').orderBy('ts','asc').get().then(function(snap){
+function startLive(){
+  if(UNSUB){UNSUB();UNSUB=null;}
+  FIRSTSNAP=true;
+  UNSUB=db.collection('reviews').orderBy('ts','asc').onSnapshot(function(snap){
+    var first=FIRSTSNAP;FIRSTSNAP=false;
+    D=[];USED={};
     snap.forEach(function(doc){var r=doc.data();r._id=doc.id;D.push(r);if(r.used)USED[r.cp]=r.usedAt||r.ts;});
-  }).catch(function(e){
-    console.log('Load error:',e);
+    renderAdm();
+    if(!first){snap.docChanges().forEach(function(ch){if(ch.type==='added')notifyNew(ch.doc.data());});}
+  },function(e){
+    console.log('Live error:',e);
     if(e&&e.code==='permission-denied')alert('لا تملك صلاحية قراءة البيانات — تأكد من تسجيل الدخول ومن نشر قواعد Firestore (راجع SETUP.md)');
   });
+}
+
+function loadPub(){
+  PUB={};
+  return db.collection('public_reviews').get().then(function(snap){
+    snap.forEach(function(doc){PUB[doc.id]=true;});
+  }).catch(function(e){console.log('Pub load error:',e);});
+}
+
+function showToast(m){
+  var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);
+  setTimeout(function(){t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(function(){t.remove();},400);},3500);
+}
+
+function notifyNew(r){
+  var nm=r.n||'عميل';
+  showToast('🔔 تقييم جديد ⭐'+r.o+' من '+nm);
+  if(window.Notification&&Notification.permission==='granted'){
+    try{new Notification('كلينولوجي — تقييم جديد',{body:'⭐'+r.o+' من '+nm+(r.nt?'\n'+String(r.nt).slice(0,80):'')});}catch(e){}
+  }
+}
+
+function togglePub(id){
+  var r=D.find(function(x){return x._id===id;});
+  if(!r)return;
+  if(PUB[id]){
+    db.collection('public_reviews').doc(id).delete().then(function(){
+      delete PUB[id];rRe();showToast('تم إخفاء التقييم من صفحة العرض');
+    }).catch(function(e){alert(e&&e.code==='permission-denied'?'انشر قواعد Firestore المحدّثة أولاً (راجع SETUP.md)':'خطأ، حاول مرة ثانية');});
+  }else{
+    db.collection('public_reviews').doc(id).set({n:r.n||'',o:r.o,nt:r.nt||'',ts:r.ts}).then(function(){
+      PUB[id]=true;rRe();showToast('تم نشر التقييم في صفحة العرض ✓');
+    }).catch(function(e){alert(e&&e.code==='permission-denied'?'انشر قواعد Firestore المحدّثة أولاً (راجع SETUP.md)':'خطأ، حاول مرة ثانية');});
+  }
 }
 
 function renderAdm(){rOv();rCp();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
@@ -387,6 +436,7 @@ function avg(a,f){if(!a.length)return 0;return(a.reduce(function(s,r){return s+r
 function rOv(){var el=document.getElementById('tcOverview'),n=D.length,rp=n?Math.round(D.filter(function(r){return r.r;}).length/n*100):0;
 var cats=[{l:'النظافة',k:'c',i:'✨',cl:'#0284c7'},{l:'الالتزام',k:'p',i:'⏰',cl:'#3b82f6'},{l:'التعامل',k:'tw',i:'👥',cl:'#8b5cf6'}];
 var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي التقييمات</div><div class="sc-v">'+n+'</div></div><div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">التقييم العام</div><div class="sc-v">'+avg(D,'o')+' ⭐</div></div><div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%</div></div><div class="sc" style="border-top:3px solid #8b5cf6"><div class="sc-l">الكوبونات</div><div class="sc-v">'+n+'</div></div></div>';
+h+='<a class="exp-btn" style="display:block;text-align:center;text-decoration:none" href="reviews.html" target="_blank">🌐 فتح صفحة عرض التقييمات</a>';
 if(n&&CHL)h+='<div class="cc"><h3>تحليل الأداء</h3><div class="cw"><canvas id="chR"></canvas></div></div>';
 h+='<div class="cc"><h3>متوسط التقييمات</h3>';
 cats.forEach(function(c){var v=avg(D,c.k);h+='<div class="ar"><div class="ar-l"><span>'+c.i+'</span><span>'+c.l+'</span></div><div class="ar-r"><div class="ab"><div class="af" style="width:'+(v/5*100)+'%;background:'+c.cl+'"></div></div><span class="av" style="color:'+c.cl+'">'+v+'/5</span></div></div>';});
@@ -405,7 +455,7 @@ if(CHL&&document.getElementById('chL')){try{kC('chL');CH['chL']=new Chart(docume
 function rRe(){var el=document.getElementById('tcResponses');
 if(!D.length){el.innerHTML='<div class="empty">لا توجد تقييمات بعد</div>';return;}
 var h='<button class="exp-btn" onclick="exportCSV()">⬇️ تصدير التقييمات (CSV)</button>';
-D.slice().reverse().forEach(function(r){var bc=r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');h+='<div class="rc" style="border-right-color:'+bc+'"><div class="rc-t"><div><div class="rc-nm">'+esc(r.n||'عميل')+'</div><div class="rc-dt">'+dt+(r.ph?' · 📱 '+esc(r.ph):'')+'</div></div><div class="rc-st"><span>'+esc(r.o)+'</span>⭐</div></div><div class="rc-sc"><span>✨'+esc(r.c)+'/5</span><span>⏰'+esc(r.p)+'/5</span><span>👥'+esc(r.tw)+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span></div>'+(r.nt?'<div class="rc-nt">"'+esc(r.nt)+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+esc(r.cp)+'</div>':'')+'</div>';});
+D.slice().reverse().forEach(function(r){var bc=r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');h+='<div class="rc" style="border-right-color:'+bc+'"><div class="rc-t"><div><div class="rc-nm">'+esc(r.n||'عميل')+'</div><div class="rc-dt">'+dt+(r.ph?' · 📱 '+esc(r.ph):'')+'</div></div><div class="rc-st"><span>'+esc(r.o)+'</span>⭐</div></div><div class="rc-sc"><span>✨'+esc(r.c)+'/5</span><span>⏰'+esc(r.p)+'/5</span><span>👥'+esc(r.tw)+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span></div>'+(r.nt?'<div class="rc-nt">"'+esc(r.nt)+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+esc(r.cp)+'</div>':'')+(r._id?'<div><button class="pub-btn'+(PUB[r._id]?' on':'')+'" onclick="togglePub(\''+r._id+'\')">'+(PUB[r._id]?'✓ منشور في صفحة العرض — اضغط للإخفاء':'🌐 نشر في صفحة العرض')+'</button></div>':'')+'</div>';});
 el.innerHTML=h;}
 
 function exportCSV(){
