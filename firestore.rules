@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // تقييمات العملاء
+    match /reviews/{reviewId} {
+
+      // أي زائر يقدر "ينشئ" تقييم جديد فقط، بشرط أن تكون البيانات سليمة
+      allow create: if
+        request.resource.data.keys().hasOnly(['n','ph','o','c','p','tw','r','nt','cp','ts','used']) &&
+        request.resource.data.o is int && request.resource.data.o >= 1 && request.resource.data.o <= 5 &&
+        request.resource.data.c is int && request.resource.data.c >= 1 && request.resource.data.c <= 5 &&
+        request.resource.data.p is int && request.resource.data.p >= 1 && request.resource.data.p <= 5 &&
+        request.resource.data.tw is int && request.resource.data.tw >= 1 && request.resource.data.tw <= 5 &&
+        request.resource.data.r is bool &&
+        request.resource.data.n is string && request.resource.data.n.size() <= 100 &&
+        request.resource.data.ph is string && request.resource.data.ph.size() <= 20 &&
+        request.resource.data.nt is string && request.resource.data.nt.size() <= 1000 &&
+        request.resource.data.cp is string && request.resource.data.cp.size() == 9 &&
+        request.resource.data.ts is string && request.resource.data.ts.size() <= 40 &&
+        request.resource.data.used == false;
+
+      // القراءة والتعديل والحذف للأدمن المسجّل دخوله فقط
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // أي مجموعة أخرى: ممنوعة بالكامل
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
