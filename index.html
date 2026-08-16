@@ -208,6 +208,36 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .exp-days{font-size:10px;font-weight:800;padding:4px 9px;border-radius:6px;white-space:nowrap}
 .exp-wa{display:inline-block;margin-top:9px;padding:9px 14px;border-radius:9px;background:#dcfce7;color:#16a34a;font-size:11.5px;font-weight:700;text-decoration:none}
 
+/* عروض ورسائل جماعية */
+.of-note{background:#f0f9ff;border:1px solid #dbeafe;border-radius:10px;padding:10px 12px;font-size:11px;color:#3d6a87;line-height:1.85;margin-bottom:10px}
+.of-ta{width:100%;padding:12px;border-radius:11px;border:1.5px solid #e5e5e5;font-family:inherit;font-size:12.5px;line-height:1.9;background:#fafafa;outline:none;resize:vertical;min-height:118px}
+.of-ta:focus{border-color:#0891b2;background:#fff}
+.of-row{display:flex;gap:8px;flex-wrap:wrap}
+.of-fld{flex:1;min-width:96px}
+.of-lb{display:block;font-size:10.5px;font-weight:700;color:#5d8aa8;margin-bottom:5px}
+.of-in{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e5e5e5;font-family:inherit;font-size:12.5px;background:#fafafa;outline:none}
+.of-in:focus{border-color:#0891b2;background:#fff}
+.of-tp{padding:7px 11px;border-radius:8px;border:1.5px solid #e5e5e5;background:#fafafa;font-size:11px;font-weight:600;color:#888;cursor:pointer;font-family:inherit;transition:all .2s}
+.of-tp.on{border-color:#0891b2;background:#0891b2;color:#fff}
+.of-hint{font-size:10px;color:#9ab;line-height:1.8;margin-top:6px}
+.of-pv{background:#eafaf0;border:1px solid #bbf7d0;border-radius:12px;padding:12px 13px;font-size:12px;line-height:1.95;color:#14532d;white-space:pre-wrap;word-break:break-word}
+.of-cur{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:14px;padding:13px;text-align:center;margin-bottom:11px}
+.of-cur-n{font-size:16.5px;font-weight:800;color:#0b3954}
+.of-cur-p{direction:ltr;font-family:monospace;font-size:12.5px;color:#5d8aa8;margin-top:3px}
+.of-prog{height:7px;border-radius:4px;background:#e8eef3;overflow:hidden;margin:11px 0 6px}
+.of-prog i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#29a9e1,#16a34a);transition:width .35s}
+.of-cnt{font-size:10.5px;color:#8aa2b2;text-align:center}
+.of-send{display:block;width:100%;text-align:center;text-decoration:none;padding:15px;border-radius:14px;border:none;background:#25d366;color:#fff;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(37,211,102,0.3)}
+.of-send:active{transform:scale(0.985)}
+.of-mini{display:flex;gap:8px;margin-top:9px}
+.of-mini button{flex:1;padding:11px 6px;border-radius:11px;border:1.5px solid #d8e6f0;background:#fff;color:#5d8aa8;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+.of-mini button:active{transform:scale(0.97)}
+.ct-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px;border-top:1px solid #f2f6f9}
+.ct-n{font-size:12.5px;font-weight:700;color:#234}
+.ct-p{direction:ltr;font-family:monospace;font-size:11px;color:#9ab;margin-top:2px}
+.ct-tag{font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:6px;white-space:nowrap}
+.ct-b{padding:7px 9px;border-radius:8px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#64748b}
+
 /* team select */
 .team-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .team-b{padding:9px 14px;border-radius:10px;border:1.5px solid #e5e5e5;background:#fafafa;font-size:12px;font-weight:600;color:#888;cursor:pointer;font-family:inherit;transition:all .2s}
@@ -374,6 +404,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <button class="adm-tb on" data-t="overview">📊 نظرة عامة</button>
     <button class="adm-tb" data-t="coupons">🎟️ الكوبونات</button>
     <button class="adm-tb" data-t="customers">👥 العملاء</button>
+    <button class="adm-tb" data-t="offers">📣 العروض</button>
     <button class="adm-tb" data-t="monthly">📈 الشهري</button>
     <button class="adm-tb" data-t="responses">💬 التقييمات</button>
   </div>
@@ -394,6 +425,56 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div id="cpnList"></div>
   </div>
   <div class="tc" id="tcCustomers"></div>
+  <div class="tc" id="tcOffers">
+    <div id="ofStats"></div>
+    <div class="cc">
+      <h3>📥 قائمة الأرقام اليومية</h3>
+      <div class="of-note">الصق أرقام اليوم من الإكسل أو الجوال — رقم في كل سطر، والاسم قبله أو بعده. نصلّح الصيغة ونحذف المكرر تلقائياً، فما ينضاف رقم مرتين مهما كررت اللصق.</div>
+      <textarea id="ofPaste" class="of-ta" placeholder="0501234567 أبو سعد&#10;منال, 0559876543&#10;+966501112223"></textarea>
+      <div class="of-row" style="margin-top:9px">
+        <button type="button" class="exp-btn" style="margin:0;flex:1" onclick="ofImport()">➕ أضف للقائمة</button>
+        <label class="exp-btn" style="margin:0;flex:1;text-align:center;cursor:pointer;display:block">📄 من ملف<input type="file" accept=".csv,.txt,text/csv,text/plain" onchange="ofFile(this)" style="display:none"></label>
+      </div>
+      <div id="ofImp"></div>
+      <button type="button" class="exp-btn" style="margin:9px 0 0;border-color:#d8e6f0;color:#5d8aa8" onclick="ofFromReviews()">👥 أضف أرقام عملاء التقييمات</button>
+    </div>
+    <div class="cc">
+      <h3>✍️ رسالة العرض</h3>
+      <div class="of-row" style="margin-bottom:10px" id="ofTpls"></div>
+      <div class="of-row" style="margin-bottom:9px">
+        <div class="of-fld" style="min-width:130px"><label class="of-lb" for="ofName">اسم العرض (للمتابعة)</label><input id="ofName" class="of-in" maxlength="40" placeholder="عرض نهاية الأسبوع"></div>
+        <div class="of-fld"><label class="of-lb" for="ofDisc">الخصم</label><input id="ofDisc" class="of-in" maxlength="12" value="20%"></div>
+        <div class="of-fld"><label class="of-lb" for="ofDays">صالح (أيام)</label><input id="ofDays" class="of-in" inputmode="numeric" maxlength="3" value="5"></div>
+      </div>
+      <textarea id="ofMsg" class="of-ta" maxlength="900"></textarea>
+      <div class="of-hint">تُستبدل تلقائياً: <b>{الاسم}</b> · <b>{الخصم}</b> · <b>{المدة}</b> · <b>{التحية}</b> · <b>{الشركة}</b> · <b>{المندوب}</b> · <b>{واتساب}</b></div>
+      <label class="of-lb" style="margin-top:11px">معاينة الرسالة</label>
+      <div class="of-pv" id="ofPv"></div>
+    </div>
+    <div class="cc">
+      <h3>🚀 الإرسال السريع</h3>
+      <div class="of-note">ثلاث ضغطات لكل عميل: زر الإرسال يفتح واتساب والرسالة مكتوبة باسمه، وترجع تلقائياً للعميل التالي. اللي أرسلت له هذا العرض ما يرجع لك مرة ثانية حتى لو أضفت أرقام جديدة بكرة.</div>
+      <div id="ofSend"></div>
+    </div>
+    <div class="cc">
+      <h3>📢 الأسرع: قائمة البث</h3>
+      <div class="of-note">لو القائمة كبيرة: نزّل جهات الاتصال (ملف لكل 250 رقم)، احفظها في الجوال، وسوِّ «قائمة بث» في واتساب للأعمال — رسالة وحدة توصل الجميع دفعة وحدة. شرط واتساب: يكون رقمك محفوظاً عند العميل.</div>
+      <button type="button" class="exp-btn" onclick="ofVcf()">📇 نزّل جهات الاتصال (VCF)</button>
+      <button type="button" class="exp-btn" id="ofCopyB" onclick="ofCopyMsg()">📋 انسخ نص الرسالة</button>
+      <button type="button" class="exp-btn" style="margin-bottom:0;border-color:#d8e6f0;color:#5d8aa8" onclick="ofCsv()">⬇️ تصدير القائمة (CSV)</button>
+    </div>
+    <div class="cc" style="padding:12px 14px">
+      <h3>📇 القائمة (<span id="ofCount">0</span>)</h3>
+      <input id="ofSearch" class="rv-search" placeholder="🔍 بحث بالاسم أو الرقم..." autocomplete="off">
+      <div class="of-row" id="ofChips">
+        <button type="button" class="of-tp on" data-f="all">الكل</button>
+        <button type="button" class="of-tp" data-f="pend">لم يُرسل</button>
+        <button type="button" class="of-tp" data-f="sent">أُرسل</button>
+        <button type="button" class="of-tp" data-f="off">موقوف</button>
+      </div>
+      <div id="ofList"></div>
+    </div>
+  </div>
   <div class="tc" id="tcMonthly"></div>
   <div class="tc" id="tcResponses">
     <div class="cc" style="padding:12px 14px">
@@ -632,7 +713,7 @@ var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout
 function openAdmin(){
 go('pgAdm');
 if(window.Notification&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
-loadCh().then(function(){return loadPub();}).then(function(){return loadTargets();}).then(startLive);
+loadCh().then(function(){return loadPub();}).then(function(){return loadTargets();}).then(function(){return loadContacts();}).then(startLive);
 }
 function doLogin(){
 var em=document.getElementById('lgEmail').value.trim(),pw=document.getElementById('lgPass').value;
@@ -750,7 +831,7 @@ function togglePub(id){
   }
 }
 
-function renderAdm(){rOv();rCp();rCu();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
+function renderAdm(){rOv();rCp();rCu();rOf();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
 
 /* ===== نسخة احتياطية واستعادة ===== */
 function backupData(){
@@ -883,6 +964,302 @@ function backWaLink(c){
     '\n\nاكتب (حجز) وحنا نكفيك الباقي ✨';
   return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
 }
+/* ===== قائمة الأرقام ورسائل العروض ===== */
+var CT=[],OFSK={},OFQ='',OFF='all',OFSHOW=40;
+var OFTPL=[
+{t:'🎁 عرض عام',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nخصصنا لك خصم {الخصم} على أي خدمة تنظيف تختارها، وصالح {المدة} فقط.\nاكتب (حجز) وحنا نكفيك الباقي ✨'},
+{t:'🏠 تنظيف المنازل',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nبيتك يستاهل نظافة تفرق — عرض تنظيف شامل بخصم {الخصم}، صالح {المدة}.\nفريق ملتزم بالموعد وشغل تشوفه بعينك 👌\nاكتب (حجز) ونجيك بالوقت اللي يناسبك ✨'},
+{t:'🕌 قبل المناسبة',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nقربت المناسبة والمواعيد تنحجز بسرعة — احجز تنظيف بيتك الآن وخذ خصم {الخصم}، والعرض صالح {المدة}.\nاكتب (حجز) ونثبت لك موعدك قبل ما يمتلئ الجدول ✨'},
+{t:'🛋 السجاد والمفروشات',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nغسيل السجاد والكنب بالبخار — يرجع لونه ورائحته زي أول، وبخصم {الخصم} {المدة}.\nاكتب (حجز) ونمر عليك ونستلم ✨'}
+];
+/* الأرقام السعودية تُحوّل لصيغة 9665xxxxxxxx، وأي رقم دولي يُقبل كما هو */
+function ofNorm(raw){
+  var d=waNum(raw);
+  if(d.indexOf('966')===0)return /^9665\d{8}$/.test(d)?d:''; /* داخل السعودية: جوال فقط */
+  if(/^[1-9]\d{9,14}$/.test(d))return d;
+  return '';
+}
+/* قراءة الأسماء والأرقام من نص ملصوق أو ملف — يتحمل الفواصل والشرط والأقواس */
+function ofParse(txt){
+  var res={ok:[],bad:[]},seen={};
+  String(txt||'').split(/[\r\n]+/).forEach(function(ln){
+    var line=ln.replace(/[\u200e\u200f\u202a-\u202e]/g,'').trim();
+    if(!line)return;
+    var m=line.match(/\+?\d[\d\s\-().]{7,24}\d/);
+    var p=m?ofNorm(m[0]):'';
+    if(!p){res.bad.push(line.slice(0,40));return;}
+    var nm=line.replace(m[0],' ').replace(/["'،,;|]+/g,' ').replace(/\s{2,}/g,' ').trim().slice(0,60);
+    if(/^\d+$/.test(nm))nm='';
+    if(seen[p]){if(nm&&!seen[p].n)seen[p].n=nm;return;}
+    var o={p:p,n:nm};seen[p]=o;res.ok.push(o);
+  });
+  return res;
+}
+function ofGet(p){return CT.find(function(c){return c.p===p;});}
+function loadContacts(){
+  return db.collection('contacts').limit(5000).get().then(function(snap){
+    CT=[];
+    snap.forEach(function(d){var c=d.data()||{};c.p=c.p||d.id;if(!c.cs)c.cs=[];CT.push(c);});
+    CT.sort(function(a,b){return String(a.at||'').localeCompare(String(b.at||''));});
+  }).catch(function(e){
+    if(e&&e.code==='permission-denied')console.log('قواعد contacts غير منشورة — راجع SETUP.md');
+    else console.log('Contacts load:',e&&e.code);
+  });
+}
+function ofImport(){
+  var ta=document.getElementById('ofPaste'),v=ta.value;
+  if(!v.trim()){showToast('الصق أرقام العملاء أولاً');return;}
+  ofSave(ofParse(v),function(){ta.value='';});
+}
+function ofFile(inp){
+  var f=inp.files&&inp.files[0];inp.value='';
+  if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){ofSave(ofParse(String(rd.result||'').replace(/^\ufeff/,'')));};
+  rd.onerror=function(){alert('تعذّرت قراءة الملف');};
+  rd.readAsText(f,'utf-8');
+}
+function ofFromReviews(){
+  if(!D.length){showToast('لا توجد تقييمات بعد');return;}
+  var seen={},list=[];
+  D.forEach(function(r){
+    var p=ofNorm(r.ph);if(!p||seen[p])return;
+    seen[p]=1;list.push({p:p,n:String(r.n||'').trim().slice(0,60)});
+  });
+  ofSave({ok:list,bad:[]});
+}
+/* الحفظ يضيف الجديد فقط ويكمل الأسماء الناقصة — ولا يمس حالة الإرسال ولا الموقوفين */
+function ofSave(parsed,done){
+  var have={};CT.forEach(function(c){have[c.p]=c;});
+  var fresh=[],named=[],dup=0,now=new Date().toISOString();
+  parsed.ok.forEach(function(o){
+    var ex=have[o.p];
+    if(!ex){fresh.push(o);return;}
+    dup++;
+    if(o.n&&!ex.n)named.push({c:ex,n:o.n});
+  });
+  var box=document.getElementById('ofImp');
+  if(!fresh.length&&!named.length){
+    box.innerHTML=ofImpBox(0,dup,parsed.bad);
+    if(dup)showToast('كل الأرقام موجودة عندك مسبقاً ✓');
+    if(done)done();
+    return;
+  }
+  var ops=[],chunk=[];
+  fresh.forEach(function(o){chunk.push(o);if(chunk.length===400){ops.push(chunk);chunk=[];}});
+  if(chunk.length)ops.push(chunk);
+  showToast('جاري الحفظ...');
+  Promise.all(ops.map(function(part){
+    var b=db.batch();
+    part.forEach(function(o){b.set(db.collection('contacts').doc(o.p),{p:o.p,n:o.n||'',at:now,st:1,cs:[]});});
+    return b.commit();
+  }).concat(named.map(function(u){
+    return db.collection('contacts').doc(u.c.p).update({n:u.n});
+  }))).then(function(){
+    fresh.forEach(function(o){CT.push({p:o.p,n:o.n||'',at:now,st:1,cs:[]});});
+    named.forEach(function(u){u.c.n=u.n;});
+    box.innerHTML=ofImpBox(fresh.length,dup,parsed.bad);
+    showToast('أضفنا '+fresh.length+' رقم جديد ✓');
+    if(done)done();
+    rOf();
+  }).catch(function(e){
+    if(e&&e.code==='permission-denied')alert('لا تملك صلاحية حفظ الأرقام — انشر قواعد Firestore المحدثة (راجع SETUP.md)');
+    else alert('صار خطأ أثناء الحفظ، حاول مرة ثانية');
+  });
+}
+function ofImpBox(add,dup,bad){
+  var h='<div class="of-note" style="margin:10px 0 0;background:#f0fdf4;border-color:#bbf7d0;color:#166534">'+
+    '✅ جديد: <b>'+add+'</b> · مكرر تجاهلناه: <b>'+dup+'</b>'+(bad.length?' · غير صالح: <b>'+bad.length+'</b>':'')+'</div>';
+  if(bad.length)h+='<div class="of-note" style="margin:8px 0 0;background:#fef2f2;border-color:#fecaca;color:#b91c1c">أسطر ما فيها رقم صحيح:<br>'+bad.slice(0,6).map(esc).join('<br>')+(bad.length>6?'<br>… و'+(bad.length-6)+' سطر آخر':'')+'</div>';
+  return h;
+}
+function ofCamp(){
+  var v=String((document.getElementById('ofName')||{}).value||'').trim();
+  return v||('عرض '+new Date().toISOString().slice(0,10));
+}
+function ofDur(d){return d===1?'اليوم فقط':d===2?'يومين':d<=10?d+' أيام':d+' يوم';}
+function ofFill(m,c){
+  var d=parseInt(document.getElementById('ofDays').value,10);if(!isFinite(d)||d<1)d=5;
+  var disc=String(document.getElementById('ofDisc').value||'').trim()||'20%';
+  var nm=(c&&c.n?String(c.n).trim():'')||'عميلنا العزيز';
+  return String(m||'').replace(/\{الاسم\}/g,nm).replace(/\{الخصم\}/g,disc).replace(/\{المدة\}/g,ofDur(d))
+    .replace(/\{التحية\}/g,greetAr()).replace(/\{الشركة\}/g,BIZ.name).replace(/\{المندوب\}/g,BIZ.rep)
+    .replace(/\{واتساب\}/g,bizWa());
+}
+function ofSentIn(c,k){return !!(c.cs&&c.cs.indexOf(k)>=0);}
+/* الدور: كل من لم يُرسل له هذا العرض، ما عدا الموقوفين والمتخطّين في هذه الجلسة */
+function ofQueue(){
+  var k=ofCamp();
+  return CT.filter(function(c){return c.st!==0&&!OFSK[c.p]&&!ofSentIn(c,k);});
+}
+function rOf(){rOfStats();rOfPv();rOfSend();rOfList();}
+function rOfStats(){
+  var k=ofCamp(),sent=0,off=0;
+  CT.forEach(function(c){if(c.st===0)off++;else if(ofSentIn(c,k))sent++;});
+  var left=CT.length-off-sent;
+  document.getElementById('ofStats').innerHTML='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">أرقام في القائمة</div><div class="sc-v">'+CT.length+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">أُرسل لهم العرض</div><div class="sc-v" style="color:#16a34a">'+sent+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">باقي في الدور</div><div class="sc-v" style="color:#b45309">'+left+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #94a3b8"><div class="sc-l">موقوفون</div><div class="sc-v" style="color:#64748b">'+off+'</div></div></div>';
+  document.getElementById('ofCount').textContent=CT.length;
+}
+function rOfPv(){
+  var q=ofQueue();
+  document.getElementById('ofPv').textContent=ofFill(document.getElementById('ofMsg').value,q[0]||CT[0]);
+}
+function rOfSend(){
+  var el=document.getElementById('ofSend'),k=ofCamp();
+  if(!CT.length){el.innerHTML='<div class="empty">أضف أرقام العملاء أولاً ☝️</div>';return;}
+  var q=ofQueue(),sent=CT.filter(function(c){return c.st!==0&&ofSentIn(c,k);}).length;
+  var skipped=CT.filter(function(c){return c.st!==0&&OFSK[c.p]&&!ofSentIn(c,k);}).length;
+  var tot=sent+skipped+q.length;
+  if(!q.length){
+    el.innerHTML='<div class="empty">خلّصنا «'+esc(k)+'» — أُرسل لـ '+sent+' عميل ✓'+(skipped?'<br><span style="font-size:11px">وتخطيت '+skipped+'</span>':'')+'</div>'+
+      (skipped?'<button type="button" class="exp-btn" onclick="ofUnskip()">↩️ رجّع المتخطّين للدور</button>':'')+
+      '<button type="button" class="exp-btn" style="margin-bottom:0;border-color:#d8e6f0;color:#5d8aa8" onclick="ofResetCamp()">🔄 ابدأ إرسال «'+esc(k)+'» من جديد</button>';
+    return;
+  }
+  var c=q[0],txt=ofFill(document.getElementById('ofMsg').value,c);
+  var pct=tot?Math.round((sent+skipped)/tot*100):0;
+  el.innerHTML='<div class="of-cur"><div class="of-cur-n">'+esc(c.n||'عميل')+'</div><div class="of-cur-p">+'+esc(c.p)+'</div>'+
+    (c.la?'<div style="font-size:10px;color:#9ab;margin-top:5px">آخر رسالة: '+esc(new Date(c.la).toLocaleDateString('ar-SA'))+(c.lc?' · '+esc(c.lc):'')+'</div>':'')+'</div>'+
+    '<a class="of-send" target="_blank" rel="noopener" href="https://wa.me/'+c.p+'?text='+encodeURIComponent(txt)+'" onclick="ofSent(\''+c.p+'\')">💬 افتح واتساب وأرسل</a>'+
+    '<div class="of-mini"><button type="button" onclick="ofSkip(\''+c.p+'\')">⏭ تخطي</button><button type="button" onclick="ofMute(\''+c.p+'\')">🔕 لا ترسل له</button></div>'+
+    '<div class="of-prog"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="of-cnt">أُرسل '+sent+' من '+tot+(skipped?' · متخطّى '+skipped:'')+' · باقي '+q.length+'</div>'+
+    (sent?'<button type="button" class="ct-b" style="display:block;margin:9px auto 0;background:none;color:#9ab" onclick="ofResetCamp()">🔄 صفّر إرسال «'+esc(k)+'»</button>':'');
+}
+function rOfList(){
+  var el=document.getElementById('ofList'),k=ofCamp(),q=OFQ.toLowerCase();
+  var list=CT.filter(function(c){
+    if(OFF==='off'&&c.st!==0)return false;
+    if(OFF!=='off'&&c.st===0)return false;
+    if(OFF==='sent'&&!ofSentIn(c,k))return false;
+    if(OFF==='pend'&&ofSentIn(c,k))return false;
+    if(q){
+      var dq=q.replace(/\D/g,'');
+      if(String(c.n||'').toLowerCase().indexOf(q)<0&&!(dq&&c.p.indexOf(dq)>=0))return false;
+    }
+    return true;
+  });
+  if(!list.length){el.innerHTML='<div class="empty">لا يوجد</div>';return;}
+  var h='';
+  list.slice(0,OFSHOW).forEach(function(c){
+    var done=ofSentIn(c,k);
+    var tag=c.st===0?'<span class="ct-tag" style="background:#f1f5f9;color:#64748b">موقوف</span>':
+      done?'<span class="ct-tag" style="background:#f0fdf4;color:#16a34a">أُرسل ✓</span>':
+      '<span class="ct-tag" style="background:#fff7ed;color:#b45309">في الدور</span>';
+    h+='<div class="ct-row"><div><div class="ct-n">'+esc(c.n||'عميل')+'</div><div class="ct-p">+'+esc(c.p)+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:6px">'+tag+
+      '<button type="button" class="ct-b" onclick="ofMute(\''+c.p+'\')">'+(c.st===0?'▶️':'🔕')+'</button>'+
+      '<button type="button" class="ct-b" style="background:#fee2e2;color:#dc2626" onclick="ofDel(\''+c.p+'\')">🗑</button></div></div>';
+  });
+  if(list.length>OFSHOW)h+='<button type="button" class="exp-btn" style="margin:10px 0 0" onclick="OFSHOW+=60;rOfList()">⬇️ عرض المزيد ('+(list.length-OFSHOW)+')</button>';
+  el.innerHTML=h;
+}
+function ofSent(p){
+  var c=ofGet(p);if(!c)return;
+  var k=ofCamp(),now=new Date().toISOString();
+  if(!c.cs)c.cs=[];
+  if(c.cs.indexOf(k)<0)c.cs.push(k);
+  c.la=now;c.lc=k;
+  db.collection('contacts').doc(p).set({cs:firebase.firestore.FieldValue.arrayUnion(k),la:now,lc:k},{merge:true})
+   .catch(function(){showToast('تعذّر حفظ حالة الإرسال — تحقق من الاتصال');});
+  setTimeout(rOf,400);
+}
+function ofSkip(p){OFSK[p]=1;rOf();}
+function ofUnskip(){OFSK={};rOf();}
+function ofMute(p){
+  var c=ofGet(p);if(!c)return;
+  var on=c.st===0;
+  if(!on&&!confirm('إيقاف الرسائل عن '+(c.n||c.p)+'؟'))return;
+  c.st=on?1:0;
+  db.collection('contacts').doc(p).update({st:c.st}).catch(function(){showToast('تعذّر الحفظ');});
+  showToast(on?'رجّعناه للقائمة ✓':'أوقفنا الرسائل عنه 🔕');
+  rOf();
+}
+function ofDel(p){
+  var c=ofGet(p);if(!c)return;
+  if(!confirm('حذف '+(c.n||p)+' من القائمة؟'))return;
+  db.collection('contacts').doc(p).delete().then(function(){
+    var i=CT.indexOf(c);if(i>=0)CT.splice(i,1);
+    showToast('تم الحذف');rOf();
+  }).catch(function(){alert('خطأ في الحذف، حاول مرة ثانية');});
+}
+/* إعادة فتح نفس العرض للجميع — لو تبي ترسله مرة ثانية */
+function ofResetCamp(){
+  var k=ofCamp(),hit=CT.filter(function(c){return ofSentIn(c,k);});
+  if(!hit.length){showToast('ما فيه إرسال سابق لهذا العرض');return;}
+  if(!confirm('إعادة «'+k+'» لكل القائمة ('+hit.length+' عميل)؟'))return;
+  var parts=[];for(var i=0;i<hit.length;i+=400)parts.push(hit.slice(i,i+400));
+  Promise.all(parts.map(function(part){
+    var b=db.batch();
+    part.forEach(function(c){b.update(db.collection('contacts').doc(c.p),{cs:firebase.firestore.FieldValue.arrayRemove(k)});});
+    return b.commit();
+  })).then(function(){
+    hit.forEach(function(c){c.cs=c.cs.filter(function(x){return x!==k;});});
+    OFSK={};showToast('جاهز للإرسال من جديد ✓');rOf();
+  }).catch(function(){alert('صار خطأ، حاول مرة ثانية');});
+}
+function ofDL(blob,name){
+  var u=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(u);},60000);
+}
+/* جهات الاتصال لقوائم البث — واتساب يحد قائمة البث بـ 256 رقم */
+function ofVcf(){
+  var list=CT.filter(function(c){return c.st!==0;});
+  if(!list.length){showToast('القائمة فارغة');return;}
+  var parts=[];for(var i=0;i<list.length;i+=250)parts.push(list.slice(i,i+250));
+  parts.forEach(function(part,i){
+    var v=part.map(function(c,j){
+      var nm=String(c.n||('عميل '+(i*250+j+1))).replace(/[\r\n;:,]/g,' ').trim();
+      return 'BEGIN:VCARD\nVERSION:3.0\nFN:'+nm+'\nTEL;TYPE=CELL:+'+c.p+'\nEND:VCARD';
+    }).join('\n');
+    setTimeout(function(){ofDL(new Blob([v],{type:'text/vcard;charset=utf-8'}),'kleenology-contacts-'+(i+1)+'.vcf');},i*700);
+  });
+  showToast('نزّلنا '+parts.length+' ملف — كل ملف يصير قائمة بث وحدة');
+}
+function ofCopyMsg(){
+  var t=ofFill(document.getElementById('ofMsg').value,null),b=document.getElementById('ofCopyB');
+  function ok(){b.textContent='تم النسخ ✓';setTimeout(function(){b.textContent='📋 انسخ نص الرسالة';},2200);}
+  function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(a);ok();}
+  try{navigator.clipboard.writeText(t).then(ok).catch(fb);}catch(e){fb();}
+}
+function ofCsv(){
+  if(!CT.length){showToast('القائمة فارغة');return;}
+  var k=ofCamp();
+  var rows=[['الاسم','الجوال','أُضيف','آخر عرض','تاريخ آخر إرسال','أُرسل له '+k,'الحالة']];
+  CT.forEach(function(c){rows.push([c.n||'','+'+c.p,c.at||'',c.lc||'',c.la||'',ofSentIn(c,k)?'نعم':'لا',c.st===0?'موقوف':'نشط']);});
+  var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+  ofDL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-contacts-'+new Date().toISOString().slice(0,10)+'.csv');
+}
+function ofInit(){
+  var tb=document.getElementById('ofTpls');
+  OFTPL.forEach(function(t,i){
+    var b=document.createElement('button');b.type='button';b.className='of-tp'+(i===0?' on':'');b.textContent=t.t;
+    b.onclick=function(){
+      document.getElementById('ofMsg').value=t.m;
+      tb.querySelectorAll('.of-tp').forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on');rOfPv();rOfSend();
+    };
+    tb.appendChild(b);
+  });
+  document.getElementById('ofMsg').value=OFTPL[0].m;
+  ['ofMsg','ofDisc','ofDays'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',function(){rOfPv();rOfSend();});
+  });
+  document.getElementById('ofName').addEventListener('input',function(){OFSK={};rOf();});
+  document.getElementById('ofSearch').addEventListener('input',function(){OFQ=this.value.trim();OFSHOW=40;rOfList();});
+  document.getElementById('ofChips').querySelectorAll('.of-tp').forEach(function(c){
+    c.onclick=function(){
+      OFF=c.dataset.f;OFSHOW=40;
+      document.getElementById('ofChips').querySelectorAll('.of-tp').forEach(function(x){x.classList.remove('on');});
+      c.classList.add('on');rOfList();
+    };
+  });
+}
+
 function avg(a,f){var s=0,n=0;a.forEach(function(r){var v=Number(r[f]);if(isFinite(v)&&v>=1&&v<=5){s+=v;n++;}});return n?(s/n).toFixed(1):'0';}
 function num(v){v=Number(v);return isFinite(v)&&v>=1&&v<=5?v:'-';}
 
@@ -1378,6 +1755,8 @@ Promise.all(chunks.map(function(chunk){
   chunk.forEach(function(id){batch.delete(db.collection('reviews').doc(id));});
   return batch.commit();
 })).then(function(){D=[];USED={};renderAdm();}).catch(function(){alert('خطأ في المسح');});}
+
+ofInit();
 
 if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 
