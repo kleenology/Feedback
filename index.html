@@ -94,6 +94,12 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .b-cls{background:#f1f5f9;color:#64748b;border:none}
 .b-wa-save{width:100%;margin-top:10px;padding:13px;border-radius:12px;border:none;background:#25d366;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 3px 14px rgba(37,211,102,0.3)}
 .b-wa-save:active{transform:scale(0.98)}
+.ref-box{margin-top:16px;background:#fff;border:1.5px dashed #f5b301;border-radius:16px;padding:16px 14px;animation:fadeUp .4s ease}
+.ref-t{font-size:14px;font-weight:800;color:#0b3954;margin-bottom:4px}
+.ref-s{font-size:11px;color:#8aa2b2;line-height:1.7;margin-bottom:10px}
+.ref-code{direction:ltr;font-family:monospace;font-size:20px;font-weight:800;letter-spacing:2px;color:#0f7cb8;background:#f0f9ff;border-radius:10px;padding:10px;margin-bottom:10px}
+.ref-btn{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#ffd66b,#f5b301);color:#5d4700;font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:0 3px 14px rgba(245,179,1,0.32)}
+.ref-btn:active{transform:scale(0.98)}
 
 /* ===== PIN PAGE ===== */
 .pin-pg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#0f172a,#1e293b);padding:20px}
@@ -309,6 +315,12 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <button class="b-cls" onclick="goHome()">إغلاق</button>
   </div>
   <button class="b-wa-save" onclick="saveCpnWa()">💬 احفظ كوبونك في واتساب</button>
+  <div class="ref-box hide" id="refBox">
+    <div class="ref-t">🎁 أهدِ أصدقاءك خصم 10%</div>
+    <div class="ref-s">شارك تجربتك مع أصدقائك — يستفيدون من خصم بكودك الخاص</div>
+    <div class="ref-code" id="refCode"></div>
+    <button class="ref-btn" onclick="shareFriendCard()">📤 شارك البطاقة مع أصدقائك</button>
+  </div>
 </div>
 </div>
 
@@ -389,6 +401,10 @@ var MO=['يناير','فبراير','مارس','أبريل','مايو','يوني
 var SUBMIT_COOLDOWN_MS=60*60*1000; /* حد الإرسال المتكرر من نفس الجهاز: ساعة واحدة */
 var TEAMS=['فريق أبو رزان']; /* أسماء الفرق — أضف أسماء جديدة هنا ويظهر سؤال الفريق تلقائياً في النموذج */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+/* كود الصديق مشتق من كود العميل — يتحقق منه بدون تخزين إضافي */
+function friendCode(cp){return cp?'KLNF'+String(cp).slice(3):'';}
+function baseFromFriend(code){return code&&code.indexOf('KLNF')===0?'KLN'+code.slice(4):'';}
+var LASTREV={o:0,n:'',cp:''};
 var LV=[{v:1,t:'ضعيف',c:'#ef4444',e:'😖'},{v:2,t:'مقبول',c:'#f97316',e:'😕'},{v:3,t:'جيد',c:'#eab308',e:'🙂'},{v:4,t:'ممتاز',c:'#29a9e1',e:'😄'},{v:5,t:'رائع',c:'#0f7cb8',e:'🤩'}];
 var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all',RVT='',TKS=[],CURT='',TMONTH='',TARGETS={};
 
@@ -440,11 +456,74 @@ document.getElementById('subBtn').onclick=function(){
   var btn=document.getElementById('subBtn');btn.textContent='جاري الإرسال...';btn.disabled=true;
   db.collection('reviews').add(entry).then(function(){
     try{localStorage.setItem('kln_last',String(Date.now()));}catch(x){}
-    document.getElementById('cpnC').textContent=cp;go('pgCpn');
+    document.getElementById('cpnC').textContent=cp;
+    LASTREV={o:entry.o,n:entry.n,cp:cp};
+    var rb=document.getElementById('refBox');
+    if(entry.o>=4){document.getElementById('refCode').textContent=friendCode(cp);rb.classList.remove('hide');}
+    else rb.classList.add('hide');
+    go('pgCpn');
     btn.textContent='إرسال التقييم 🎁';btn.disabled=false;
   }).catch(function(){sErr('خطأ في الإرسال، حاول مرة ثانية');btn.textContent='إرسال التقييم 🎁';btn.disabled=false;});
 };
 function sErr(m){var e=document.getElementById('err');e.textContent=m;e.classList.remove('hide');e.scrollIntoView({behavior:'smooth',block:'center'});}
+
+function shareFriendCard(){
+  var fc=friendCode(LASTREV.cp),rate=LASTREV.o||5,nm=LASTREV.n||'';
+  var exp=new Date();exp.setDate(exp.getDate()+30);
+  var txt='جربت خدمة كلينولوجي وكانت ممتازة ✨\nاستخدم كودي '+fc+' واحصل على خصم 10% على خدمتك\nصالح حتى '+exp.toLocaleDateString('ar-SA');
+  var W=700,Hc=900,SC=3;
+  var cv=document.createElement('canvas');cv.width=W*SC;cv.height=Hc*SC;
+  var x=cv.getContext('2d');x.scale(SC,SC);
+  x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
+  function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+  function star(cx,cy,R){x.beginPath();for(var p=0;p<5;p++){var a=-Math.PI/2+p*2*Math.PI/5;if(p===0)x.moveTo(cx+R*Math.cos(a),cy+R*Math.sin(a));else x.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));var a2=a+Math.PI/5;x.lineTo(cx+R*0.45*Math.cos(a2),cy+R*0.45*Math.sin(a2));}x.closePath();}
+  function draw(logo){
+    var g=x.createLinearGradient(0,0,W,Hc);g.addColorStop(0,'#083b66');g.addColorStop(0.55,'#1173b5');g.addColorStop(1,'#29a9e1');
+    x.fillStyle=g;x.fillRect(0,0,W,Hc);
+    x.fillStyle='rgba(255,255,255,0.06)';
+    x.beginPath();x.arc(70,120,130,0,7);x.fill();
+    x.beginPath();x.arc(640,760,150,0,7);x.fill();
+    x.save();x.shadowColor='rgba(0,0,0,0.22)';x.shadowBlur=20;x.shadowOffsetY=7;x.fillStyle='#fff';rr(230,55,240,150,26);x.fill();x.restore();
+    if(logo){
+      var s=Math.min(205/logo.width,128/logo.height),w=logo.width*s,h=logo.height*s;
+      var src=logo,tw=logo.width,th=logo.height,dw=Math.round(w*SC);
+      while(tw/2>dw){var t2=document.createElement('canvas');t2.width=Math.round(tw/2);t2.height=Math.round(th/2);var c2=t2.getContext('2d');c2.imageSmoothingEnabled=true;c2.imageSmoothingQuality='high';c2.drawImage(src,0,0,t2.width,t2.height);if(src!==logo){src.width=0;src.height=0;}src=t2;tw=t2.width;th=t2.height;}
+      x.drawImage(src,230+(240-w)/2,55+(150-h)/2,w,h);
+    }
+    x.direction='rtl';x.textAlign='center';
+    var R=27,gap=13,total=5*2*R+4*gap,right=W/2+total/2-R;
+    for(var i2=0;i2<5;i2++){
+      star(right-i2*(2*R+gap),275,R);
+      x.fillStyle=i2<rate?'#f5b301':'rgba(255,255,255,0.25)';x.fill();
+    }
+    x.fillStyle='#fff';x.font='bold 31px "Noto Kufi Arabic"';
+    x.fillText('جرّبت كلينولوجي',W/2,355);
+    x.fillText('وكانت تجربة ممتازة ✨',W/2,398);
+    if(nm){x.fillStyle='rgba(255,255,255,0.7)';x.font='19px "Noto Kufi Arabic"';x.fillText('— '+nm,W/2,437);}
+    x.save();x.shadowColor='rgba(0,0,0,0.18)';x.shadowBlur=18;x.shadowOffsetY=7;x.fillStyle='#fff';rr(60,480,580,250,24);x.fill();x.restore();
+    x.fillStyle='#0b3954';x.font='bold 25px "Noto Kufi Arabic"';x.fillText('🎁 هدية لك من صديقك',W/2,532);
+    x.fillStyle='#5d8aa8';x.font='18px "Noto Kufi Arabic"';x.fillText('خصم 10% على خدمتك الأولى',W/2,568);
+    var yg=x.createLinearGradient(100,590,600,590);yg.addColorStop(0,'#ffd66b');yg.addColorStop(1,'#f5b301');
+    x.fillStyle=yg;rr(100,590,440,66,16);x.fill();
+    x.fillStyle='#5d4700';x.font='bold 31px monospace';x.direction='ltr';x.fillText(fc,W/2,634);x.direction='rtl';
+    x.fillStyle='#9ab';x.font='15px "Noto Kufi Arabic"';x.fillText('صالح حتى '+exp.toLocaleDateString('ar-SA'),W/2,690);
+    x.fillStyle='rgba(255,255,255,0.92)';x.font='bold 21px "Noto Kufi Arabic"';x.fillText('اذكر الكود عند الحجز واستفد من الخصم',W/2,790);
+    x.fillStyle='rgba(255,255,255,0.55)';x.font='17px "Noto Kufi Arabic"';x.fillText('Kleenology — نظافة تليق بك',W/2,845);
+    cv.toBlob(function(b){
+      if(!b){alert('تعذر إنشاء البطاقة');return;}
+      var f;try{f=new File([b],'kleenology-offer.png',{type:'image/png'});}catch(e){f=null;}
+      if(f&&navigator.canShare&&navigator.canShare({files:[f]})&&navigator.share){
+        navigator.share({files:[f],text:txt}).catch(function(){});
+      }else if(navigator.share){
+        navigator.share({text:txt}).catch(function(){});
+      }else{
+        window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+      }
+    },'image/png');
+  }
+  var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+  ready.then(function(){var im=new Image();im.onload=function(){draw(im);};im.onerror=function(){draw(null);};im.src='logo.png';});
+}
 
 function saveCpnWa(){
   var c=document.getElementById('cpnC').textContent;
@@ -978,7 +1057,10 @@ function rCp(){
 var totalCp=D.filter(function(r){return r.cp;}).length;
 var usedCp=D.filter(function(r){return r.used;}).length;
 var activeCp=totalCp-usedCp;
-document.getElementById('cpnStats').innerHTML='<div class="sg"><div class="sc" style="border-top:3px solid #0891b2"><div class="sc-l">كوبونات صالحة</div><div class="sc-v" style="color:#0891b2">'+activeCp+'</div></div><div class="sc" style="border-top:3px solid #b45309"><div class="sc-l">كوبونات مستخدمة</div><div class="sc-v" style="color:#b45309">'+usedCp+'</div></div></div>';
+var refs=D.filter(function(r){return r.rcUsed;});
+document.getElementById('cpnStats').innerHTML='<div class="sg"><div class="sc" style="border-top:3px solid #0891b2"><div class="sc-l">كوبونات صالحة</div><div class="sc-v" style="color:#0891b2">'+activeCp+'</div></div><div class="sc" style="border-top:3px solid #b45309"><div class="sc-l">كوبونات مستخدمة</div><div class="sc-v" style="color:#b45309">'+usedCp+'</div></div></div>'+
+ '<div class="cc" style="padding:14px"><h3>🎁 التسويق بالإحالة</h3><div class="sg" style="margin-bottom:0"><div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">عملاء جدد بالإحالة</div><div class="sc-v" style="color:#16a34a">'+refs.length+'</div></div><div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">أكواد إحالة متاحة</div><div class="sc-v" style="color:#b45309">'+D.filter(function(r){return r.cp&&r.o>=4&&!r.rcUsed;}).length+'</div></div></div>'+
+ (refs.length?'<div style="margin-top:10px;font-size:11px;color:#345"><b>عملاء جلبوا لك زبائن:</b><br>'+refs.slice(-6).reverse().map(function(r){return '⭐ '+esc(r.n||'عميل')+(r.ph?' · '+esc(r.ph):'');}).join('<br>')+'</div>':'<div style="margin-top:10px;font-size:10px;color:#9ab;text-align:center">أكواد الإحالة تُنشأ تلقائياً لكل عميل يقيّم 4 نجوم فأكثر</div>')+'</div>';
 /* كوبونات صالحة تنتهي خلال 10 أيام — فرصة لإرجاع العميل */
 var now=new Date(),soon=[];
 D.forEach(function(r){
@@ -1011,6 +1093,15 @@ function verifyCpn(){
 var raw=document.getElementById('cpnInput').value;var code=raw.replace(/[^A-Za-z0-9]/g,'').toUpperCase();document.getElementById('cpnInput').value=code;
 var res=document.getElementById('cpnResult'),wrap=document.getElementById('cpnUseWrap');wrap.classList.add('hide');pendingCpn='';
 if(!code){res.innerHTML='';return;}
+var base=baseFromFriend(code);
+if(base){
+  var owner=D.find(function(r){return r.cp===base;});
+  if(!owner){res.innerHTML='<div class="cpn-result invalid"><div class="cpn-r-icon">❌</div><div class="cpn-r-status" style="color:#dc2626">كود إحالة غير موجود</div><div class="cpn-r-info">تأكد من الرمز وحاول مرة ثانية</div></div>';return;}
+  if(owner.rcUsed){res.innerHTML='<div class="cpn-result used"><div class="cpn-r-icon">⚠️</div><div class="cpn-r-status" style="color:#b45309">كود إحالة مستخدم مسبقاً</div><div class="cpn-r-info">استُخدم بتاريخ '+(owner.rcUsedAt?new Date(owner.rcUsedAt).toLocaleDateString('ar-SA'):'غير محدد')+'<br>بإحالة من: '+esc(owner.n||'عميل')+'</div></div>';return;}
+  pendingCpn=code;
+  res.innerHTML='<div class="cpn-result valid"><div class="cpn-r-icon">🎁</div><div class="cpn-r-status" style="color:#0891b2">كود إحالة صالح — خصم 10%</div><div class="cpn-r-info">عميل جديد بإحالة من: <b>'+esc(owner.n||'عميل')+'</b>'+(owner.ph?'<br>📱 '+esc(owner.ph):'')+'</div></div>';
+  wrap.classList.remove('hide');return;
+}
 var found=D.find(function(r){return r.cp===code;});
 if(!found){res.innerHTML='<div class="cpn-result invalid"><div class="cpn-r-icon">❌</div><div class="cpn-r-status" style="color:#dc2626">كوبون غير موجود</div><div class="cpn-r-info">تأكد من الرمز وحاول مرة ثانية</div></div>';return;}
 if(found.used){res.innerHTML='<div class="cpn-result used"><div class="cpn-r-icon">⚠️</div><div class="cpn-r-status" style="color:#b45309">كوبون مستخدم مسبقاً</div><div class="cpn-r-info">تم استخدامه بتاريخ '+(found.usedAt?new Date(found.usedAt).toLocaleDateString('ar-SA'):'غير محدد')+'<br>العميل: '+(found.n||'غير محدد')+'</div></div>';return;}
@@ -1022,6 +1113,16 @@ wrap.classList.remove('hide');}
 
 function doMarkUsed2(){
 if(!pendingCpn)return;
+var fbase=baseFromFriend(pendingCpn);
+if(fbase){
+  var own=D.find(function(r){return r.cp===fbase;});
+  if(!own||!own._id)return;
+  db.collection('reviews').doc(own._id).update({rcUsed:true,rcUsedAt:new Date().toISOString()}).then(function(){
+    alert('تم تسجيل استخدام كود الإحالة ✓\nالعميل المُحيل: '+(own.n||'عميل'));
+    pendingCpn='';rCp();
+  }).catch(function(){alert('خطأ في الحفظ، حاول مرة ثانية');});
+  return;
+}
 var found=D.find(function(r){return r.cp===pendingCpn;});
 if(!found||!found._id)return;
 db.collection('reviews').doc(found._id).update({used:true,usedAt:new Date().toISOString()}).then(function(){
