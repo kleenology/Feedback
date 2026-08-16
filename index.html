@@ -864,7 +864,7 @@ function rCu(){
   el.innerHTML=h;
 }
 /* تحية حسب وقت الإرسال */
-function greetAr(){var h=new Date().getHours();return h<12?'صباح الخير':h<17?'مرحباً':'مساك الله بالخير';}
+function greetAr(){var h=new Date().getHours();return h<12?'صباحك خير':h<17?'هلا وغلا':'مساك الله بالخير';}
 /* مدة الغياب بصيغة مفهومة: أيام لأقل من شهرين، وشهور بعدها */
 function awayFor(d){
   d=Math.max(1,Math.floor(Number(d)||0));
@@ -873,10 +873,10 @@ function awayFor(d){
   return 'قرابة '+(m===2?'شهرين':m<=10?m+' أشهر':m+' شهر');
 }
 function backWaLink(c){
-  var t=greetAr()+' '+(c.n||'عميلنا العزيز')+' 🌟\nمعك '+BIZ.name+
-    '\n\nصار لك '+awayFor(c.days)+' ما شرفتنا — حبينا نطمن عليك 😊'+
-    '\nجهزنا لك خصم '+WINBACK.off+' على حجزك القادم، صالح لمدة '+WINBACK.valid+' أيام.'+
-    '\n\nتبي نرتب لك موعد؟ رد بكلمة (حجز) ونتكفل بالباقي ✨';
+  var t=greetAr()+' '+(c.n||'يا غالي')+' 🌟\nمعك '+BIZ.name+
+    '\n\nطوّلت الغيبة! صار لك '+awayFor(c.days)+' ما شرفتنا 😊'+
+    '\nجهّزنا لك خصم '+WINBACK.off+' على طلبك الجاي، بس صالح '+WINBACK.valid+' أيام.'+
+    '\n\nودّك نحجز لك؟ اكتب لنا (حجز) وحنا نكفيك الباقي ✨';
   return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
 }
 function avg(a,f){var s=0,n=0;a.forEach(function(r){var v=Number(r[f]);if(isFinite(v)&&v>=1&&v<=5){s+=v;n++;}});return n?(s/n).toFixed(1):'0';}
