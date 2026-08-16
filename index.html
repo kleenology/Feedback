@@ -424,6 +424,7 @@ var db=firebase.firestore(),auth=firebase.auth();
 var MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var SUBMIT_COOLDOWN_MS=60*60*1000; /* حد الإرسال المتكرر من نفس الجهاز: ساعة واحدة */
 var TEAMS=['فريق أبو رزان']; /* أسماء الفرق — أضف أسماء جديدة هنا ويظهر سؤال الفريق تلقائياً في النموذج */
+var ASK_TEAM=false; /* إخفاء سؤال اختيار الفريق في نموذج التقييم مؤقتاً — غيّرها إلى true لإعادة إظهاره */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 /* كود الصديق مشتق من كود العميل — يتحقق منه بدون تخزين إضافي */
 function friendCode(cp){return cp?'KLNF'+String(cp).slice(3):'';}
@@ -451,7 +452,7 @@ LV.forEach(function(l){
 });
 
 (function(){
-if(!TEAMS.length)return;
+if(!ASK_TEAM||!TEAMS.length)return;
 var card=document.getElementById('teamCard'),box=document.getElementById('teamBtns');
 card.classList.remove('hide');
 TEAMS.forEach(function(t){
