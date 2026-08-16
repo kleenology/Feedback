@@ -599,40 +599,71 @@ function shareTeamReport(i){
   var rp=Math.round(list.filter(function(r){return r.r;}).length/list.length*100);
   var fl=list.filter(isFlag).length;
   var cats=[{l:'النظافة',v:parseFloat(avg(list,'c')),c:'#29a9e1'},{l:'الالتزام بالموعد',v:parseFloat(avg(list,'p')),c:'#3b82f6'},{l:'تعامل الفريق',v:parseFloat(avg(list,'tw')),c:'#8b5cf6'}];
-  var cv=document.createElement('canvas');cv.width=800;cv.height=1060;
+  var ov=parseFloat(avg(list,'o'))||0;
+  var grade=ov>=4.5?{t:'🏆 أداء استثنائي',c:'#16a34a'}:ov>=4?{t:'💪 أداء رائع',c:'#29a9e1'}:ov>=3?{t:'🚀 أداء جيد',c:'#d99e00'}:{t:'📈 يحتاج تطوير',c:'#f97316'};
+  var msg=ov>=4.5?'فخورون فيكم! استمروا على هذا المستوى المميز 🌟':ov>=4?'شغل ممتاز! خطوة بسيطة وتوصلون القمة 🏆':ov>=3?'أداؤكم جيد — ونثق أنكم تقدرون أكثر 💪':'كل فريق يمر بتحديات — معاً نرجع أقوى 💪';
+  var cv=document.createElement('canvas');cv.width=800;cv.height=1240;
   var x=cv.getContext('2d');
   function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+  function starPath(cx,cy,R){x.beginPath();for(var p=0;p<5;p++){var a=-Math.PI/2+p*2*Math.PI/5;if(p===0)x.moveTo(cx+R*Math.cos(a),cy+R*Math.sin(a));else x.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));var a2=a+Math.PI/5;x.lineTo(cx+R*0.45*Math.cos(a2),cy+R*0.45*Math.sin(a2));}x.closePath();}
+  function card(a,b,w,h,r){x.save();x.shadowColor='rgba(13,60,97,0.12)';x.shadowBlur=18;x.shadowOffsetY=6;x.fillStyle='#fff';rr(a,b,w,h,r);x.fill();x.restore();}
   function draw(logo){
-    x.fillStyle='#f3f7fa';x.fillRect(0,0,800,1060);
-    var g=x.createLinearGradient(0,0,800,240);g.addColorStop(0,'#083b66');g.addColorStop(1,'#29a9e1');
-    x.fillStyle=g;x.fillRect(0,0,800,250);
-    x.fillStyle='#fff';rr(300,35,200,130,22);x.fill();
-    if(logo){var s=Math.min(170/logo.width,110/logo.height),w=logo.width*s,h=logo.height*s;x.drawImage(logo,300+(200-w)/2,35+(130-h)/2,w,h);}
+    x.fillStyle='#f2f7fa';x.fillRect(0,0,800,1240);
+    var g=x.createLinearGradient(0,0,800,260);g.addColorStop(0,'#083b66');g.addColorStop(1,'#29a9e1');
+    x.fillStyle=g;x.fillRect(0,0,800,260);
+    x.fillStyle='rgba(255,255,255,0.07)';
+    x.beginPath();x.arc(80,50,95,0,7);x.fill();
+    x.beginPath();x.arc(730,210,110,0,7);x.fill();
+    x.beginPath();x.arc(640,30,50,0,7);x.fill();
+    x.save();x.shadowColor='rgba(0,0,0,0.2)';x.shadowBlur=16;x.shadowOffsetY=5;x.fillStyle='#fff';rr(300,38,200,132,24);x.fill();x.restore();
+    if(logo){var s=Math.min(170/logo.width,112/logo.height),w=logo.width*s,h=logo.height*s;x.drawImage(logo,300+(200-w)/2,38+(132-h)/2,w,h);}
     x.direction='rtl';x.textAlign='center';
-    x.fillStyle='#fff';x.font='bold 30px "Noto Kufi Arabic"';x.fillText('تقرير أداء الفريق',400,215);
-    x.fillStyle='#0b3954';x.font='bold 40px "Noto Kufi Arabic"';x.fillText('👷 '+k,400,325);
-    x.fillStyle='#8aa2b2';x.font='20px "Noto Kufi Arabic"';x.fillText(new Date().toLocaleDateString('ar-SA'),400,362);
-    var tiles=[{v:String(list.length),l:'عدد التقييمات',c:'#345a72'},{v:avg(list,'o')+' ⭐',l:'التقييم العام',c:'#e0a300'},{v:rp+'%',l:'نسبة الترشيح',c:'#0f7cb8'}];
-    tiles.forEach(function(t,ti){
-      var tx=60+ti*233;
-      x.fillStyle='#fff';rr(tx,400,213,130,18);x.fill();
-      x.fillStyle=t.c;x.font='bold 40px "Noto Kufi Arabic"';x.fillText(t.v,tx+106,462);
-      x.fillStyle='#8aa2b2';x.font='18px "Noto Kufi Arabic"';x.fillText(t.l,tx+106,505);
-    });
-    x.fillStyle='#fff';rr(60,565,680,330,18);x.fill();
-    x.fillStyle='#0b3954';x.font='bold 24px "Noto Kufi Arabic"';x.fillText('التقييم التفصيلي',400,615);
+    x.fillStyle='#fff';x.font='bold 30px "Noto Kufi Arabic"';x.fillText('تقرير أداء الفريق',400,225);
+    x.fillStyle='#0b3954';x.font='bold 44px "Noto Kufi Arabic"';x.fillText('👷 '+k,400,335);
+    x.fillStyle='#8aa2b2';x.font='20px "Noto Kufi Arabic"';x.fillText(new Date().toLocaleDateString('ar-SA'),400,372);
+    x.font='bold 24px "Noto Kufi Arabic"';
+    var gw=x.measureText(grade.t).width+70;
+    x.save();x.shadowColor=grade.c+'55';x.shadowBlur=14;x.shadowOffsetY=4;x.fillStyle=grade.c;rr(400-gw/2,395,gw,52,26);x.fill();x.restore();
+    x.fillStyle='#fff';x.fillText(grade.t,400,430);
+    card(60,480,680,225,22);
+    x.fillStyle='#0b3954';x.font='bold 88px "Noto Kufi Arabic"';x.fillText(String(ov),435,595);
+    x.fillStyle='#8aa2b2';x.font='bold 26px "Noto Kufi Arabic"';x.fillText('من 5',310,590);
+    var R=24,gap=14,total=5*2*R+4*gap,startRight=400+total/2-R;
+    for(var kk=0;kk<5;kk++){
+      var cx2=startRight-kk*(2*R+gap),cy2=655;
+      starPath(cx2,cy2,R);x.fillStyle='#dde6ec';x.fill();
+      if(ov>kk){
+        var frac=Math.min(1,ov-kk);
+        x.save();starPath(cx2,cy2,R);x.clip();
+        x.fillStyle='#f5b301';x.fillRect(cx2+R-2*R*frac-1,cy2-R-2,2*R*frac+2,2*R+4);
+        x.restore();
+      }
+    }
+    card(410,725,330,145,20);
+    x.fillStyle='#345a72';x.font='bold 54px "Noto Kufi Arabic"';x.fillText(String(list.length),575,795);
+    x.fillStyle='#8aa2b2';x.font='19px "Noto Kufi Arabic"';x.fillText('عدد التقييمات',575,845);
+    card(60,725,330,145,20);
+    x.strokeStyle='#e6eef4';x.lineWidth=13;x.beginPath();x.arc(150,797,46,0,7);x.stroke();
+    x.strokeStyle='#0f7cb8';x.lineCap='round';x.beginPath();x.arc(150,797,46,-Math.PI/2,-Math.PI/2+2*Math.PI*rp/100);x.stroke();
+    x.fillStyle='#0f7cb8';x.font='bold 26px "Noto Kufi Arabic"';x.fillText(rp+'%',150,807);
+    x.fillStyle='#345a72';x.font='bold 22px "Noto Kufi Arabic"';x.fillText('نسبة الترشيح',290,790);
+    x.fillStyle='#a9bfcc';x.font='16px "Noto Kufi Arabic"';x.fillText('يرشحوننا لغيرهم',290,822);
+    card(60,895,680,235,22);
+    x.fillStyle='#0b3954';x.font='bold 24px "Noto Kufi Arabic"';x.fillText('التقييم التفصيلي',400,938);
     cats.forEach(function(c2,ci){
-      var y=670+ci*75;
-      x.textAlign='right';x.fillStyle='#345';x.font='bold 21px "Noto Kufi Arabic"';x.fillText(c2.l,700,y+8);
-      x.fillStyle='#e9eef3';rr(190,y-8,290,16,8);x.fill();
+      var y=985+ci*52;
+      x.textAlign='right';x.fillStyle='#345a72';x.font='bold 20px "Noto Kufi Arabic"';x.fillText(c2.l,700,y+7);
+      x.fillStyle='#e9eef3';rr(200,y-7,280,15,7);x.fill();
       var v=isFinite(c2.v)?c2.v:0;
-      if(v>0){x.fillStyle=c2.c;rr(190+290*(1-v/5),y-8,290*(v/5),16,8);x.fill();}
-      x.textAlign='left';x.fillStyle=c2.c;x.font='bold 22px "Noto Kufi Arabic"';x.fillText(v+'/5',100,y+8);
+      if(v>0){x.fillStyle=c2.c;rr(200+280*(1-v/5),y-7,280*(v/5),15,7);x.fill();}
+      x.textAlign='left';x.fillStyle=c2.c;x.font='bold 21px "Noto Kufi Arabic"';x.fillText(v+'/5',110,y+7);
       x.textAlign='center';
     });
-    if(fl){x.fillStyle='#dc2626';x.font='bold 22px "Noto Kufi Arabic"';x.fillText('🚨 '+fl+' تقييم يحتاج متابعة',400,940);}
-    else{x.fillStyle='#16a34a';x.font='bold 22px "Noto Kufi Arabic"';x.fillText('✓ لا توجد ملاحظات معلقة',400,940);}
-    x.fillStyle='#a9bfcc';x.font='18px "Noto Kufi Arabic"';x.fillText('Kleenology — نظام تقييم الخدمة',400,1010);
+    var yg=x.createLinearGradient(60,1155,740,1155);yg.addColorStop(0,'#ffd66b');yg.addColorStop(1,'#f5b301');
+    x.save();x.shadowColor='rgba(245,179,1,0.35)';x.shadowBlur=14;x.shadowOffsetY=5;x.fillStyle=yg;rr(60,1155,680,58,18);x.fill();x.restore();
+    x.fillStyle='#5d4700';x.font='bold 21px "Noto Kufi Arabic"';x.fillText(msg,400,1192);
+    if(fl){x.fillStyle='#dc2626';x.font='bold 17px "Noto Kufi Arabic"';x.fillText('🚨 '+fl+' تقييم بانتظار المتابعة',400,1140);}
+    x.fillStyle='#a9bfcc';x.font='15px "Noto Kufi Arabic"';x.fillText('Kleenology — نظام تقييم الخدمة',400,1232);
     cv.toBlob(function(b){
       if(!b){alert('تعذر إنشاء الصورة');return;}
       var f;
