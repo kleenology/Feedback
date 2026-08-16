@@ -357,9 +357,10 @@ auth.signInWithEmailAndPassword(em,pw).then(function(){
   btn.disabled=false;btn.textContent='دخول';
   var code=e&&e.code?e.code:'',m='خطأ في تسجيل الدخول، حاول مرة ثانية';
   if(code==='auth/invalid-credential'||code==='auth/wrong-password'||code==='auth/user-not-found'||code==='auth/invalid-email')m='البريد أو كلمة المرور غير صحيحة';
-  else if(code==='auth/operation-not-allowed')m='تسجيل الدخول غير مفعّل — راجع ملف SETUP.md';
+  else if(code==='auth/operation-not-allowed'||code.indexOf('auth/api-key-not-valid')===0||code==='auth/configuration-not-found')m='خدمة تسجيل الدخول غير مفعّلة في Firebase — افتح Authentication واضغط Get started ثم فعّل Email/Password (راجع SETUP.md)';
   else if(code==='auth/too-many-requests')m='محاولات كثيرة، انتظر قليلاً ثم حاول';
   else if(code==='auth/network-request-failed')m='تحقق من اتصال الإنترنت';
+  else if(code)m+=' ('+code+')';
   er.textContent=m;er.classList.add('show');
 });}
 document.getElementById('lgPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
