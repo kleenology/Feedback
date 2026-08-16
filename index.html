@@ -590,9 +590,10 @@ function renderTeamDetail(k){
     '</div>'+
     (fl?'<div style="font-size:11px;font-weight:700;color:#dc2626;text-align:center;margin-bottom:8px">🚨 '+fl+' تقييم يحتاج متابعة</div>':'')+
     '<button type="button" class="td-btn" onclick="viewTeamReviews('+TKS.indexOf(k)+')">💬 عرض تقييمات الفريق</button>'+
-    '<button type="button" class="td-btn" style="margin-top:6px;background:linear-gradient(135deg,#1173b5,#29a9e1);color:#fff;border-color:#1173b5" onclick="shareTeamReport('+TKS.indexOf(k)+')">📤 مشاركة تقرير الفريق (صورة)</button></div>';
+    '<button type="button" class="td-btn" style="margin-top:6px;background:linear-gradient(135deg,#1173b5,#29a9e1);color:#fff;border-color:#1173b5" onclick="shareTeamReport('+TKS.indexOf(k)+')">📤 مشاركة تقرير الفريق (صورة)</button>'+
+    '<button type="button" class="td-btn" style="margin-top:6px" onclick="shareTeamReport('+TKS.indexOf(k)+',1)">💾 حفظ الصورة بالجودة الكاملة</button></div>';
 }
-function shareTeamReport(i){
+function shareTeamReport(i,saveOnly){
   var k=TKS[i];if(!k)return;
   var list=D.filter(function(r){return r.tm===k;});
   if(!list.length)return;
@@ -682,12 +683,15 @@ function shareTeamReport(i){
       if(!b){alert('تعذر إنشاء الصورة');return;}
       var f;
       try{f=new File([b],'kleenology-team-report.png',{type:'image/png'});}catch(e){f=null;}
-      if(f&&navigator.canShare&&navigator.canShare({files:[f]})&&navigator.share){
+      if(!saveOnly&&f&&navigator.canShare&&navigator.canShare({files:[f]})&&navigator.share){
         navigator.share({files:[f],title:'تقرير أداء الفريق'}).catch(function(){});
       }else{
-        var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='kleenology-team-report.png';
+        var url=URL.createObjectURL(b);
+        var a=document.createElement('a');a.href=url;a.download='kleenology-team-report.png';
         document.body.appendChild(a);a.click();a.remove();
-        setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+        showToast('الصورة '+cv.width+'×'+cv.height+' — إن لم تُحفظ افتحها من النافذة الجديدة');
+        setTimeout(function(){window.open(url,'_blank');},300);
+        setTimeout(function(){URL.revokeObjectURL(url);},60000);
       }
     },'image/png');
   }
