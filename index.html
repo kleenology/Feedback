@@ -209,6 +209,8 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .td-sv{font-size:15px;font-weight:800}
 .td-sl{font-size:9px;color:#9ab;margin-top:2px}
 .td-btn{width:100%;padding:10px;border-radius:10px;border:1.5px solid #29a9e1;background:#fff;color:#0f7cb8;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.td-month{width:100%;padding:10px;border-radius:10px;border:1.5px solid #d8e6f0;background:#fff;color:#0b3954;font-family:inherit;font-size:12px;font-weight:700;margin-bottom:10px;outline:none}
+.td-cmp{text-align:center;font-size:11px;font-weight:700;margin-bottom:8px}
 .rv-team-tag{display:inline-flex;align-items:center;gap:6px;background:#e9f6fd;color:#0f7cb8;border:1px solid #bfe3f7;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;margin-top:8px}
 .rv-team-tag button{background:none;border:none;color:#0f7cb8;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px}
 
@@ -373,7 +375,7 @@ var SUBMIT_COOLDOWN_MS=60*60*1000; /* حد الإرسال المتكرر من ن
 var TEAMS=['فريق أبو رزان']; /* أسماء الفرق — أضف أسماء جديدة هنا ويظهر سؤال الفريق تلقائياً في النموذج */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var LV=[{v:1,t:'ضعيف',c:'#ef4444',e:'😖'},{v:2,t:'مقبول',c:'#f97316',e:'😕'},{v:3,t:'جيد',c:'#eab308',e:'🙂'},{v:4,t:'ممتاز',c:'#29a9e1',e:'😄'},{v:5,t:'رائع',c:'#0f7cb8',e:'🤩'}];
-var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all',RVT='',TKS=[],CURT='';
+var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all',RVT='',TKS=[],CURT='',TMONTH='';
 
 var pages=['pgForm','pgCpn','pgLogin','pgAdm'];
 function go(id){pages.forEach(function(p){document.getElementById(p).classList.add('hide');});document.getElementById(id).classList.remove('hide');window.scrollTo(0,0);}
@@ -573,13 +575,39 @@ function teamDetail(i){
   CURT=k;renderTeamDetail(k);
 }
 function tdCell(v,l,c){return '<div class="td-s"><div class="td-sv" style="color:'+c+'">'+v+'</div><div class="td-sl">'+l+'</div></div>';}
+function mKey(ts){var d=new Date(ts);if(isNaN(d))return '';return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function mLabel(key){if(!key)return 'كل الفترات';var p=key.split('-');return MO[parseInt(p[1],10)-1]+' '+p[0];}
+function prevKey(key){var p=key.split('-'),y=parseInt(p[0],10),m=parseInt(p[1],10)-1;if(m<1){m=12;y--;}return y+'-'+String(m).padStart(2,'0');}
+function teamList(k,month){return D.filter(function(r){return r.tm===k&&(!month||mKey(r.ts)===month);});}
+function teamMonths(k){
+  var seen={};D.forEach(function(r){if(r.tm===k){var key=mKey(r.ts);if(key)seen[key]=1;}});
+  return Object.keys(seen).sort().reverse();
+}
+function setTeamMonth(v){TMONTH=v;if(CURT)renderTeamDetail(CURT);}
 function renderTeamDetail(k){
   var box=document.getElementById('teamDetailBox');if(!box)return;
-  var list=D.filter(function(r){return r.tm===k;});
+  var months=teamMonths(k);
+  if(TMONTH&&months.indexOf(TMONTH)<0)TMONTH=months.length?months[0]:'';
+  if(!TMONTH&&months.length)TMONTH=months[0];
+  var list=teamList(k,TMONTH);
+  if(!list.length){list=teamList(k,'');TMONTH='';}
   if(!list.length){box.innerHTML='';CURT='';return;}
   var rp=Math.round(list.filter(function(r){return r.r;}).length/list.length*100);
   var fl=list.filter(isFlag).length;
-  box.innerHTML='<div class="td-box"><div class="td-t">👷 '+esc(k)+'</div>'+
+  var sel='<select class="td-month" onchange="setTeamMonth(this.value)">';
+  months.forEach(function(m){sel+='<option value="'+m+'"'+(m===TMONTH?' selected':'')+'>📅 '+mLabel(m)+'</option>';});
+  sel+='<option value=""'+(TMONTH?'':' selected')+'>📊 كل الفترات</option></select>';
+  var cmp='';
+  if(TMONTH){
+    var pl=teamList(k,prevKey(TMONTH));
+    if(pl.length){
+      var d=(parseFloat(avg(list,'o'))-parseFloat(avg(pl,'o'))).toFixed(1);
+      cmp=d>0?'<div class="td-cmp" style="color:#16a34a">▲ تحسّن '+d+' عن '+mLabel(prevKey(TMONTH))+'</div>'
+        :d<0?'<div class="td-cmp" style="color:#dc2626">▼ انخفاض '+Math.abs(d)+' عن '+mLabel(prevKey(TMONTH))+'</div>'
+        :'<div class="td-cmp" style="color:#8aa2b2">= نفس مستوى '+mLabel(prevKey(TMONTH))+'</div>';
+    }
+  }
+  box.innerHTML='<div class="td-box"><div class="td-t">👷 '+esc(k)+'</div>'+sel+cmp+
     '<div class="td-g">'+
     tdCell(list.length,'عدد التقييمات','#345')+
     tdCell(avg(list,'o')+' ⭐','التقييم العام','#f5a301')+
@@ -595,8 +623,19 @@ function renderTeamDetail(k){
 }
 function shareTeamReport(i,saveOnly){
   var k=TKS[i];if(!k)return;
-  var list=D.filter(function(r){return r.tm===k;});
+  var month=TMONTH,list=teamList(k,month);
+  if(!list.length){month='';list=teamList(k,'');}
   if(!list.length)return;
+  var cmpTxt='',cmpCol='';
+  if(month){
+    var plist=teamList(k,prevKey(month));
+    if(plist.length){
+      var dv=(parseFloat(avg(list,'o'))-parseFloat(avg(plist,'o'))).toFixed(1);
+      if(dv>0){cmpTxt='▲ تحسّن '+dv+' عن '+mLabel(prevKey(month));cmpCol='#16a34a';}
+      else if(dv<0){cmpTxt='▼ انخفاض '+Math.abs(dv)+' عن '+mLabel(prevKey(month));cmpCol='#dc2626';}
+      else{cmpTxt='= نفس مستوى '+mLabel(prevKey(month));cmpCol='#8aa2b2';}
+    }
+  }
   var rp=Math.round(list.filter(function(r){return r.r;}).length/list.length*100);
   var fl=list.filter(isFlag).length;
   var cats=[{l:'النظافة',v:parseFloat(avg(list,'c')),c:'#29a9e1'},{l:'الالتزام بالموعد',v:parseFloat(avg(list,'p')),c:'#3b82f6'},{l:'تعامل الفريق',v:parseFloat(avg(list,'tw')),c:'#8b5cf6'}];
@@ -636,7 +675,7 @@ function shareTeamReport(i,saveOnly){
     x.direction='rtl';x.textAlign='center';
     x.fillStyle='#fff';x.font='bold 30px "Noto Kufi Arabic"';x.fillText('تقرير أداء الفريق',400,225);
     x.fillStyle='#0b3954';x.font='bold 44px "Noto Kufi Arabic"';x.fillText('👷 '+k,400,335);
-    x.fillStyle='#8aa2b2';x.font='20px "Noto Kufi Arabic"';x.fillText(new Date().toLocaleDateString('ar-SA'),400,372);
+    x.fillStyle='#0f7cb8';x.font='bold 22px "Noto Kufi Arabic"';x.fillText('📅 '+(month?mLabel(month):'كل الفترات'),400,372);
     x.font='bold 24px "Noto Kufi Arabic"';
     var gw=x.measureText(grade.t).width+70;
     x.save();x.shadowColor=grade.c+'55';x.shadowBlur=14;x.shadowOffsetY=4;x.fillStyle=grade.c;rr(400-gw/2,395,gw,52,26);x.fill();x.restore();
@@ -678,8 +717,9 @@ function shareTeamReport(i,saveOnly){
     var yg=x.createLinearGradient(60,1155,740,1155);yg.addColorStop(0,'#ffd66b');yg.addColorStop(1,'#f5b301');
     x.save();x.shadowColor='rgba(245,179,1,0.35)';x.shadowBlur=14;x.shadowOffsetY=5;x.fillStyle=yg;rr(60,1155,680,58,18);x.fill();x.restore();
     x.fillStyle='#5d4700';x.font='bold 21px "Noto Kufi Arabic"';x.fillText(msg,400,1192);
-    if(fl){x.fillStyle='#dc2626';x.font='bold 17px "Noto Kufi Arabic"';x.fillText('🚨 '+fl+' تقييم بانتظار المتابعة',400,1140);}
-    x.fillStyle='#a9bfcc';x.font='15px "Noto Kufi Arabic"';x.fillText('Kleenology — نظام تقييم الخدمة',400,1232);
+    if(cmpTxt){x.fillStyle=cmpCol;x.font='bold 19px "Noto Kufi Arabic"';x.fillText(cmpTxt,400,1143);}
+    else if(fl){x.fillStyle='#dc2626';x.font='bold 17px "Noto Kufi Arabic"';x.fillText('🚨 '+fl+' تقييم بانتظار المتابعة',400,1143);}
+    x.fillStyle='#a9bfcc';x.font='15px "Noto Kufi Arabic"';x.fillText('Kleenology — نظام تقييم الخدمة · '+new Date().toLocaleDateString('ar-SA'),400,1232);
     cv.toBlob(function(b){
       if(!b){alert('تعذر إنشاء الصورة');return;}
       var f;
