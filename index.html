@@ -6,6 +6,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>كلينولوجي - تقييم الخدمة</title>
 <link rel="icon" type="image/png" href="logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1173b5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="كلينولوجي">
+<link rel="apple-touch-icon" href="logo.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -367,6 +373,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
   <div class="adm-tabs">
     <button class="adm-tb on" data-t="overview">📊 نظرة عامة</button>
     <button class="adm-tb" data-t="coupons">🎟️ الكوبونات</button>
+    <button class="adm-tb" data-t="customers">👥 العملاء</button>
     <button class="adm-tb" data-t="monthly">📈 الشهري</button>
     <button class="adm-tb" data-t="responses">💬 التقييمات</button>
   </div>
@@ -386,6 +393,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div id="cpnExpiring"></div>
     <div id="cpnList"></div>
   </div>
+  <div class="tc" id="tcCustomers"></div>
   <div class="tc" id="tcMonthly"></div>
   <div class="tc" id="tcResponses">
     <div class="cc" style="padding:12px 14px">
@@ -424,7 +432,7 @@ function refCount(r){return r?(r.rcCount||(r.rcUsed?1:0)):0;}
 var BIZ={name:'كلينولوجي',phone:'0537519929',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','تنظيف بعد التشطيب']};
 var LASTREV={o:0,n:'',cp:''};
 var LV=[{v:1,t:'ضعيف',c:'#ef4444',e:'😖'},{v:2,t:'مقبول',c:'#f97316',e:'😕'},{v:3,t:'جيد',c:'#eab308',e:'🙂'},{v:4,t:'ممتاز',c:'#29a9e1',e:'😄'},{v:5,t:'رائع',c:'#0f7cb8',e:'🤩'}];
-var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all',RVT='',TKS=[],CURT='',TMONTH='',TARGETS={};
+var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all',RVT='',TKS=[],CURT='',TMONTH='',TARGETS={},LIMIT=400,MORE=false;
 
 var pages=['pgForm','pgCpn','pgLogin','pgAdm'];
 function go(id){pages.forEach(function(p){document.getElementById(p).classList.add('hide');});document.getElementById(id).classList.remove('hide');window.scrollTo(0,0);}
@@ -655,10 +663,13 @@ function kC(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
 function startLive(){
   if(UNSUB){UNSUB();UNSUB=null;}
   FIRSTSNAP=true;
-  UNSUB=db.collection('reviews').orderBy('ts','asc').onSnapshot(function(snap){
+  /* نحمّل أحدث LIMIT تقييم فقط — تبقى اللوحة سريعة مهما كبرت البيانات */
+  UNSUB=db.collection('reviews').orderBy('ts','desc').limit(LIMIT).onSnapshot(function(snap){
     var first=FIRSTSNAP;FIRSTSNAP=false;
+    MORE=snap.size>=LIMIT;
     D=[];USED={};
     snap.forEach(function(doc){var r=doc.data();r._id=doc.id;D.push(r);if(r.used)USED[r.cp]=r.usedAt||r.ts;});
+    D.reverse();
     renderAdm();
     if(!first){snap.docChanges().forEach(function(ch){if(ch.type==='added')notifyNew(ch.doc.data());});}
   },function(e){
@@ -667,6 +678,9 @@ function startLive(){
   });
 }
 
+function loadOlder(){
+  LIMIT+=400;showToast('جاري تحميل تقييمات أقدم...');startLive();
+}
 function loadTargets(){
   TARGETS={};
   try{TARGETS=JSON.parse(localStorage.getItem('kln_targets')||'{}')||{};}catch(e){TARGETS={};}
@@ -734,7 +748,93 @@ function togglePub(id){
   }
 }
 
-function renderAdm(){rOv();rCp();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
+function renderAdm(){rOv();rCp();rCu();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
+
+/* ===== نسخة احتياطية واستعادة ===== */
+function backupData(){
+  var pack={v:1,at:new Date().toISOString(),reviews:D.map(function(r){var c={};for(var k in r)if(k!=='_id')c[k]=r[k];return c;}),published:Object.keys(PUB),targets:TARGETS};
+  var b=new Blob([JSON.stringify(pack,null,1)],{type:'application/json'});
+  var u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='kleenology-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();a.remove();
+  showToast('تم تنزيل نسخة احتياطية ('+D.length+' تقييم)');
+  setTimeout(function(){window.open(u,'_blank');},400);
+  setTimeout(function(){URL.revokeObjectURL(u);},60000);
+}
+function restoreData(input){
+  var f=input.files&&input.files[0];input.value='';
+  if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    var pack;
+    try{pack=JSON.parse(rd.result);}catch(e){alert('الملف غير صالح');return;}
+    if(!pack||!pack.reviews||!pack.reviews.length){alert('لا توجد تقييمات في الملف');return;}
+    var have={};D.forEach(function(r){if(r.cp)have[r.cp]=1;});
+    var add=pack.reviews.filter(function(r){return r.cp&&!have[r.cp];});
+    if(!add.length){alert('كل التقييمات في الملف موجودة عندك — لا حاجة للاستعادة');return;}
+    if(!confirm('سيتم إضافة '+add.length+' تقييم مفقود من النسخة الاحتياطية.\nالتقييمات الموجودة لن تتكرر.\n\nمتابعة؟'))return;
+    var chunks=[];for(var i=0;i<add.length;i+=400)chunks.push(add.slice(i,i+400));
+    Promise.all(chunks.map(function(ch){
+      var batch=db.batch();
+      ch.forEach(function(r){batch.set(db.collection('reviews').doc(),r);});
+      return batch.commit();
+    })).then(function(){
+      if(pack.targets){TARGETS=pack.targets;saveTargets();}
+      showToast('تمت استعادة '+add.length+' تقييم ✓');
+    }).catch(function(){alert('صار خطأ أثناء الاستعادة');});
+  };
+  rd.readAsText(f);
+}
+
+/* ===== العملاء المتكررون ===== */
+function custKey(r){var d=waNum(r.ph);return d||('n:'+String(r.n||'').trim());}
+function custGroups(){
+  var g={};
+  D.forEach(function(r){
+    var k=custKey(r);if(!k||k==='n:')return;
+    if(!g[k])g[k]={n:r.n||'عميل',ph:r.ph||'',items:[]};
+    g[k].items.push(r);
+    if(r.n)g[k].n=r.n;
+    if(r.ph)g[k].ph=r.ph;
+  });
+  return Object.keys(g).map(function(k){
+    var c=g[k];
+    c.items.sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
+    c.count=c.items.length;
+    c.last=new Date(c.items[c.items.length-1].ts);
+    c.days=Math.floor((new Date()-c.last)/86400000);
+    c.avg=parseFloat(avg(c.items,'o'))||0;
+    c.refs=c.items.reduce(function(s,r){return s+refCount(r);},0);
+    return c;
+  });
+}
+function rCu(){
+  var el=document.getElementById('tcCustomers');
+  if(!D.length){el.innerHTML='<div class="empty">لا توجد بيانات بعد</div>';return;}
+  var cs=custGroups(),rep=cs.filter(function(c){return c.count>1;});
+  var away=cs.filter(function(c){return c.days>=45&&c.avg>=4;}).sort(function(a,b){return b.days-a.days;});
+  var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي العملاء</div><div class="sc-v">'+cs.length+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">عملاء متكررون</div><div class="sc-v" style="color:#16a34a">'+rep.length+'</div></div></div>';
+  h+='<div class="cc"><h3>🏅 أوفى العملاء</h3>';
+  var top=cs.slice().sort(function(a,b){return b.count-a.count||b.avg-a.avg;}).slice(0,8);
+  if(!top.length)h+='<div class="empty">لا يوجد</div>';
+  top.forEach(function(c,i){
+    h+='<div class="ar"><div class="ar-l"><span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'👤')+'</span><span>'+esc(c.n)+(c.ph?' <span style="color:#bbb">· '+esc(c.ph)+'</span>':'')+'</span></div><div class="ar-r"><span style="font-size:11px;color:#9ab">'+c.avg+'⭐</span><span class="av" style="color:#0f7cb8">'+c.count+' مرة</span></div></div>';
+  });
+  h+='</div>';
+  h+='<div class="cc"><h3>💤 عملاء غابوا ('+away.length+')</h3><div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">عملاء راضون ما طلبوا من 45 يوم فأكثر — دعوتهم أرخص من جلب عميل جديد</div>';
+  if(!away.length)h+='<div class="empty">ما فيه عملاء غائبين 👌</div>';
+  away.slice(0,15).forEach(function(c){
+    h+='<div class="exp-item" style="border-right-color:#8b5cf6"><div class="exp-top"><div><div class="exp-nm">'+esc(c.n)+'</div><div style="font-size:10px;color:#9ab;margin-top:3px">'+c.avg+'⭐ · '+c.count+' خدمة · آخر مرة قبل '+c.days+' يوم</div></div></div>'+
+      (c.ph?'<a class="exp-wa" target="_blank" rel="noopener" href="'+backWaLink(c)+'">💬 دعوة للعودة</a>':'')+'</div>';
+  });
+  h+='</div>';
+  el.innerHTML=h;
+}
+function backWaLink(c){
+  var t='مرحباً '+(c.n||'عميلنا العزيز')+' 🌟\nمعك فريق '+BIZ.name+'\n\nمشتاقين لخدمتك! صار لنا فترة ما شرفتنا 😊\nنسعد بحجزك القادم — وخصم خاص لك عند الحجز هذا الأسبوع 🎁';
+  return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
+}
 function avg(a,f){var s=0,n=0;a.forEach(function(r){var v=Number(r[f]);if(isFinite(v)&&v>=1&&v<=5){s+=v;n++;}});return n?(s/n).toFixed(1):'0';}
 function num(v){v=Number(v);return isFinite(v)&&v>=1&&v<=5?v:'-';}
 
@@ -744,6 +844,9 @@ var cats=[{l:'النظافة',k:'c',i:'✨',cl:'#0284c7'},{l:'الالتزام',
 var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي التقييمات</div><div class="sc-v">'+n+'</div></div><div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">التقييم العام</div><div class="sc-v">'+avg(D,'o')+' ⭐</div></div><div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%</div></div><div class="sc" style="border-top:3px solid '+(fl?'#dc2626':'#16a34a')+'"><div class="sc-l">تحتاج متابعة</div><div class="sc-v" style="color:'+(fl?'#dc2626':'#16a34a')+'">'+fl+'</div></div></div>';
 if(n)h+='<button type="button" class="exp-btn" style="background:linear-gradient(135deg,#1173b5,#29a9e1);color:#fff;border-color:#1173b5" onclick="shareCompanyReport()">📋 تقرير الشركة الشهري (صورة)</button>';
 h+='<a class="exp-btn" style="display:block;text-align:center;text-decoration:none" href="reviews.html" target="_blank">🌐 فتح صفحة عرض التقييمات</a>';
+h+='<div style="display:flex;gap:8px"><button type="button" class="exp-btn" style="flex:1" onclick="backupData()">💾 نسخة احتياطية</button>'+
+   '<label class="exp-btn" style="flex:1;text-align:center;margin:0 0 10px;cursor:pointer;display:block">♻️ استعادة<input type="file" accept="application/json,.json" onchange="restoreData(this)" style="display:none"></label></div>';
+if(MORE)h+='<button type="button" class="exp-btn" style="border-color:#d8e6f0;color:#5d8aa8" onclick="loadOlder()">⬇️ تحميل تقييمات أقدم (يُعرض آخر '+LIMIT+')</button>';
 if(TEAMS.length&&D.some(function(r){return isTestReview(r)||!r.tm;})){
   h+='<button type="button" class="exp-btn" style="border-color:#f5a301;color:#9a6b00" onclick="fixData()">🛠 ترتيب البيانات: حذف التجريبية وتعيين '+esc(TEAMS[0])+' للكل</button>';
 }
@@ -1227,6 +1330,8 @@ Promise.all(chunks.map(function(chunk){
   chunk.forEach(function(id){batch.delete(db.collection('reviews').doc(id));});
   return batch.commit();
 })).then(function(){D=[];USED={};renderAdm();}).catch(function(){alert('خطأ في المسح');});}
+
+if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 
 document.addEventListener('paste',function(){setTimeout(function(){var el=document.getElementById('cpnInput');if(el&&el===document.activeElement){el.value=el.value.replace(/\s/g,'').toUpperCase();verifyCpn();}},300);});
 </script>

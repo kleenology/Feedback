@@ -1,0 +1,17 @@
+{
+  "name": "كلينولوجي - تقييم الخدمة",
+  "short_name": "كلينولوجي",
+  "description": "قيّم خدمة كلينولوجي واحصل على كوبون خصم فوري",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f7fa",
+  "theme_color": "#1173b5",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
