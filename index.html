@@ -773,15 +773,45 @@ function restoreData(input){
     var add=pack.reviews.filter(function(r){return r.cp&&!have[r.cp];});
     if(!add.length){alert('كل التقييمات في الملف موجودة عندك — لا حاجة للاستعادة');return;}
     if(!confirm('سيتم إضافة '+add.length+' تقييم مفقود من النسخة الاحتياطية.\nالتقييمات الموجودة لن تتكرر.\n\nمتابعة؟'))return;
-    var chunks=[];for(var i=0;i<add.length;i+=400)chunks.push(add.slice(i,i+400));
-    Promise.all(chunks.map(function(ch){
-      var batch=db.batch();
-      ch.forEach(function(r){batch.set(db.collection('reviews').doc(),r);});
-      return batch.commit();
-    })).then(function(){
+    /* قواعد Firestore تسمح عند الإنشاء بحقول محددة و used=false فقط،
+       فننشئ أولاً بالحقول المسموحة ثم نعيد حالة الكوبون والمتابعة والإحالات بتحديث */
+    var CK=['n','ph','o','c','p','tw','r','nt','cp','ts','tm','ok'];
+    var SK=['used','usedAt','handled','handledAt','rcUsed','rcCount','rcUsedAt'];
+    var refs=[],bases=[],states=[];
+    add.forEach(function(r){
+      var base={used:false},state={};
+      CK.forEach(function(k){if(r[k]!==undefined&&r[k]!==null)base[k]=r[k];});
+      SK.forEach(function(k){if(r[k]!==undefined&&r[k]!==null)state[k]=r[k];});
+      if(base.n===undefined)base.n='عميل';
+      if(base.ph===undefined)base.ph='';
+      if(base.nt===undefined)base.nt='';
+      refs.push(db.collection('reviews').doc());bases.push(base);states.push(state);
+    });
+    function runBatches(build,total){
+      var jobs=[];
+      for(var i=0;i<total;i+=400){
+        (function(from,to){
+          var batch=db.batch(),any=false;
+          for(var j=from;j<to;j++)if(build(batch,j))any=true;
+          if(any)jobs.push(batch.commit());
+        })(i,Math.min(i+400,total));
+      }
+      return Promise.all(jobs);
+    }
+    runBatches(function(b,i){b.set(refs[i],bases[i]);return true;},refs.length)
+    .then(function(){
+      return runBatches(function(b,i){
+        if(!Object.keys(states[i]).length)return false;
+        b.update(refs[i],states[i]);return true;
+      },refs.length);
+    })
+    .then(function(){
       if(pack.targets){TARGETS=pack.targets;saveTargets();}
       showToast('تمت استعادة '+add.length+' تقييم ✓');
-    }).catch(function(){alert('صار خطأ أثناء الاستعادة');});
+    }).catch(function(e){
+      console.log('Restore error:',e);
+      alert('صار خطأ أثناء الاستعادة — تأكد أن قواعد Firestore منشورة وأن الملف من نفس النظام');
+    });
   };
   rd.readAsText(f);
 }
