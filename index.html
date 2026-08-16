@@ -168,6 +168,25 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .cpn-badge.active{background:#f0f9ff;color:#0891b2}
 .cpn-badge.used{background:#fefce8;color:#b45309}
 
+/* team select */
+.team-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.team-b{padding:9px 14px;border-radius:10px;border:1.5px solid #e5e5e5;background:#fafafa;font-size:12px;font-weight:600;color:#888;cursor:pointer;font-family:inherit;transition:all .2s}
+.team-b.on{border-color:#0891b2;background:rgba(8,145,178,0.08);color:#0891b2;font-weight:700}
+
+/* responses filters */
+.rv-search{width:100%;padding:11px 12px;border-radius:10px;border:1.5px solid #e5e5e5;font-size:13px;font-family:inherit;background:#fafafa;outline:none;margin-bottom:8px}
+.rv-search:focus{border-color:#0891b2}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:7px 12px;border-radius:8px;border:1.5px solid #e5e5e5;background:#fafafa;font-size:11px;font-weight:600;color:#888;cursor:pointer;font-family:inherit;transition:all .2s}
+.chip.on{border-color:#0891b2;background:#0891b2;color:#fff}
+.flag-badge{display:inline-block;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;margin-bottom:6px}
+.ok-badge{display:inline-block;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;margin-bottom:6px}
+.act-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.act-b{padding:8px 12px;border-radius:8px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.b-wa{background:#dcfce7;color:#16a34a}
+.b-done{background:#e0f2fe;color:#0369a1}
+.b-del{background:#fee2e2;color:#dc2626}
+
 /* toast + publish */
 .toast{position:fixed;top:14px;left:14px;right:14px;z-index:200;background:#0c4a6e;color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 6px 24px rgba(0,0,0,0.25);font-size:13px;font-weight:600;animation:fadeUp .3s ease}
 .pub-btn{margin-top:8px;padding:8px 12px;border-radius:8px;border:1.5px solid #0891b2;background:#fff;color:#0891b2;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s}
@@ -206,6 +225,11 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div class="cat" data-k="cleanliness"><div class="cat-l"><span class="i">✨</span> مستوى النظافة</div><div class="cat-btns"></div></div>
     <div class="cat" data-k="punctuality"><div class="cat-l"><span class="i">⏰</span> الالتزام بالموعد</div><div class="cat-btns"></div></div>
     <div class="cat" data-k="teamwork"><div class="cat-l"><span class="i">👥</span> تعامل الفريق</div><div class="cat-btns"></div></div>
+  </div>
+  <div class="card hide" id="teamCard">
+    <div class="card-t">من الفريق اللي خدمك؟</div>
+    <div class="card-sub">اختياري - يساعدنا نطور فرقنا</div>
+    <div class="team-btns" id="teamBtns"></div>
   </div>
   <div class="card">
     <div class="card-t">هل ترشح خدمتنا لغيرك؟</div>
@@ -292,7 +316,18 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div id="cpnList"></div>
   </div>
   <div class="tc" id="tcMonthly"></div>
-  <div class="tc" id="tcResponses"></div>
+  <div class="tc" id="tcResponses">
+    <div class="cc" style="padding:12px 14px">
+      <input id="rvSearch" class="rv-search" placeholder="🔍 بحث بالاسم أو رقم الجوال..." autocomplete="off">
+      <div class="chips">
+        <button type="button" class="chip on" data-f="all">الكل</button>
+        <button type="button" class="chip" data-f="flag">🚨 تحتاج متابعة</button>
+        <button type="button" class="chip" data-f="pub">🌐 المنشورة</button>
+      </div>
+      <button type="button" class="exp-btn" style="margin:10px 0 0" onclick="exportCSV()">⬇️ تصدير التقييمات (CSV)</button>
+    </div>
+    <div id="rvList"></div>
+  </div>
 </div>
 <div class="cl-bar hide" id="clBar"><button class="cl-btn" onclick="clrAll()">مسح جميع التقييمات</button></div>
 </div>
@@ -308,9 +343,10 @@ firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDom
 var db=firebase.firestore(),auth=firebase.auth();
 var MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var SUBMIT_COOLDOWN_MS=60*60*1000; /* حد الإرسال المتكرر من نفس الجهاز: ساعة واحدة */
+var TEAMS=[]; /* أسماء الفرق — عبّئها مثل ['فريق أحمد','فريق سالم'] ويظهر سؤال الفريق تلقائياً في النموذج */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var LV=[{v:1,t:'ضعيف',c:'#ef4444'},{v:2,t:'مقبول',c:'#f97316'},{v:3,t:'جيد',c:'#eab308'},{v:4,t:'ممتاز',c:'#38bdf8'},{v:5,t:'رائع',c:'#0284c7'}];
-var D=[],S={o:0,c:0,p:0,tw:0,r:null},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true;
+var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all';
 
 var pages=['pgForm','pgCpn','pgLogin','pgAdm'];
 function go(id){pages.forEach(function(p){document.getElementById(p).classList.add('hide');});document.getElementById(id).classList.remove('hide');window.scrollTo(0,0);}
@@ -319,6 +355,17 @@ function go(id){pages.forEach(function(p){document.getElementById(p).classList.a
 function setStar(v){S.o=v;document.querySelectorAll('.star-b svg').forEach(function(s,i){s.setAttribute('fill',i<v?'#f59e0b':'none');s.setAttribute('stroke',i<v?'#f59e0b':'#ddd');});var t=document.getElementById('rt'),m={1:'ضعيف',2:'مقبول',3:'جيد 👍',4:'جيد جداً 👏',5:'ممتاز! 🎉'},cl={1:'#ef4444',2:'#ef4444',3:'#eab308',4:'#0891b2',5:'#0891b2'};t.textContent=m[v];t.style.color=cl[v];}
 
 document.querySelectorAll('.cat').forEach(function(cat){var k=cat.dataset.k,box=cat.querySelector('.cat-btns');LV.forEach(function(l){var b=document.createElement('button');b.className='cat-b';b.textContent=l.t;b.dataset.v=l.v;b.onclick=function(){S[k==='cleanliness'?'c':k==='punctuality'?'p':'tw']=l.v;box.querySelectorAll('.cat-b').forEach(function(o){o.style.borderColor='#eee';o.style.background='#fafafa';o.style.color='#bbb';o.style.fontWeight='500';o.style.boxShadow='none';});b.style.borderColor=l.c;b.style.background=l.c+'14';b.style.color=l.c;b.style.fontWeight='700';b.style.boxShadow='0 2px 8px '+l.c+'22';};box.appendChild(b);});});
+
+(function(){
+if(!TEAMS.length)return;
+var card=document.getElementById('teamCard'),box=document.getElementById('teamBtns');
+card.classList.remove('hide');
+TEAMS.forEach(function(t){
+  var b=document.createElement('button');b.type='button';b.className='team-b';b.textContent=t;
+  b.onclick=function(){var was=S.tm===t;S.tm=was?'':t;box.querySelectorAll('.team-b').forEach(function(o){o.classList.remove('on');});if(!was)b.classList.add('on');};
+  box.appendChild(b);
+});
+})();
 
 document.querySelectorAll('.rec-b').forEach(function(btn){btn.onclick=function(){var yes=btn.dataset.v==='1';S.r=yes;document.querySelectorAll('.rec-b').forEach(function(b){b.style.borderColor='#e5e5e5';b.style.background='#fafafa';b.style.color='#bbb';b.style.boxShadow='none';b.style.transform='scale(1)';});var c=yes?'#0891b2':'#dc2626';btn.style.borderColor=c;btn.style.background=c+'10';btn.style.color=c;btn.style.boxShadow='0 2px 12px '+c+'18';btn.style.transform='scale(1.02)';};});
 
@@ -333,6 +380,7 @@ document.getElementById('subBtn').onclick=function(){
   if(window.crypto&&crypto.getRandomValues){crypto.getRandomValues(rnd);}else{for(var i=0;i<6;i++)rnd[i]=Math.floor(Math.random()*4294967296);}
   for(var i=0;i<6;i++)cp+=ch[rnd[i]%ch.length];
   var entry={n:document.getElementById('fN').value.trim().slice(0,100),ph:document.getElementById('fP').value.trim().slice(0,20),o:S.o,c:S.c,p:S.p,tw:S.tw,r:S.r,nt:document.getElementById('fNt').value.trim().slice(0,1000),cp:cp,ts:new Date().toISOString(),used:false};
+  if(S.tm)entry.tm=S.tm.slice(0,50);
   var btn=document.getElementById('subBtn');btn.textContent='جاري الإرسال...';btn.disabled=true;
   db.collection('reviews').add(entry).then(function(){
     try{localStorage.setItem('kln_last',String(Date.now()));}catch(x){}
@@ -344,7 +392,7 @@ function sErr(m){var e=document.getElementById('err');e.textContent=m;e.classLis
 
 function doCpy(){var c=document.getElementById('cpnC').textContent,b=document.getElementById('cpyB');try{navigator.clipboard.writeText(c).then(ok).catch(fb);}catch(e){fb();}function fb(){var t=document.createElement('textarea');t.value=c;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);ok();}function ok(){b.textContent='تم النسخ ✓';b.classList.add('ok');setTimeout(function(){b.textContent='نسخ الكوبون';b.classList.remove('ok');},2000);}}
 
-function goHome(){if(UNSUB){UNSUB();UNSUB=null;}S={o:0,c:0,p:0,tw:0,r:null};['fN','fP','fNt'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#ddd');});document.querySelectorAll('.cat-b').forEach(function(o){o.style.borderColor='#eee';o.style.background='#fafafa';o.style.color='#bbb';o.style.fontWeight='500';o.style.boxShadow='none';});document.querySelectorAll('.rec-b').forEach(function(b){b.style.borderColor='#e5e5e5';b.style.background='#fafafa';b.style.color='#bbb';b.style.boxShadow='none';b.style.transform='scale(1)';});document.getElementById('err').classList.add('hide');go('pgForm');}
+function goHome(){if(UNSUB){UNSUB();UNSUB=null;}S={o:0,c:0,p:0,tw:0,r:null,tm:''};['fN','fP','fNt'].forEach(function(id){document.getElementById(id).value='';});document.querySelectorAll('.team-b').forEach(function(b){b.classList.remove('on');});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#ddd');});document.querySelectorAll('.cat-b').forEach(function(o){o.style.borderColor='#eee';o.style.background='#fafafa';o.style.color='#bbb';o.style.fontWeight='500';o.style.boxShadow='none';});document.querySelectorAll('.rec-b').forEach(function(b){b.style.borderColor='#e5e5e5';b.style.background='#fafafa';b.style.color='#bbb';b.style.boxShadow='none';b.style.transform='scale(1)';});document.getElementById('err').classList.add('hide');go('pgForm');}
 
 var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout(tt);if(tc>=3){tc=0;if(auth.currentUser){openAdmin();}else{go('pgLogin');}}else tt=setTimeout(function(){tc=0;},600);};
 
@@ -434,13 +482,25 @@ function renderAdm(){rOv();rCp();rMo();rRe();document.getElementById('clBar').cl
 function avg(a,f){if(!a.length)return 0;return(a.reduce(function(s,r){return s+r[f];},0)/a.length).toFixed(1);}
 
 function rOv(){var el=document.getElementById('tcOverview'),n=D.length,rp=n?Math.round(D.filter(function(r){return r.r;}).length/n*100):0;
+var fl=D.filter(isFlag).length;
 var cats=[{l:'النظافة',k:'c',i:'✨',cl:'#0284c7'},{l:'الالتزام',k:'p',i:'⏰',cl:'#3b82f6'},{l:'التعامل',k:'tw',i:'👥',cl:'#8b5cf6'}];
-var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي التقييمات</div><div class="sc-v">'+n+'</div></div><div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">التقييم العام</div><div class="sc-v">'+avg(D,'o')+' ⭐</div></div><div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%</div></div><div class="sc" style="border-top:3px solid #8b5cf6"><div class="sc-l">الكوبونات</div><div class="sc-v">'+n+'</div></div></div>';
+var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي التقييمات</div><div class="sc-v">'+n+'</div></div><div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">التقييم العام</div><div class="sc-v">'+avg(D,'o')+' ⭐</div></div><div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%</div></div><div class="sc" style="border-top:3px solid '+(fl?'#dc2626':'#16a34a')+'"><div class="sc-l">تحتاج متابعة</div><div class="sc-v" style="color:'+(fl?'#dc2626':'#16a34a')+'">'+fl+'</div></div></div>';
 h+='<a class="exp-btn" style="display:block;text-align:center;text-decoration:none" href="reviews.html" target="_blank">🌐 فتح صفحة عرض التقييمات</a>';
 if(n&&CHL)h+='<div class="cc"><h3>تحليل الأداء</h3><div class="cw"><canvas id="chR"></canvas></div></div>';
 h+='<div class="cc"><h3>متوسط التقييمات</h3>';
 cats.forEach(function(c){var v=avg(D,c.k);h+='<div class="ar"><div class="ar-l"><span>'+c.i+'</span><span>'+c.l+'</span></div><div class="ar-r"><div class="ab"><div class="af" style="width:'+(v/5*100)+'%;background:'+c.cl+'"></div></div><span class="av" style="color:'+c.cl+'">'+v+'/5</span></div></div>';});
-h+='</div>';el.innerHTML=h;
+h+='</div>';
+var tg={};D.forEach(function(r){if(r.tm){if(!tg[r.tm])tg[r.tm]=[];tg[r.tm].push(r);}});
+var tks=Object.keys(tg);
+if(tks.length){
+  h+='<div class="cc"><h3>👷 أداء الفرق</h3>';
+  tks.sort(function(a,b){return avg(tg[b],'o')-avg(tg[a],'o');}).forEach(function(k){
+    var v=avg(tg[k],'o');
+    h+='<div class="ar"><div class="ar-l"><span>👷</span><span>'+esc(k)+' <span style="color:#bbb">('+tg[k].length+')</span></span></div><div class="ar-r"><div class="ab"><div class="af" style="width:'+(v/5*100)+'%;background:#0891b2"></div></div><span class="av" style="color:#0891b2">'+v+'/5</span></div></div>';
+  });
+  h+='</div>';
+}
+el.innerHTML=h;
 if(n>0&&CHL){try{kC('chR');CH['chR']=new Chart(document.getElementById('chR'),{type:'radar',data:{labels:cats.map(function(c){return c.l;}),datasets:[{data:cats.map(function(c){return parseFloat(avg(D,c.k));}),backgroundColor:'rgba(8,145,178,0.15)',borderColor:'#0891b2',borderWidth:2,pointBackgroundColor:'#0891b2'}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:5,ticks:{stepSize:1,font:{size:9}},pointLabels:{font:{size:11,family:"'Noto Kufi Arabic'"}}}},plugins:{legend:{display:false}}}});}catch(e){}}}
 
 function rMo(){var el=document.getElementById('tcMonthly'),g={};
@@ -452,16 +512,64 @@ md.slice().reverse().forEach(function(m){var bc=m.o>=4?'#0284c7':m.o>=3?'#eab308
 el.innerHTML=h;
 if(CHL&&document.getElementById('chL')){try{kC('chL');CH['chL']=new Chart(document.getElementById('chL'),{type:'line',data:{labels:md.map(function(m){return m.m;}),datasets:[{label:'العام',data:md.map(function(m){return m.o;}),borderColor:'#0891b2',backgroundColor:'rgba(8,145,178,0.1)',borderWidth:3,pointBackgroundColor:'#0891b2',pointRadius:4,fill:true,tension:.3},{label:'النظافة',data:md.map(function(m){return m.c;}),borderColor:'#3b82f6',borderWidth:2,borderDash:[5,5],pointRadius:3,fill:false,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:5,ticks:{stepSize:1}}},plugins:{legend:{labels:{font:{size:10,family:"'Noto Kufi Arabic'"}}}}}});}catch(e){}}}
 
-function rRe(){var el=document.getElementById('tcResponses');
-if(!D.length){el.innerHTML='<div class="empty">لا توجد تقييمات بعد</div>';return;}
-var h='<button class="exp-btn" onclick="exportCSV()">⬇️ تصدير التقييمات (CSV)</button>';
-D.slice().reverse().forEach(function(r){var bc=r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');h+='<div class="rc" style="border-right-color:'+bc+'"><div class="rc-t"><div><div class="rc-nm">'+esc(r.n||'عميل')+'</div><div class="rc-dt">'+dt+(r.ph?' · 📱 '+esc(r.ph):'')+'</div></div><div class="rc-st"><span>'+esc(r.o)+'</span>⭐</div></div><div class="rc-sc"><span>✨'+esc(r.c)+'/5</span><span>⏰'+esc(r.p)+'/5</span><span>👥'+esc(r.tw)+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span></div>'+(r.nt?'<div class="rc-nt">"'+esc(r.nt)+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+esc(r.cp)+'</div>':'')+(r._id?'<div><button class="pub-btn'+(PUB[r._id]?' on':'')+'" onclick="togglePub(\''+r._id+'\')">'+(PUB[r._id]?'✓ منشور في صفحة العرض — اضغط للإخفاء':'🌐 نشر في صفحة العرض')+'</button></div>':'')+'</div>';});
+function isFlag(r){return r.o<=2&&!r.handled;}
+
+function rRe(){var el=document.getElementById('rvList');
+var list=D.slice().reverse().filter(function(r){
+  if(RVF==='flag'&&!isFlag(r))return false;
+  if(RVF==='pub'&&!PUB[r._id])return false;
+  if(RVQ){var q=RVQ.toLowerCase();if(String(r.n||'').toLowerCase().indexOf(q)<0&&String(r.ph||'').indexOf(RVQ)<0)return false;}
+  return true;
+});
+if(!list.length){el.innerHTML='<div class="empty">'+(D.length?'لا توجد نتائج مطابقة':'لا توجد تقييمات بعد')+'</div>';return;}
+var h='';
+list.forEach(function(r){
+  var bc=isFlag(r)?'#dc2626':r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dt=new Date(r.ts).toLocaleDateString('ar-SA');
+  var badge='';
+  if(r.o<=2)badge=r.handled?'<span class="ok-badge">✓ تمت المعالجة</span> ':'<span class="flag-badge">🚨 يحتاج متابعة</span> ';
+  var acts='';
+  if(r._id){
+    acts='<div class="act-row">';
+    if(r.o<=2&&r.ph)acts+='<a class="act-b b-wa" style="text-decoration:none" target="_blank" rel="noopener" href="'+waLink(r.ph,r.n)+'">💬 واتساب</a>';
+    if(r.o<=2)acts+='<button class="act-b b-done" onclick="markHandled(\''+r._id+'\','+(r.handled?'false':'true')+')">'+(r.handled?'إعادة فتح':'✓ تمت المعالجة')+'</button>';
+    acts+='<button class="pub-btn'+(PUB[r._id]?' on':'')+'" style="margin-top:0" onclick="togglePub(\''+r._id+'\')">'+(PUB[r._id]?'✓ منشور':'🌐 نشر')+'</button>';
+    acts+='<button class="act-b b-del" onclick="delReview(\''+r._id+'\')">🗑 حذف</button>';
+    acts+='</div>';
+  }
+  h+='<div class="rc" style="border-right-color:'+bc+'">'+badge+'<div class="rc-t"><div><div class="rc-nm">'+esc(r.n||'عميل')+'</div><div class="rc-dt">'+dt+(r.ph?' · 📱 '+esc(r.ph):'')+'</div></div><div class="rc-st"><span>'+esc(r.o)+'</span>⭐</div></div><div class="rc-sc"><span>✨'+esc(r.c)+'/5</span><span>⏰'+esc(r.p)+'/5</span><span>👥'+esc(r.tw)+'/5</span><span>'+(r.r?'👍 يرشح':'👎 لا')+'</span>'+(r.tm?'<span>👷 '+esc(r.tm)+'</span>':'')+'</div>'+(r.nt?'<div class="rc-nt">"'+esc(r.nt)+'"</div>':'')+(r.cp?'<div class="rc-cp">🎟️ '+esc(r.cp)+'</div>':'')+acts+'</div>';
+});
 el.innerHTML=h;}
+
+document.getElementById('rvSearch').addEventListener('input',function(){RVQ=this.value.trim();rRe();});
+document.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){RVF=c.dataset.f;document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});c.classList.add('on');rRe();};});
+
+function waLink(ph,nm){
+  var d=String(ph||'').replace(/\D/g,'');
+  if(d.indexOf('00')===0)d=d.slice(2);
+  if(d.indexOf('05')===0)d='966'+d.slice(1);
+  else if(d.length===9&&d.indexOf('5')===0)d='966'+d;
+  var t=encodeURIComponent('مرحباً '+(nm||'عميلنا العزيز')+'، معك فريق كلينولوجي 🌟 اطلعنا على تقييمك ونعتذر إن كانت الخدمة أقل من توقعاتك. نحب نسمع ملاحظاتك ونعالجها بأسرع وقت 🙏');
+  return 'https://wa.me/'+d+'?text='+t;
+}
+
+function markHandled(id,v){
+  db.collection('reviews').doc(id).update({handled:v,handledAt:new Date().toISOString()})
+  .then(function(){showToast(v?'تم تعليم التقييم كمعالج ✓':'تمت إعادة فتح المتابعة');})
+  .catch(function(){alert('خطأ في الحفظ، حاول مرة ثانية');});
+}
+
+function delReview(id){
+  if(!confirm('حذف هذا التقييم نهائياً؟'))return;
+  db.collection('reviews').doc(id).delete().then(function(){
+    showToast('تم حذف التقييم');
+    if(PUB[id])db.collection('public_reviews').doc(id).delete().then(function(){delete PUB[id];}).catch(function(){});
+  }).catch(function(){alert('خطأ في الحذف، حاول مرة ثانية');});
+}
 
 function exportCSV(){
 if(!D.length)return;
-var rows=[['التاريخ','الاسم','الجوال','التقييم العام','النظافة','الالتزام','التعامل','يرشح','الملاحظات','الكوبون','الكوبون مستخدم']];
-D.forEach(function(r){rows.push([r.ts||'',r.n||'',r.ph||'',r.o,r.c,r.p,r.tw,r.r?'نعم':'لا',r.nt||'',r.cp||'',r.used?'نعم':'لا']);});
+var rows=[['التاريخ','الاسم','الجوال','الفريق','التقييم العام','النظافة','الالتزام','التعامل','يرشح','الملاحظات','الكوبون','الكوبون مستخدم','تمت المعالجة']];
+D.forEach(function(r){rows.push([r.ts||'',r.n||'',r.ph||'',r.tm||'',r.o,r.c,r.p,r.tw,r.r?'نعم':'لا',r.nt||'',r.cp||'',r.used?'نعم':'لا',r.o<=2?(r.handled?'نعم':'لا'):'']);});
 var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
 var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
 var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='kleenology-reviews-'+new Date().toISOString().slice(0,10)+'.csv';
