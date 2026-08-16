@@ -37,6 +37,9 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .fld input:focus,.fld textarea:focus{border-color:#29a9e1;box-shadow:0 0 0 3px rgba(41,169,225,0.12);background:#fff}
 .fld textarea{resize:none;line-height:1.7}
 
+.consent{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11.5px;color:#5d8aa8;cursor:pointer;line-height:1.6}
+.consent input{width:17px;height:17px;accent-color:#29a9e1;flex-shrink:0}
+
 /* stars */
 .stars{display:flex;gap:9px;justify-content:center;direction:rtl;padding:6px 0 2px}
 .stars-hint{display:flex;justify-content:space-between;direction:rtl;width:236px;margin:0 auto;font-size:10px;color:#a9bfcc;font-weight:700}
@@ -100,6 +103,10 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .ref-code{direction:ltr;font-family:monospace;font-size:20px;font-weight:800;letter-spacing:2px;color:#0f7cb8;background:#f0f9ff;border-radius:10px;padding:10px;margin-bottom:10px}
 .ref-btn{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#ffd66b,#f5b301);color:#5d4700;font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:0 3px 14px rgba(245,179,1,0.32)}
 .ref-btn:active{transform:scale(0.98)}
+.ref-row{display:flex;gap:8px;margin-top:8px}
+.ref-b2{flex:1;padding:11px 6px;border-radius:11px;border:1.5px solid #d8e6f0;background:#fff;color:#0f7cb8;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.ref-b2:active{transform:scale(0.97)}
+.ref-b2.ok{background:#0f7cb8;color:#fff;border-color:#0f7cb8}
 
 /* ===== PIN PAGE ===== */
 .pin-pg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#0f172a,#1e293b);padding:20px}
@@ -289,6 +296,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div class="card-t" style="margin-bottom:4px">ملاحظاتك</div>
     <div class="card-sub">اختياري - شاركنا أي ملاحظة تساعدنا نتطور</div>
     <div class="fld"><textarea id="fNt" rows="3" placeholder="اكتب ملاحظاتك هنا..."></textarea></div>
+    <label class="consent"><input type="checkbox" id="fCons"><span>أوافق على نشر رأيي في صفحة آراء العملاء</span></label>
   </div>
   <div class="teaser"><span class="e">🎁</span><div><div class="t1">كوبون خصم 10% هديتك!</div><div class="t2">أرسل تقييمك واحصل على كوبون خصم فوري</div></div></div>
   <div style="text-align:center;margin:2px 0 8px"><a href="reviews.html" style="font-size:12px;color:#0891b2;font-weight:600;text-decoration:none">⭐ شاهد آراء عملائنا</a></div>
@@ -317,9 +325,17 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
   <button class="b-wa-save" onclick="saveCpnWa()">💬 احفظ كوبونك في واتساب</button>
   <div class="ref-box hide" id="refBox">
     <div class="ref-t">🎁 أهدِ أصدقاءك خصم 10%</div>
-    <div class="ref-s">شارك تجربتك مع أصدقائك — يستفيدون من خصم بكودك الخاص</div>
+    <div class="ref-s">كودك يقبل عدداً غير محدود من الأصدقاء — كل ما شاركته أكثر، استفاد أصدقاؤك أكثر</div>
     <div class="ref-code" id="refCode"></div>
-    <button class="ref-btn" onclick="shareFriendCard()">📤 شارك البطاقة مع أصدقائك</button>
+    <button class="ref-btn" onclick="shareFriendCard(1)">📱 صورة لحالة الواتساب</button>
+    <div class="ref-row">
+      <button class="ref-b2" onclick="shareFriendCard(0)">📤 بطاقة للإرسال</button>
+      <button class="ref-b2" onclick="shareBizCard()">🏢 بطاقة الشركة</button>
+    </div>
+    <div class="ref-row">
+      <button class="ref-b2" id="copyRecB" onclick="copyRecommend()">📋 انسخ توصية</button>
+      <button class="ref-b2" onclick="saveContact()">📇 احفظ رقمنا</button>
+    </div>
   </div>
 </div>
 </div>
@@ -404,6 +420,8 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 /* كود الصديق مشتق من كود العميل — يتحقق منه بدون تخزين إضافي */
 function friendCode(cp){return cp?'KLNF'+String(cp).slice(3):'';}
 function baseFromFriend(code){return code&&code.indexOf('KLNF')===0?'KLN'+code.slice(4):'';}
+function refCount(r){return r?(r.rcCount||(r.rcUsed?1:0)):0;}
+var BIZ={name:'كلينولوجي',phone:'',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','تنظيف بعد التشطيب']};
 var LASTREV={o:0,n:'',cp:''};
 var LV=[{v:1,t:'ضعيف',c:'#ef4444',e:'😖'},{v:2,t:'مقبول',c:'#f97316',e:'😕'},{v:3,t:'جيد',c:'#eab308',e:'🙂'},{v:4,t:'ممتاز',c:'#29a9e1',e:'😄'},{v:5,t:'رائع',c:'#0f7cb8',e:'🤩'}];
 var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all',RVT='',TKS=[],CURT='',TMONTH='',TARGETS={};
@@ -453,6 +471,7 @@ document.getElementById('subBtn').onclick=function(){
   for(var i=0;i<6;i++)cp+=ch[rnd[i]%ch.length];
   var entry={n:document.getElementById('fN').value.trim().slice(0,100),ph:document.getElementById('fP').value.trim().slice(0,20),o:S.o,c:S.c,p:S.p,tw:S.tw,r:S.r,nt:document.getElementById('fNt').value.trim().slice(0,1000),cp:cp,ts:new Date().toISOString(),used:false};
   if(S.tm)entry.tm=S.tm.slice(0,50);
+  if(document.getElementById('fCons').checked)entry.ok=true;
   var btn=document.getElementById('subBtn');btn.textContent='جاري الإرسال...';btn.disabled=true;
   db.collection('reviews').add(entry).then(function(){
     try{localStorage.setItem('kln_last',String(Date.now()));}catch(x){}
@@ -467,62 +486,125 @@ document.getElementById('subBtn').onclick=function(){
 };
 function sErr(m){var e=document.getElementById('err');e.textContent=m;e.classList.remove('hide');e.scrollIntoView({behavior:'smooth',block:'center'});}
 
-function shareFriendCard(){
+function bizWa(){return BIZ.phone?'واتساب: https://wa.me/'+waNum(BIZ.phone):'';}
+function recommendText(){
+  var fc=friendCode(LASTREV.cp);
+  return 'أنصحكم بـ'+BIZ.name+' 👌\nجربت خدمتهم وكانت ممتازة — التزام بالموعد وشغل نظيف ✨\n'+
+    (fc?'\nاستخدموا كودي '+fc+' وتحصلون على خصم 10% 🎁\n':'')+
+    (bizWa()?'\n'+bizWa():'');
+}
+function copyRecommend(){
+  var t=recommendText(),b=document.getElementById('copyRecB');
+  function ok(){b.textContent='تم النسخ ✓';b.classList.add('ok');setTimeout(function(){b.textContent='📋 انسخ توصية';b.classList.remove('ok');},2200);}
+  try{navigator.clipboard.writeText(t).then(ok).catch(fb);}catch(e){fb();}
+  function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(a);ok();}
+}
+function saveContact(){
+  var tel=BIZ.phone?waNum(BIZ.phone):'';
+  var v='BEGIN:VCARD\nVERSION:3.0\nFN:'+BIZ.name+'\nORG:'+BIZ.name+'\n'+(tel?'TEL;TYPE=CELL:+'+tel+'\n':'')+'NOTE:'+BIZ.tagline+'\nEND:VCARD';
+  var b=new Blob([v],{type:'text/vcard;charset=utf-8'});
+  var u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='kleenology.vcf';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){window.open(u,'_blank');},300);
+  setTimeout(function(){URL.revokeObjectURL(u);},60000);
+}
+function shareBizCard(){
+  var fc=friendCode(LASTREV.cp);
+  var txt=BIZ.name+' — '+BIZ.tagline+(fc?'\nكود خصم 10%: '+fc:'')+(bizWa()?'\n'+bizWa():'');
+  var W=700,Hc=900,SC=3;
+  var cv=document.createElement('canvas');cv.width=W*SC;cv.height=Hc*SC;
+  var x=cv.getContext('2d');x.scale(SC,SC);x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
+  function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+  function draw(logo){
+    x.fillStyle='#f2f7fa';x.fillRect(0,0,W,Hc);
+    var g=x.createLinearGradient(0,0,W,330);g.addColorStop(0,'#083b66');g.addColorStop(1,'#29a9e1');
+    x.fillStyle=g;x.fillRect(0,0,W,330);
+    x.fillStyle='rgba(255,255,255,0.07)';x.beginPath();x.arc(60,60,110,0,7);x.fill();x.beginPath();x.arc(650,290,120,0,7);x.fill();
+    x.save();x.shadowColor='rgba(0,0,0,0.2)';x.shadowBlur=18;x.shadowOffsetY=6;x.fillStyle='#fff';rr(220,60,260,160,26);x.fill();x.restore();
+    if(logo){var s=Math.min(222/logo.width,136/logo.height),w=logo.width*s,h=logo.height*s;
+      var src=logo,tw=logo.width,th=logo.height,dw=Math.round(w*SC);
+      while(tw/2>dw){var t2=document.createElement('canvas');t2.width=Math.round(tw/2);t2.height=Math.round(th/2);var c2=t2.getContext('2d');c2.imageSmoothingEnabled=true;c2.imageSmoothingQuality='high';c2.drawImage(src,0,0,t2.width,t2.height);if(src!==logo){src.width=0;src.height=0;}src=t2;tw=t2.width;th=t2.height;}
+      x.drawImage(src,220+(260-w)/2,60+(160-h)/2,w,h);}
+    x.direction='rtl';x.textAlign='center';
+    x.fillStyle='#fff';x.font='bold 26px "Noto Kufi Arabic"';x.fillText(BIZ.tagline,W/2,275);
+    x.save();x.shadowColor='rgba(13,60,97,0.12)';x.shadowBlur=18;x.shadowOffsetY=6;x.fillStyle='#fff';rr(55,380,590,300,22);x.fill();x.restore();
+    x.fillStyle='#0b3954';x.font='bold 24px "Noto Kufi Arabic"';x.fillText('خدماتنا',W/2,425);
+    BIZ.services.slice(0,4).forEach(function(s2,i){
+      var y=475+i*47;
+      x.textAlign='right';x.fillStyle='#345a72';x.font='20px "Noto Kufi Arabic"';x.fillText('✓  '+s2,600,y);
+      x.textAlign='center';
+    });
+    if(fc){
+      var yg=x.createLinearGradient(55,715,645,715);yg.addColorStop(0,'#ffd66b');yg.addColorStop(1,'#f5b301');
+      x.save();x.shadowColor='rgba(245,179,1,0.3)';x.shadowBlur=14;x.shadowOffsetY=5;x.fillStyle=yg;rr(55,715,590,92,20);x.fill();x.restore();
+      x.fillStyle='#5d4700';x.font='bold 19px "Noto Kufi Arabic"';x.fillText('🎁 خصم 10% بكود',W/2,748);
+      x.font='bold 28px monospace';x.direction='ltr';x.fillText(fc,W/2,788);x.direction='rtl';
+    }
+    if(BIZ.phone){x.fillStyle='#0f7cb8';x.font='bold 24px "Noto Kufi Arabic"';x.direction='ltr';x.fillText(BIZ.phone,W/2,fc?855:790);x.direction='rtl';}
+    x.fillStyle='#a9bfcc';x.font='16px "Noto Kufi Arabic"';x.fillText('Kleenology',W/2,Hc-25);
+    exportCard(cv,txt,'kleenology-card.png');
+  }
+  loadLogoThen(draw);
+}
+function loadLogoThen(draw){
+  var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+  ready.then(function(){var im=new Image();im.onload=function(){draw(im);};im.onerror=function(){draw(null);};im.src='logo.png';});
+}
+function exportCard(cv,txt,fname){
+  cv.toBlob(function(b){
+    if(!b){alert('تعذر إنشاء البطاقة');return;}
+    var f;try{f=new File([b],fname,{type:'image/png'});}catch(e){f=null;}
+    if(f&&navigator.canShare&&navigator.canShare({files:[f]})&&navigator.share){navigator.share({files:[f],text:txt}).catch(function(){});}
+    else if(navigator.share){navigator.share({text:txt}).catch(function(){});}
+    else{window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');}
+  },'image/png');
+}
+function shareFriendCard(story){
   var fc=friendCode(LASTREV.cp),rate=LASTREV.o||5,nm=LASTREV.n||'';
   var exp=new Date();exp.setDate(exp.getDate()+30);
   var txt='جربت خدمة كلينولوجي وكانت ممتازة ✨\nاستخدم كودي '+fc+' واحصل على خصم 10% على خدمتك\nصالح حتى '+exp.toLocaleDateString('ar-SA');
-  var W=700,Hc=900,SC=3;
+  var W=700,Hc=story?1244:900,SC=3;
   var cv=document.createElement('canvas');cv.width=W*SC;cv.height=Hc*SC;
   var x=cv.getContext('2d');x.scale(SC,SC);
   x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
   function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
   function star(cx,cy,R){x.beginPath();for(var p=0;p<5;p++){var a=-Math.PI/2+p*2*Math.PI/5;if(p===0)x.moveTo(cx+R*Math.cos(a),cy+R*Math.sin(a));else x.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));var a2=a+Math.PI/5;x.lineTo(cx+R*0.45*Math.cos(a2),cy+R*0.45*Math.sin(a2));}x.closePath();}
+  var T=story?175:0; /* إزاحة رأسية لصيغة الحالة */
   function draw(logo){
     var g=x.createLinearGradient(0,0,W,Hc);g.addColorStop(0,'#083b66');g.addColorStop(0.55,'#1173b5');g.addColorStop(1,'#29a9e1');
     x.fillStyle=g;x.fillRect(0,0,W,Hc);
     x.fillStyle='rgba(255,255,255,0.06)';
-    x.beginPath();x.arc(70,120,130,0,7);x.fill();
-    x.beginPath();x.arc(640,760,150,0,7);x.fill();
-    x.save();x.shadowColor='rgba(0,0,0,0.22)';x.shadowBlur=20;x.shadowOffsetY=7;x.fillStyle='#fff';rr(230,55,240,150,26);x.fill();x.restore();
+    x.beginPath();x.arc(70,120+T/2,130,0,7);x.fill();
+    x.beginPath();x.arc(640,760+T,150,0,7);x.fill();
+    x.save();x.shadowColor='rgba(0,0,0,0.22)';x.shadowBlur=20;x.shadowOffsetY=7;x.fillStyle='#fff';rr(230,55+T,240,150,26);x.fill();x.restore();
     if(logo){
       var s=Math.min(205/logo.width,128/logo.height),w=logo.width*s,h=logo.height*s;
       var src=logo,tw=logo.width,th=logo.height,dw=Math.round(w*SC);
       while(tw/2>dw){var t2=document.createElement('canvas');t2.width=Math.round(tw/2);t2.height=Math.round(th/2);var c2=t2.getContext('2d');c2.imageSmoothingEnabled=true;c2.imageSmoothingQuality='high';c2.drawImage(src,0,0,t2.width,t2.height);if(src!==logo){src.width=0;src.height=0;}src=t2;tw=t2.width;th=t2.height;}
-      x.drawImage(src,230+(240-w)/2,55+(150-h)/2,w,h);
+      x.drawImage(src,230+(240-w)/2,55+T+(150-h)/2,w,h);
     }
     x.direction='rtl';x.textAlign='center';
     var R=27,gap=13,total=5*2*R+4*gap,right=W/2+total/2-R;
     for(var i2=0;i2<5;i2++){
-      star(right-i2*(2*R+gap),275,R);
+      star(right-i2*(2*R+gap),275+T,R);
       x.fillStyle=i2<rate?'#f5b301':'rgba(255,255,255,0.25)';x.fill();
     }
     x.fillStyle='#fff';x.font='bold 31px "Noto Kufi Arabic"';
-    x.fillText('جرّبت كلينولوجي',W/2,355);
-    x.fillText('وكانت تجربة ممتازة ✨',W/2,398);
-    if(nm){x.fillStyle='rgba(255,255,255,0.7)';x.font='19px "Noto Kufi Arabic"';x.fillText('— '+nm,W/2,437);}
-    x.save();x.shadowColor='rgba(0,0,0,0.18)';x.shadowBlur=18;x.shadowOffsetY=7;x.fillStyle='#fff';rr(60,480,580,250,24);x.fill();x.restore();
-    x.fillStyle='#0b3954';x.font='bold 25px "Noto Kufi Arabic"';x.fillText('🎁 هدية لك من صديقك',W/2,532);
-    x.fillStyle='#5d8aa8';x.font='18px "Noto Kufi Arabic"';x.fillText('خصم 10% على خدمتك الأولى',W/2,568);
-    var yg=x.createLinearGradient(100,590,600,590);yg.addColorStop(0,'#ffd66b');yg.addColorStop(1,'#f5b301');
-    x.fillStyle=yg;rr(100,590,440,66,16);x.fill();
-    x.fillStyle='#5d4700';x.font='bold 31px monospace';x.direction='ltr';x.fillText(fc,W/2,634);x.direction='rtl';
-    x.fillStyle='#9ab';x.font='15px "Noto Kufi Arabic"';x.fillText('صالح حتى '+exp.toLocaleDateString('ar-SA'),W/2,690);
-    x.fillStyle='rgba(255,255,255,0.92)';x.font='bold 21px "Noto Kufi Arabic"';x.fillText('اذكر الكود عند الحجز واستفد من الخصم',W/2,790);
-    x.fillStyle='rgba(255,255,255,0.55)';x.font='17px "Noto Kufi Arabic"';x.fillText('Kleenology — نظافة تليق بك',W/2,845);
-    cv.toBlob(function(b){
-      if(!b){alert('تعذر إنشاء البطاقة');return;}
-      var f;try{f=new File([b],'kleenology-offer.png',{type:'image/png'});}catch(e){f=null;}
-      if(f&&navigator.canShare&&navigator.canShare({files:[f]})&&navigator.share){
-        navigator.share({files:[f],text:txt}).catch(function(){});
-      }else if(navigator.share){
-        navigator.share({text:txt}).catch(function(){});
-      }else{
-        window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
-      }
-    },'image/png');
+    x.fillText('جرّبت كلينولوجي',W/2,355+T);
+    x.fillText('وكانت تجربة ممتازة ✨',W/2,398+T);
+    if(nm){x.fillStyle='rgba(255,255,255,0.7)';x.font='19px "Noto Kufi Arabic"';x.fillText('— '+nm,W/2,437+T);}
+    x.save();x.shadowColor='rgba(0,0,0,0.18)';x.shadowBlur=18;x.shadowOffsetY=7;x.fillStyle='#fff';rr(60,480+T,580,250,24);x.fill();x.restore();
+    x.fillStyle='#0b3954';x.font='bold 25px "Noto Kufi Arabic"';x.fillText('🎁 هدية لك من صديقك',W/2,532+T);
+    x.fillStyle='#5d8aa8';x.font='18px "Noto Kufi Arabic"';x.fillText('خصم 10% على خدمتك الأولى',W/2,568+T);
+    var yg=x.createLinearGradient(100,590+T,600,590+T);yg.addColorStop(0,'#ffd66b');yg.addColorStop(1,'#f5b301');
+    x.fillStyle=yg;rr(100,590+T,440,66,16);x.fill();
+    x.fillStyle='#5d4700';x.font='bold 31px monospace';x.direction='ltr';x.fillText(fc,W/2,634+T);x.direction='rtl';
+    x.fillStyle='#9ab';x.font='15px "Noto Kufi Arabic"';x.fillText('صالح حتى '+exp.toLocaleDateString('ar-SA'),W/2,690+T);
+    x.fillStyle='rgba(255,255,255,0.92)';x.font='bold 21px "Noto Kufi Arabic"';x.fillText('اذكر الكود عند الحجز واستفد من الخصم',W/2,790+T);
+    x.fillStyle='rgba(255,255,255,0.55)';x.font='17px "Noto Kufi Arabic"';x.fillText('Kleenology — نظافة تليق بك',W/2,845+T);
+    exportCard(cv,txt,'kleenology-offer.png');
   }
-  var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
-  ready.then(function(){var im=new Image();im.onload=function(){draw(im);};im.onerror=function(){draw(null);};im.src='logo.png';});
+  loadLogoThen(draw);
 }
 
 function saveCpnWa(){
@@ -533,7 +615,7 @@ function saveCpnWa(){
 }
 function doCpy(){var c=document.getElementById('cpnC').textContent,b=document.getElementById('cpyB');try{navigator.clipboard.writeText(c).then(ok).catch(fb);}catch(e){fb();}function fb(){var t=document.createElement('textarea');t.value=c;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);ok();}function ok(){b.textContent='تم النسخ ✓';b.classList.add('ok');setTimeout(function(){b.textContent='نسخ الكوبون';b.classList.remove('ok');},2000);}}
 
-function goHome(){if(UNSUB){UNSUB();UNSUB=null;}S={o:0,c:0,p:0,tw:0,r:null,tm:''};['fN','fP','fNt'].forEach(function(id){document.getElementById(id).value='';});document.querySelectorAll('.team-b').forEach(function(b){b.classList.remove('on');});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#cfdce5');});document.querySelectorAll('.cat-b').forEach(function(o){o.classList.remove('on');});document.querySelectorAll('.cat-val').forEach(function(l){l.textContent='';});document.querySelectorAll('.rec-b').forEach(function(b){b.classList.remove('on');});document.getElementById('err').classList.add('hide');go('pgForm');}
+function goHome(){if(UNSUB){UNSUB();UNSUB=null;}S={o:0,c:0,p:0,tw:0,r:null,tm:''};['fN','fP','fNt'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('fCons').checked=false;document.querySelectorAll('.team-b').forEach(function(b){b.classList.remove('on');});document.getElementById('rt').textContent='';document.querySelectorAll('.star-b svg').forEach(function(s){s.setAttribute('fill','none');s.setAttribute('stroke','#cfdce5');});document.querySelectorAll('.cat-b').forEach(function(o){o.classList.remove('on');});document.querySelectorAll('.cat-val').forEach(function(l){l.textContent='';});document.querySelectorAll('.rec-b').forEach(function(b){b.classList.remove('on');});document.getElementById('err').classList.add('hide');go('pgForm');}
 
 var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout(tt);if(tc>=3){tc=0;if(auth.currentUser){openAdmin();}else{go('pgLogin');}}else tt=setTimeout(function(){tc=0;},600);};
 
@@ -997,6 +1079,8 @@ list.forEach(function(r){
   var bc=isFlag(r)?'#dc2626':r.o>=4?'#0284c7':r.o>=3?'#eab308':'#ef4444',dd=new Date(r.ts),dt=isNaN(dd)?'-':dd.toLocaleDateString('ar-SA');
   var badge='';
   if(r.o<=2)badge=r.handled?'<span class="ok-badge">✓ تمت المعالجة</span> ':'<span class="flag-badge">🚨 يحتاج متابعة</span> ';
+  if(r.ok&&!PUB[r._id])badge+='<span class="ok-badge" style="background:#f0f9ff;color:#0f7cb8;border-color:#bfe3f7">👍 العميل وافق على النشر</span> ';
+  if(refCount(r))badge+='<span class="ok-badge" style="background:#fffbeb;color:#b45309;border-color:#fde68a">🎁 جلب '+refCount(r)+' عميل</span> ';
   var acts='';
   if(r._id){
     acts='<div class="act-row">';
@@ -1057,10 +1141,11 @@ function rCp(){
 var totalCp=D.filter(function(r){return r.cp;}).length;
 var usedCp=D.filter(function(r){return r.used;}).length;
 var activeCp=totalCp-usedCp;
-var refs=D.filter(function(r){return r.rcUsed;});
+var refs=D.filter(function(r){return refCount(r)>0;}).sort(function(a,b){return refCount(b)-refCount(a);});
+var refTotal=refs.reduce(function(s,r){return s+refCount(r);},0);
 document.getElementById('cpnStats').innerHTML='<div class="sg"><div class="sc" style="border-top:3px solid #0891b2"><div class="sc-l">كوبونات صالحة</div><div class="sc-v" style="color:#0891b2">'+activeCp+'</div></div><div class="sc" style="border-top:3px solid #b45309"><div class="sc-l">كوبونات مستخدمة</div><div class="sc-v" style="color:#b45309">'+usedCp+'</div></div></div>'+
- '<div class="cc" style="padding:14px"><h3>🎁 التسويق بالإحالة</h3><div class="sg" style="margin-bottom:0"><div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">عملاء جدد بالإحالة</div><div class="sc-v" style="color:#16a34a">'+refs.length+'</div></div><div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">أكواد إحالة متاحة</div><div class="sc-v" style="color:#b45309">'+D.filter(function(r){return r.cp&&r.o>=4&&!r.rcUsed;}).length+'</div></div></div>'+
- (refs.length?'<div style="margin-top:10px;font-size:11px;color:#345"><b>عملاء جلبوا لك زبائن:</b><br>'+refs.slice(-6).reverse().map(function(r){return '⭐ '+esc(r.n||'عميل')+(r.ph?' · '+esc(r.ph):'');}).join('<br>')+'</div>':'<div style="margin-top:10px;font-size:10px;color:#9ab;text-align:center">أكواد الإحالة تُنشأ تلقائياً لكل عميل يقيّم 4 نجوم فأكثر</div>')+'</div>';
+ '<div class="cc" style="padding:14px"><h3>🎁 التسويق بالإحالة</h3><div class="sg" style="margin-bottom:0"><div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">عملاء جدد بالإحالة</div><div class="sc-v" style="color:#16a34a">'+refTotal+'</div></div><div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">أكواد إحالة نشطة</div><div class="sc-v" style="color:#b45309">'+D.filter(function(r){return r.cp&&r.o>=4;}).length+'</div></div></div>'+
+ (refs.length?'<div style="margin-top:12px;font-size:11px;color:#345"><b>🏆 أكثر العملاء إحالة:</b>'+refs.slice(0,6).map(function(r,i){return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid #f2f6f9"><span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'⭐')+' '+esc(r.n||'عميل')+(r.ph?' <span style="color:#9ab">· '+esc(r.ph)+'</span>':'')+'</span><b style="color:#16a34a">'+refCount(r)+'</b></div>';}).join('')+'</div>':'<div style="margin-top:10px;font-size:10px;color:#9ab;text-align:center">أكواد الإحالة تُنشأ تلقائياً لكل عميل يقيّم 4 نجوم فأكثر — والكود يقبل عدداً غير محدود من الأصدقاء</div>')+'</div>';
 /* كوبونات صالحة تنتهي خلال 10 أيام — فرصة لإرجاع العميل */
 var now=new Date(),soon=[];
 D.forEach(function(r){
@@ -1097,9 +1182,9 @@ var base=baseFromFriend(code);
 if(base){
   var owner=D.find(function(r){return r.cp===base;});
   if(!owner){res.innerHTML='<div class="cpn-result invalid"><div class="cpn-r-icon">❌</div><div class="cpn-r-status" style="color:#dc2626">كود إحالة غير موجود</div><div class="cpn-r-info">تأكد من الرمز وحاول مرة ثانية</div></div>';return;}
-  if(owner.rcUsed){res.innerHTML='<div class="cpn-result used"><div class="cpn-r-icon">⚠️</div><div class="cpn-r-status" style="color:#b45309">كود إحالة مستخدم مسبقاً</div><div class="cpn-r-info">استُخدم بتاريخ '+(owner.rcUsedAt?new Date(owner.rcUsedAt).toLocaleDateString('ar-SA'):'غير محدد')+'<br>بإحالة من: '+esc(owner.n||'عميل')+'</div></div>';return;}
+  var used=refCount(owner);
   pendingCpn=code;
-  res.innerHTML='<div class="cpn-result valid"><div class="cpn-r-icon">🎁</div><div class="cpn-r-status" style="color:#0891b2">كود إحالة صالح — خصم 10%</div><div class="cpn-r-info">عميل جديد بإحالة من: <b>'+esc(owner.n||'عميل')+'</b>'+(owner.ph?'<br>📱 '+esc(owner.ph):'')+'</div></div>';
+  res.innerHTML='<div class="cpn-result valid"><div class="cpn-r-icon">🎁</div><div class="cpn-r-status" style="color:#0891b2">كود إحالة صالح — خصم 10%</div><div class="cpn-r-info">عميل جديد بإحالة من: <b>'+esc(owner.n||'عميل')+'</b>'+(owner.ph?'<br>📱 '+esc(owner.ph):'')+(used?'<br>🎯 هذا العميل جلب لك '+used+' عميل قبل':'<br>✨ أول إحالة لهذا العميل')+'</div></div>';
   wrap.classList.remove('hide');return;
 }
 var found=D.find(function(r){return r.cp===code;});
@@ -1117,8 +1202,9 @@ var fbase=baseFromFriend(pendingCpn);
 if(fbase){
   var own=D.find(function(r){return r.cp===fbase;});
   if(!own||!own._id)return;
-  db.collection('reviews').doc(own._id).update({rcUsed:true,rcUsedAt:new Date().toISOString()}).then(function(){
-    alert('تم تسجيل استخدام كود الإحالة ✓\nالعميل المُحيل: '+(own.n||'عميل'));
+  var nc=refCount(own)+1;
+  db.collection('reviews').doc(own._id).update({rcUsed:true,rcCount:nc,rcUsedAt:new Date().toISOString()}).then(function(){
+    alert('تم تسجيل استخدام كود الإحالة ✓\nالعميل المُحيل: '+(own.n||'عميل')+'\nإجمالي إحالاته: '+nc);
     pendingCpn='';rCp();
   }).catch(function(){alert('خطأ في الحفظ، حاول مرة ثانية');});
   return;

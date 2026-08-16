@@ -7,8 +7,9 @@ service cloud.firestore {
 
       // أي زائر يقدر "ينشئ" تقييم جديد فقط، بشرط أن تكون البيانات سليمة
       allow create: if
-        request.resource.data.keys().hasOnly(['n','ph','o','c','p','tw','r','nt','cp','ts','used','tm']) &&
+        request.resource.data.keys().hasOnly(['n','ph','o','c','p','tw','r','nt','cp','ts','used','tm','ok']) &&
         (!('tm' in request.resource.data) || (request.resource.data.tm is string && request.resource.data.tm.size() <= 50)) &&
+        (!('ok' in request.resource.data) || request.resource.data.ok is bool) &&
         request.resource.data.o is int && request.resource.data.o >= 1 && request.resource.data.o <= 5 &&
         request.resource.data.c is int && request.resource.data.c >= 1 && request.resource.data.c <= 5 &&
         request.resource.data.p is int && request.resource.data.p >= 1 && request.resource.data.p <= 5 &&
