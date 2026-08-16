@@ -33,6 +33,11 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    // إعدادات لوحة التحكم (أهداف الفرق) — للأدمن فقط
+    match /settings/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
     // أي مجموعة أخرى: ممنوعة بالكامل
     match /{document=**} {
       allow read, write: if false;

@@ -211,6 +211,11 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .td-btn{width:100%;padding:10px;border-radius:10px;border:1.5px solid #29a9e1;background:#fff;color:#0f7cb8;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .td-month{width:100%;padding:10px;border-radius:10px;border:1.5px solid #d8e6f0;background:#fff;color:#0b3954;font-family:inherit;font-size:12px;font-weight:700;margin-bottom:10px;outline:none}
 .td-cmp{text-align:center;font-size:11px;font-weight:700;margin-bottom:8px}
+.tg-box{background:#fff;border:1px solid #e2eef6;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.tg-h{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;color:#0b3954;margin-bottom:7px}
+.tg-bar{height:12px;border-radius:6px;background:#eef3f7;overflow:hidden;margin-bottom:5px}
+.tg-fill{height:100%;border-radius:6px;transition:width .5s}
+.tg-st{font-size:10px;font-weight:700;text-align:center}
 .rv-team-tag{display:inline-flex;align-items:center;gap:6px;background:#e9f6fd;color:#0f7cb8;border:1px solid #bfe3f7;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;margin-top:8px}
 .rv-team-tag button{background:none;border:none;color:#0f7cb8;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px}
 
@@ -375,7 +380,7 @@ var SUBMIT_COOLDOWN_MS=60*60*1000; /* حد الإرسال المتكرر من ن
 var TEAMS=['فريق أبو رزان']; /* أسماء الفرق — أضف أسماء جديدة هنا ويظهر سؤال الفريق تلقائياً في النموذج */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var LV=[{v:1,t:'ضعيف',c:'#ef4444',e:'😖'},{v:2,t:'مقبول',c:'#f97316',e:'😕'},{v:3,t:'جيد',c:'#eab308',e:'🙂'},{v:4,t:'ممتاز',c:'#29a9e1',e:'😄'},{v:5,t:'رائع',c:'#0f7cb8',e:'🤩'}];
-var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all',RVT='',TKS=[],CURT='',TMONTH='';
+var D=[],S={o:0,c:0,p:0,tw:0,r:null,tm:''},CH={},CHL=false,USED={},pendingCpn='',PUB={},UNSUB=null,FIRSTSNAP=true,RVQ='',RVF='all',RVT='',TKS=[],CURT='',TMONTH='',TARGETS={};
 
 var pages=['pgForm','pgCpn','pgLogin','pgAdm'];
 function go(id){pages.forEach(function(p){document.getElementById(p).classList.add('hide');});document.getElementById(id).classList.remove('hide');window.scrollTo(0,0);}
@@ -440,7 +445,7 @@ var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout
 function openAdmin(){
 go('pgAdm');
 if(window.Notification&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
-loadCh().then(function(){return loadPub();}).then(startLive);
+loadCh().then(function(){return loadPub();}).then(function(){return loadTargets();}).then(startLive);
 }
 function doLogin(){
 var em=document.getElementById('lgEmail').value.trim(),pw=document.getElementById('lgPass').value;
@@ -483,6 +488,39 @@ function startLive(){
     console.log('Live error:',e);
     if(e&&e.code==='permission-denied')alert('لا تملك صلاحية قراءة البيانات — تأكد من تسجيل الدخول ومن نشر قواعد Firestore (راجع SETUP.md)');
   });
+}
+
+function loadTargets(){
+  TARGETS={};
+  try{TARGETS=JSON.parse(localStorage.getItem('kln_targets')||'{}')||{};}catch(e){TARGETS={};}
+  return db.collection('settings').doc('targets').get().then(function(doc){
+    if(doc.exists&&doc.data()&&doc.data().teams)TARGETS=doc.data().teams;
+  }).catch(function(e){console.log('Targets load:',e&&e.code);});
+}
+function saveTargets(){
+  try{localStorage.setItem('kln_targets',JSON.stringify(TARGETS));}catch(e){}
+  return db.collection('settings').doc('targets').set({teams:TARGETS}).catch(function(e){
+    if(e&&e.code==='permission-denied')showToast('حُفظ على هذا الجهاز — انشر قواعد Firestore للمزامنة');
+  });
+}
+function setTeamTarget(i){
+  var k=TKS[i];if(!k)return;
+  var cur=TARGETS[k]||{};
+  var r=prompt('🎯 هدف التقييم الشهري لـ '+k+'\n(رقم من 1 إلى 5)',cur.rating||'4.5');
+  if(r===null)return;
+  var rating=parseFloat(String(r).replace(',','.'));
+  if(!isFinite(rating)||rating<1||rating>5){alert('أدخل رقماً من 1 إلى 5');return;}
+  var c=prompt('🎯 هدف عدد التقييمات في الشهر\n(اتركه فارغاً إذا ما تبغى هدف للعدد)',cur.count||'');
+  var count=parseInt(c,10);if(!isFinite(count)||count<1)count=0;
+  TARGETS[k]={rating:rating,count:count};
+  saveTargets();showToast('تم حفظ هدف '+k+' ✓');
+  if(CURT===k)renderTeamDetail(k);
+}
+function clearTeamTarget(i){
+  var k=TKS[i];if(!k||!TARGETS[k])return;
+  if(!confirm('حذف هدف '+k+'؟'))return;
+  delete TARGETS[k];saveTargets();showToast('تم حذف الهدف');
+  if(CURT===k)renderTeamDetail(k);
 }
 
 function loadPub(){
@@ -607,7 +645,22 @@ function renderTeamDetail(k){
         :'<div class="td-cmp" style="color:#8aa2b2">= نفس مستوى '+mLabel(prevKey(TMONTH))+'</div>';
     }
   }
-  box.innerHTML='<div class="td-box"><div class="td-t">👷 '+esc(k)+'</div>'+sel+cmp+
+  var tg=TARGETS[k],tgHtml='',idx=TKS.indexOf(k);
+  if(tg&&TMONTH){
+    var ov2=parseFloat(avg(list,'o'))||0,pr=Math.min(100,Math.round(ov2/tg.rating*100));
+    var hit=ov2>=tg.rating,col=hit?'#16a34a':pr>=85?'#f5a301':'#f97316';
+    tgHtml='<div class="tg-box"><div class="tg-h"><span>🎯 هدف التقييم: '+tg.rating+'</span><span style="color:'+col+'">'+ov2+' / '+tg.rating+'</span></div>'+
+      '<div class="tg-bar"><div class="tg-fill" style="width:'+pr+'%;background:'+col+'"></div></div>'+
+      '<div class="tg-st" style="color:'+col+'">'+(hit?'✓ تحقق الهدف — أحسنتم!':'باقي '+(tg.rating-ov2).toFixed(1)+' للوصول للهدف')+'</div>';
+    if(tg.count){
+      var cp=Math.min(100,Math.round(list.length/tg.count*100)),chit=list.length>=tg.count,ccol=chit?'#16a34a':'#0f7cb8';
+      tgHtml+='<div class="tg-h" style="margin-top:9px"><span>🎯 هدف عدد التقييمات: '+tg.count+'</span><span style="color:'+ccol+'">'+list.length+' / '+tg.count+'</span></div>'+
+        '<div class="tg-bar"><div class="tg-fill" style="width:'+cp+'%;background:'+ccol+'"></div></div>'+
+        '<div class="tg-st" style="color:'+ccol+'">'+(chit?'✓ تحقق هدف العدد':'باقي '+(tg.count-list.length)+' تقييم')+'</div>';
+    }
+    tgHtml+='</div>';
+  }
+  box.innerHTML='<div class="td-box"><div class="td-t">👷 '+esc(k)+'</div>'+sel+cmp+tgHtml+
     '<div class="td-g">'+
     tdCell(list.length,'عدد التقييمات','#345')+
     tdCell(avg(list,'o')+' ⭐','التقييم العام','#f5a301')+
@@ -619,7 +672,9 @@ function renderTeamDetail(k){
     (fl?'<div style="font-size:11px;font-weight:700;color:#dc2626;text-align:center;margin-bottom:8px">🚨 '+fl+' تقييم يحتاج متابعة</div>':'')+
     '<button type="button" class="td-btn" onclick="viewTeamReviews('+TKS.indexOf(k)+')">💬 عرض تقييمات الفريق</button>'+
     '<button type="button" class="td-btn" style="margin-top:6px;background:linear-gradient(135deg,#1173b5,#29a9e1);color:#fff;border-color:#1173b5" onclick="shareTeamReport('+TKS.indexOf(k)+')">📤 مشاركة تقرير الفريق (صورة)</button>'+
-    '<button type="button" class="td-btn" style="margin-top:6px" onclick="shareTeamReport('+TKS.indexOf(k)+',1)">💾 حفظ الصورة بالجودة الكاملة</button></div>';
+    '<button type="button" class="td-btn" style="margin-top:6px" onclick="shareTeamReport('+idx+',1)">💾 حفظ الصورة بالجودة الكاملة</button>'+
+    '<button type="button" class="td-btn" style="margin-top:6px;border-color:#f5b301;color:#9a6b00" onclick="setTeamTarget('+idx+')">🎯 '+(tg?'تعديل هدف الفريق':'تحديد هدف شهري للفريق')+'</button>'+
+    (tg?'<button type="button" class="td-btn" style="margin-top:6px;border-color:#e5c9c9;color:#b45454" onclick="clearTeamTarget('+idx+')">حذف الهدف</button>':'')+'</div>';
 }
 function shareTeamReport(i,saveOnly){
   var k=TKS[i];if(!k)return;
@@ -642,8 +697,13 @@ function shareTeamReport(i,saveOnly){
   var ov=parseFloat(avg(list,'o'))||0;
   var grade=ov>=4.5?{t:'🏆 أداء استثنائي',c:'#16a34a'}:ov>=4?{t:'💪 أداء رائع',c:'#29a9e1'}:ov>=3?{t:'🚀 أداء جيد',c:'#d99e00'}:{t:'📈 يحتاج تطوير',c:'#f97316'};
   var msg=ov>=4.5?'فخورون فيكم! استمروا على هذا المستوى المميز 🌟':ov>=4?'شغل ممتاز! خطوة بسيطة وتوصلون القمة 🏆':ov>=3?'أداؤكم جيد — ونثق أنكم تقدرون أكثر 💪':'كل فريق يمر بتحديات — معاً نرجع أقوى 💪';
-  var SC=3; /* دقة عالية: الرسم بمقاس 800×1240 والإخراج بثلاثة أضعاف (2400×3720) */
-  var cv=document.createElement('canvas');cv.width=800*SC;cv.height=1240*SC;
+  var tgt=month?TARGETS[k]:null;
+  var H=1150;
+  if(tgt)H+=(tgt.count?185:110)+20;
+  if(cmpTxt||fl)H+=42;
+  H+=103;
+  var SC=3; /* دقة عالية: الإخراج بثلاثة أضعاف مقاس الرسم */
+  var cv=document.createElement('canvas');cv.width=800*SC;cv.height=H*SC;
   var x=cv.getContext('2d');
   x.scale(SC,SC);
   x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
@@ -651,7 +711,7 @@ function shareTeamReport(i,saveOnly){
   function starPath(cx,cy,R){x.beginPath();for(var p=0;p<5;p++){var a=-Math.PI/2+p*2*Math.PI/5;if(p===0)x.moveTo(cx+R*Math.cos(a),cy+R*Math.sin(a));else x.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));var a2=a+Math.PI/5;x.lineTo(cx+R*0.45*Math.cos(a2),cy+R*0.45*Math.sin(a2));}x.closePath();}
   function card(a,b,w,h,r){x.save();x.shadowColor='rgba(13,60,97,0.12)';x.shadowBlur=18;x.shadowOffsetY=6;x.fillStyle='#fff';rr(a,b,w,h,r);x.fill();x.restore();}
   function draw(logo){
-    x.fillStyle='#f2f7fa';x.fillRect(0,0,800,1240);
+    x.fillStyle='#f2f7fa';x.fillRect(0,0,800,H);
     var g=x.createLinearGradient(0,0,800,260);g.addColorStop(0,'#083b66');g.addColorStop(1,'#29a9e1');
     x.fillStyle=g;x.fillRect(0,0,800,260);
     x.fillStyle='rgba(255,255,255,0.07)';
@@ -714,12 +774,38 @@ function shareTeamReport(i,saveOnly){
       x.textAlign='left';x.fillStyle=c2.c;x.font='bold 21px "Noto Kufi Arabic"';x.fillText(v+'/5',110,y+7);
       x.textAlign='center';
     });
-    var yg=x.createLinearGradient(60,1155,740,1155);yg.addColorStop(0,'#ffd66b');yg.addColorStop(1,'#f5b301');
-    x.save();x.shadowColor='rgba(245,179,1,0.35)';x.shadowBlur=14;x.shadowOffsetY=5;x.fillStyle=yg;rr(60,1155,680,58,18);x.fill();x.restore();
-    x.fillStyle='#5d4700';x.font='bold 21px "Noto Kufi Arabic"';x.fillText(msg,400,1192);
-    if(cmpTxt){x.fillStyle=cmpCol;x.font='bold 19px "Noto Kufi Arabic"';x.fillText(cmpTxt,400,1143);}
-    else if(fl){x.fillStyle='#dc2626';x.font='bold 17px "Noto Kufi Arabic"';x.fillText('🚨 '+fl+' تقييم بانتظار المتابعة',400,1143);}
-    x.fillStyle='#a9bfcc';x.font='15px "Noto Kufi Arabic"';x.fillText('Kleenology — نظام تقييم الخدمة · '+new Date().toLocaleDateString('ar-SA'),400,1232);
+    var by=1150;
+    if(tgt){
+      var th=tgt.count?185:110;
+      card(60,by,680,th,20);
+      var hit=ov>=tgt.rating,tcol=hit?'#16a34a':ov/tgt.rating>=0.85?'#f5a301':'#f97316';
+      x.textAlign='right';x.fillStyle='#0b3954';x.font='bold 20px "Noto Kufi Arabic"';x.fillText('🎯 هدف التقييم: '+tgt.rating,715,by+38);
+      x.textAlign='left';x.direction='ltr';x.fillStyle=tcol;x.font='bold 20px "Noto Kufi Arabic"';x.fillText(ov+' / '+tgt.rating,85,by+38);
+      x.direction='rtl';x.textAlign='center';
+      x.fillStyle='#eef3f7';rr(85,by+52,630,18,9);x.fill();
+      var pw=Math.min(1,ov/tgt.rating);
+      if(pw>0){x.fillStyle=tcol;rr(85+630*(1-pw),by+52,630*pw,18,9);x.fill();}
+      x.fillStyle=tcol;x.font='bold 17px "Noto Kufi Arabic"';
+      x.fillText(hit?'✓ تحقق الهدف — أحسنتم! 🎉':'باقي '+(tgt.rating-ov).toFixed(1)+' للوصول للهدف',400,by+88);
+      if(tgt.count){
+        var chit=list.length>=tgt.count,ccol=chit?'#16a34a':'#0f7cb8';
+        x.textAlign='right';x.fillStyle='#0b3954';x.font='bold 19px "Noto Kufi Arabic"';x.fillText('🎯 هدف عدد التقييمات: '+tgt.count,715,by+126);
+        x.textAlign='left';x.direction='ltr';x.fillStyle=ccol;x.font='bold 19px "Noto Kufi Arabic"';x.fillText(list.length+' / '+tgt.count,85,by+126);
+        x.direction='rtl';x.textAlign='center';
+        x.fillStyle='#eef3f7';rr(85,by+140,630,18,9);x.fill();
+        var cw=Math.min(1,list.length/tgt.count);
+        if(cw>0){x.fillStyle=ccol;rr(85+630*(1-cw),by+140,630*cw,18,9);x.fill();}
+        x.fillStyle=ccol;x.font='bold 16px "Noto Kufi Arabic"';
+        x.fillText(chit?'✓ تحقق هدف العدد':'باقي '+(tgt.count-list.length)+' تقييم للهدف',400,by+174);
+      }
+      by+=th+20;
+    }
+    if(cmpTxt){x.fillStyle=cmpCol;x.font='bold 19px "Noto Kufi Arabic"';x.fillText(cmpTxt,400,by+20);by+=42;}
+    else if(fl){x.fillStyle='#dc2626';x.font='bold 17px "Noto Kufi Arabic"';x.fillText('🚨 '+fl+' تقييم بانتظار المتابعة',400,by+20);by+=42;}
+    var yg=x.createLinearGradient(60,by,740,by);yg.addColorStop(0,'#ffd66b');yg.addColorStop(1,'#f5b301');
+    x.save();x.shadowColor='rgba(245,179,1,0.35)';x.shadowBlur=14;x.shadowOffsetY=5;x.fillStyle=yg;rr(60,by,680,58,18);x.fill();x.restore();
+    x.fillStyle='#5d4700';x.font='bold 21px "Noto Kufi Arabic"';x.fillText(msg,400,by+37);
+    x.fillStyle='#a9bfcc';x.font='15px "Noto Kufi Arabic"';x.fillText('Kleenology — نظام تقييم الخدمة · '+new Date().toLocaleDateString('ar-SA'),400,by+95);
     cv.toBlob(function(b){
       if(!b){alert('تعذر إنشاء الصورة');return;}
       var f;
