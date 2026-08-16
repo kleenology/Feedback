@@ -526,6 +526,9 @@ var fl=D.filter(isFlag).length;
 var cats=[{l:'النظافة',k:'c',i:'✨',cl:'#0284c7'},{l:'الالتزام',k:'p',i:'⏰',cl:'#3b82f6'},{l:'التعامل',k:'tw',i:'👥',cl:'#8b5cf6'}];
 var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي التقييمات</div><div class="sc-v">'+n+'</div></div><div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-l">التقييم العام</div><div class="sc-v">'+avg(D,'o')+' ⭐</div></div><div class="sc" style="border-top:3px solid #0284c7"><div class="sc-l">نسبة الترشيح</div><div class="sc-v">'+rp+'%</div></div><div class="sc" style="border-top:3px solid '+(fl?'#dc2626':'#16a34a')+'"><div class="sc-l">تحتاج متابعة</div><div class="sc-v" style="color:'+(fl?'#dc2626':'#16a34a')+'">'+fl+'</div></div></div>';
 h+='<a class="exp-btn" style="display:block;text-align:center;text-decoration:none" href="reviews.html" target="_blank">🌐 فتح صفحة عرض التقييمات</a>';
+if(TEAMS.length&&D.some(function(r){return isTestReview(r)||!r.tm;})){
+  h+='<button type="button" class="exp-btn" style="border-color:#f5a301;color:#9a6b00" onclick="fixData()">🛠 ترتيب البيانات: حذف التجريبية وتعيين '+esc(TEAMS[0])+' للكل</button>';
+}
 if(n&&CHL)h+='<div class="cc"><h3>تحليل الأداء</h3><div class="cw"><canvas id="chR"></canvas></div></div>';
 h+='<div class="cc"><h3>متوسط التقييمات</h3>';
 cats.forEach(function(c){var v=avg(D,c.k);h+='<div class="ar"><div class="ar-l"><span>'+c.i+'</span><span>'+c.l+'</span></div><div class="ar-r"><div class="ab"><div class="af" style="width:'+(v/5*100)+'%;background:'+c.cl+'"></div></div><span class="av" style="color:'+c.cl+'">'+v+'/5</span></div></div>';});
@@ -543,6 +546,26 @@ if(TKS.length){
 el.innerHTML=h;
 if(CURT){if(TKS.indexOf(CURT)>=0)renderTeamDetail(CURT);else CURT='';}
 if(n>0&&CHL){try{kC('chR');CH['chR']=new Chart(document.getElementById('chR'),{type:'radar',data:{labels:cats.map(function(c){return c.l;}),datasets:[{data:cats.map(function(c){return parseFloat(avg(D,c.k));}),backgroundColor:'rgba(8,145,178,0.15)',borderColor:'#0891b2',borderWidth:2,pointBackgroundColor:'#0891b2'}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:5,ticks:{stepSize:1,font:{size:9}},pointLabels:{font:{size:11,family:"'Noto Kufi Arabic'"}}}},plugins:{legend:{display:false}}}});}catch(e){}}}
+
+function isTestReview(r){
+  var testNames=['تجربة النظام','فحص النظام','عميل تجريبي غاضب','عميل تجريبي سعيد','تقييم ناقص للاختبار'];
+  var n=String(r.n||'');
+  return testNames.indexOf(n)>=0||n.toLowerCase().indexOf('abdulhadi')>=0||n.indexOf('عبدالهادي')>=0||n.indexOf('عبد الهادي')>=0;
+}
+function fixData(){
+  var team=TEAMS[0];
+  var toDel=D.filter(function(r){return r._id&&isTestReview(r);});
+  var toSet=D.filter(function(r){return r._id&&!isTestReview(r)&&!r.tm;});
+  if(!toDel.length&&!toSet.length){showToast('البيانات مرتبة أصلاً ✓');return;}
+  if(!confirm('سيتم:\n- حذف '+toDel.length+' تقييم تجريبي (تجارب النظام و abdulhadi)\n- تعيين "'+team+'" لـ '+toSet.length+' تقييم بدون فريق\n\nمتابعة؟'))return;
+  var ops=[];
+  toDel.forEach(function(r){
+    ops.push(db.collection('reviews').doc(r._id).delete());
+    ops.push(db.collection('public_reviews').doc(r._id).delete().then(function(){delete PUB[r._id];}).catch(function(){}));
+  });
+  toSet.forEach(function(r){ops.push(db.collection('reviews').doc(r._id).update({tm:team}));});
+  Promise.all(ops).then(function(){showToast('تم ترتيب البيانات ✓');}).catch(function(){alert('صار خطأ أثناء الترتيب — حدّث الصفحة وحاول مرة ثانية');});
+}
 
 function teamDetail(i){
   var k=TKS[i];if(!k)return;
