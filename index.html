@@ -910,26 +910,50 @@ function custGroups(){
     if(r.n)g[k].n=r.n;
     if(r.ph)g[k].ph=r.ph;
   });
+  /* أرقام قائمة العروض تنضم لنفس القائمة — من قيّمنا يندمج مع تقييماته، ومن ما قيّم يظهر كعميل بلا تقييم */
+  CT.forEach(function(t){
+    if(!t||!t.p)return;
+    var e=g[t.p];
+    if(e){e.inList=true;e.st=t.st;if(t.n&&(!e.n||e.n==='عميل'))e.n=t.n;return;}
+    g[t.p]={n:t.n||'عميل',ph:t.p,items:[],inList:true,st:t.st,at:t.at};
+  });
   return Object.keys(g).map(function(k){
     var c=g[k];
     c.items.sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
     c.count=c.items.length;
-    c.last=new Date(c.items[c.items.length-1].ts);
-    c.days=Math.floor((new Date()-c.last)/86400000);
-    c.avg=parseFloat(avg(c.items,'o'))||0;
-    c.refs=c.items.reduce(function(s,r){return s+refCount(r);},0);
+    if(c.count){
+      c.last=new Date(c.items[c.items.length-1].ts);
+      c.days=Math.floor((new Date()-c.last)/86400000);
+      c.avg=parseFloat(avg(c.items,'o'))||0;
+      c.refs=c.items.reduce(function(s,r){return s+refCount(r);},0);
+    }else{
+      c.last=null;c.days=-1;c.avg=0;c.refs=0;
+    }
     return c;
   });
 }
+/* دعوة عميل من القائمة ما قيّمنا بعد */
+function inviteWaLink(c){
+  var url=location.protocol==='https:'?(location.origin+location.pathname):'';
+  var t=greetAr()+' '+(c.n&&c.n!=='عميل'?c.n:'يا غالي')+' 🌟\nمعك '+BIZ.rep+' من '+BIZ.name+
+    '\n\nكيف كانت آخر خدمة قدمناها لك؟ رأيك يهمنا ويرفع مستوانا 🙏'+
+    (url?'\nقيّمنا من هنا: '+url:'')+
+    '\n\nويوصلك كوبون خصم 10% أول ما ترسل تقييمك 🎁';
+  return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
+}
 function rCu(){
   var el=document.getElementById('tcCustomers');
-  if(!D.length){el.innerHTML='<div class="empty">لا توجد بيانات بعد</div>';return;}
+  if(!D.length&&!CT.length){el.innerHTML='<div class="empty">لا توجد بيانات بعد</div>';return;}
   var cs=custGroups(),rep=cs.filter(function(c){return c.count>1;});
+  var rated=cs.filter(function(c){return c.count>0;});
+  var quiet=cs.filter(function(c){return c.count===0&&c.st!==0;});
   var away=cs.filter(function(c){return c.days>=45&&c.avg>=4;}).sort(function(a,b){return b.days-a.days;});
   var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي العملاء</div><div class="sc-v">'+cs.length+'</div></div>'+
-    '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">عملاء متكررون</div><div class="sc-v" style="color:#16a34a">'+rep.length+'</div></div></div>';
+    '<div class="sc" style="border-top:3px solid #0891b2"><div class="sc-l">قيّمونا</div><div class="sc-v" style="color:#0891b2">'+rated.length+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">عملاء متكررون</div><div class="sc-v" style="color:#16a34a">'+rep.length+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">من القائمة بلا تقييم</div><div class="sc-v" style="color:#b45309">'+quiet.length+'</div></div></div>';
   h+='<div class="cc"><h3>🏅 أوفى العملاء</h3>';
-  var top=cs.slice().sort(function(a,b){return b.count-a.count||b.avg-a.avg;}).slice(0,8);
+  var top=rated.slice().sort(function(a,b){return b.count-a.count||b.avg-a.avg;}).slice(0,8);
   if(!top.length)h+='<div class="empty">لا يوجد</div>';
   top.forEach(function(c,i){
     h+='<div class="ar"><div class="ar-l"><span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'👤')+'</span><span>'+esc(c.n)+(c.ph?' <span style="color:#bbb">· '+esc(c.ph)+'</span>':'')+'</span></div><div class="ar-r"><span style="font-size:11px;color:#9ab">'+c.avg+'⭐</span><span class="av" style="color:#0f7cb8">'+c.count+' مرة</span></div></div>';
@@ -942,6 +966,16 @@ function rCu(){
       (c.ph?'<a class="exp-wa" target="_blank" rel="noopener" href="'+backWaLink(c)+'">💬 دعوة للعودة</a>':'')+'</div>';
   });
   h+='</div>';
+  /* أرقام أضفتها من تبويب العروض وما وصلنا منها تقييم بعد */
+  if(quiet.length){
+    h+='<div class="cc"><h3>📋 من القائمة — ما قيّمونا بعد ('+quiet.length+')</h3><div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">أرقام أضفتها في تبويب العروض — دعوتهم للتقييم تكسبك رأيهم وكوبون يرجّعهم</div>';
+    quiet.slice(0,15).forEach(function(c){
+      h+='<div class="exp-item" style="border-right-color:#0891b2"><div class="exp-top"><div><div class="exp-nm">'+esc(c.n)+'</div><div style="font-size:10px;color:#9ab;margin-top:3px;direction:ltr;text-align:right">+'+esc(c.ph)+'</div></div></div>'+
+        '<a class="exp-wa" target="_blank" rel="noopener" href="'+inviteWaLink(c)+'">💬 اطلب تقييمه</a></div>';
+    });
+    if(quiet.length>15)h+='<div style="font-size:10px;color:#9ab;text-align:center;margin-top:8px">… و'+(quiet.length-15)+' غيرهم — أرسل لهم دفعة واحدة من تبويب 📣 العروض</div>';
+    h+='</div>';
+  }
   el.innerHTML=h;
 }
 /* تحية حسب وقت الإرسال */
@@ -1061,7 +1095,7 @@ function ofSave(parsed,done){
     box.innerHTML=ofImpBox(fresh.length,dup,parsed.bad);
     showToast('أضفنا '+fresh.length+' رقم جديد ✓');
     if(done)done();
-    rOf();
+    rOf();rCu();
   }).catch(function(e){
     if(e&&e.code==='permission-denied')alert('لا تملك صلاحية حفظ الأرقام — انشر قواعد Firestore المحدثة (راجع SETUP.md)');
     else alert('صار خطأ أثناء الحفظ، حاول مرة ثانية');
@@ -1176,14 +1210,14 @@ function ofMute(p){
   c.st=on?1:0;
   db.collection('contacts').doc(p).update({st:c.st}).catch(function(){showToast('تعذّر الحفظ');});
   showToast(on?'رجّعناه للقائمة ✓':'أوقفنا الرسائل عنه 🔕');
-  rOf();
+  rOf();rCu();
 }
 function ofDel(p){
   var c=ofGet(p);if(!c)return;
   if(!confirm('حذف '+(c.n||p)+' من القائمة؟'))return;
   db.collection('contacts').doc(p).delete().then(function(){
     var i=CT.indexOf(c);if(i>=0)CT.splice(i,1);
-    showToast('تم الحذف');rOf();
+    showToast('تم الحذف');rOf();rCu();
   }).catch(function(){alert('خطأ في الحذف، حاول مرة ثانية');});
 }
 /* إعادة فتح نفس العرض للجميع — لو تبي ترسله مرة ثانية */
