@@ -910,12 +910,16 @@ function custGroups(){
     if(r.n)g[k].n=r.n;
     if(r.ph)g[k].ph=r.ph;
   });
+  /* التقييمات القديمة بلا رقم جوال مفهرسة بالاسم — نجهزها للمطابقة حتى لا يتكرر العميل */
+  var byName={};
+  Object.keys(g).forEach(function(k){if(k.indexOf('n:')===0&&k.length>2)byName[k.slice(2)]=g[k];});
   /* أرقام قائمة العروض تنضم لنفس القائمة — من قيّمنا يندمج مع تقييماته، ومن ما قيّم يظهر كعميل بلا تقييم */
   CT.forEach(function(t){
     if(!t||!t.p)return;
-    var e=g[t.p];
-    if(e){e.inList=true;e.st=t.st;if(t.n&&(!e.n||e.n==='عميل'))e.n=t.n;return;}
-    g[t.p]={n:t.n||'عميل',ph:t.p,items:[],inList:true,st:t.st,at:t.at};
+    var nm=String(t.n||'').trim(),e=g[t.p];
+    if(!e&&nm&&byName[nm]){e=byName[nm];delete g['n:'+nm];delete byName[nm];e.ph=t.p;g[t.p]=e;}
+    if(e){e.inList=true;e.st=t.st;if(nm&&(!e.n||e.n==='عميل'))e.n=nm;return;}
+    g[t.p]={n:nm||'عميل',ph:t.p,items:[],inList:true,st:t.st,at:t.at};
   });
   return Object.keys(g).map(function(k){
     var c=g[k];
@@ -946,12 +950,15 @@ function rCu(){
   if(!D.length&&!CT.length){el.innerHTML='<div class="empty">لا توجد بيانات بعد</div>';return;}
   var cs=custGroups(),rep=cs.filter(function(c){return c.count>1;});
   var rated=cs.filter(function(c){return c.count>0;});
-  var quiet=cs.filter(function(c){return c.count===0&&c.st!==0;});
+  var noRate=cs.filter(function(c){return c.count===0;});
+  var quiet=noRate.filter(function(c){return c.st!==0;});
   var away=cs.filter(function(c){return c.days>=45&&c.avg>=4;}).sort(function(a,b){return b.days-a.days;});
-  var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي العملاء</div><div class="sc-v">'+cs.length+'</div></div>'+
-    '<div class="sc" style="border-top:3px solid #0891b2"><div class="sc-l">قيّمونا</div><div class="sc-v" style="color:#0891b2">'+rated.length+'</div></div>'+
+  /* الرقمان منفصلان عمداً: عملاء التقييمات شيء، وأرقام قائمة العروض شيء آخر */
+  var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">عملاء قيّمونا</div><div class="sc-v">'+rated.length+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">عملاء متكررون</div><div class="sc-v" style="color:#16a34a">'+rep.length+'</div></div>'+
-    '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">من القائمة بلا تقييم</div><div class="sc-v" style="color:#b45309">'+quiet.length+'</div></div></div>';
+    '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">أرقام في قائمة العروض</div><div class="sc-v" style="color:#b45309">'+CT.length+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #94a3b8"><div class="sc-l">منها ما قيّمونا بعد</div><div class="sc-v" style="color:#64748b">'+noRate.length+'</div></div></div>';
+  if(CT.length)h+='<div class="of-note" style="margin-bottom:12px">الرقمان منفصلان: «قيّمونا» عملاء وصلنا منهم تقييم فعلي، و«قائمة العروض» أرقام أضفتها أنت. من كان في الاثنين يُحسب مرة وحدة فقط — والتقييم العام والتقارير تُحسب من التقييمات وحدها، ما تتأثر بالقائمة.</div>';
   h+='<div class="cc"><h3>🏅 أوفى العملاء</h3>';
   var top=rated.slice().sort(function(a,b){return b.count-a.count||b.avg-a.avg;}).slice(0,8);
   if(!top.length)h+='<div class="empty">لا يوجد</div>';
