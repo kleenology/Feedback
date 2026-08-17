@@ -430,12 +430,21 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div class="cc">
       <h3>📥 قائمة الأرقام اليومية</h3>
       <div class="of-note">الصق أرقام اليوم من الإكسل أو الجوال — رقم في كل سطر، والاسم قبله أو بعده. نصلّح الصيغة ونحذف المكرر تلقائياً، فما ينضاف رقم مرتين مهما كررت اللصق.</div>
+      <label class="of-lb" style="margin-bottom:6px">مصدر هذه الدفعة — من هم هذي الأرقام؟</label>
+      <div class="of-row" id="ofSrcChips" style="margin-bottom:8px">
+        <button type="button" class="of-tp on" data-s="cu">👤 عملاء طلبوا خدمة</button>
+        <button type="button" class="of-tp" data-s="ld">🎯 ليدز من حملة</button>
+        <button type="button" class="of-tp" data-s="">❓ ما أدري</button>
+      </div>
+      <div id="ofSrcName" style="display:none;margin-bottom:8px"><input id="ofSn" class="of-in" maxlength="30" placeholder="اسم الحملة (تيك توك أغسطس)"></div>
+      <div class="of-note" id="ofSrcNote" style="margin-bottom:9px"></div>
       <textarea id="ofPaste" class="of-ta" placeholder="0501234567 أبو سعد&#10;منال, 0559876543&#10;+966501112223"></textarea>
       <div class="of-row" style="margin-top:9px">
         <button type="button" class="exp-btn" style="margin:0;flex:1" onclick="ofImport()">➕ أضف للقائمة</button>
         <label class="exp-btn" style="margin:0;flex:1;text-align:center;cursor:pointer;display:block">📄 من ملف<input type="file" accept=".csv,.txt,text/csv,text/plain" onchange="ofFile(this)" style="display:none"></label>
       </div>
       <div id="ofImp"></div>
+      <div id="ofUnc"></div>
       <button type="button" class="exp-btn" style="margin:9px 0 0;border-color:#d8e6f0;color:#5d8aa8" onclick="ofFromReviews()">👥 أضف أرقام عملاء التقييمات</button>
     </div>
     <div class="cc">
@@ -454,6 +463,13 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div class="cc">
       <h3>🚀 الإرسال السريع</h3>
       <div class="of-note">ثلاث ضغطات لكل عميل: زر الإرسال يفتح واتساب والرسالة مكتوبة باسمه، وترجع تلقائياً للعميل التالي. اللي أرسلت له هذا العرض ما يرجع لك مرة ثانية حتى لو أضفت أرقام جديدة بكرة.</div>
+      <label class="of-lb" style="margin-bottom:6px">أرسل لـ</label>
+      <div class="of-row" id="ofTgtChips" style="margin-bottom:10px">
+        <button type="button" class="of-tp on" data-t="all">الكل</button>
+        <button type="button" class="of-tp" data-t="cu">👤 العملاء فقط</button>
+        <button type="button" class="of-tp" data-t="ld">🎯 الليدز فقط</button>
+        <button type="button" class="of-tp" data-t="un">❓ غير المصنّف</button>
+      </div>
       <div id="ofSend"></div>
     </div>
     <div class="cc">
@@ -471,6 +487,12 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
         <button type="button" class="of-tp" data-f="pend">لم يُرسل</button>
         <button type="button" class="of-tp" data-f="sent">أُرسل</button>
         <button type="button" class="of-tp" data-f="off">موقوف</button>
+      </div>
+      <div class="of-row" id="ofSfChips" style="margin-top:-4px">
+        <button type="button" class="of-tp on" data-s="all">كل المصادر</button>
+        <button type="button" class="of-tp" data-s="cu">👤 عملاء</button>
+        <button type="button" class="of-tp" data-s="ld">🎯 ليدز</button>
+        <button type="button" class="of-tp" data-s="un">❓ غير مصنّف</button>
       </div>
       <div id="ofList"></div>
     </div>
@@ -918,8 +940,8 @@ function custGroups(){
     if(!t||!t.p)return;
     var nm=String(t.n||'').trim(),e=g[t.p];
     if(!e&&nm&&byName[nm]){e=byName[nm];delete g['n:'+nm];delete byName[nm];e.ph=t.p;g[t.p]=e;}
-    if(e){e.inList=true;e.st=t.st;if(nm&&(!e.n||e.n==='عميل'))e.n=nm;return;}
-    g[t.p]={n:nm||'عميل',ph:t.p,items:[],inList:true,st:t.st,at:t.at};
+    if(e){e.inList=true;e.st=t.st;e.sr=t.sr;e.sn=t.sn;if(nm&&(!e.n||e.n==='عميل'))e.n=nm;return;}
+    g[t.p]={n:nm||'عميل',ph:t.p,items:[],inList:true,st:t.st,sr:t.sr,sn:t.sn,at:t.at};
   });
   return Object.keys(g).map(function(k){
     var c=g[k];
@@ -936,6 +958,9 @@ function custGroups(){
     return c;
   });
 }
+/* تصنيف العميل في تبويب العملاء: أي تقييم يعني أنه جرّبنا فعلاً */
+function cuKind(c){return c.count?'cu':(c.sr==='ld'?'ld':c.sr==='cu'?'cu':'');}
+function cuWon(c){return !!(c.sr==='ld'&&c.count);}
 /* دعوة عميل من القائمة ما قيّمنا بعد */
 function inviteWaLink(c){
   var url=location.protocol==='https:'?(location.origin+location.pathname):'';
@@ -945,20 +970,31 @@ function inviteWaLink(c){
     '\n\nويوصلك كوبون خصم 10% أول ما ترسل تقييمك 🎁';
   return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
 }
+/* الليد ما جرّبنا — ما نسأله عن «آخر خدمة»، ندعوه يجرّب أول مرة */
+function leadWaLink(c){
+  var t=greetAr()+' '+(c.n&&c.n!=='عميل'?c.n:'يا غالي')+' 🌟\nمعك '+BIZ.rep+' من '+BIZ.name+
+    '\n\nوصلنا اهتمامك بخدمة التنظيف'+(c.sn?' (من '+c.sn+')':'')+' 🙏'+
+    '\nقل لي وش تحتاج تنظيف (شقة · فيلا · كنب · سجاد) وأعطيك السعر والموعد على طول، ولك خصم على أول طلب ✨';
+  return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
+}
 function rCu(){
   var el=document.getElementById('tcCustomers');
   if(!D.length&&!CT.length){el.innerHTML='<div class="empty">لا توجد بيانات بعد</div>';return;}
   var cs=custGroups(),rep=cs.filter(function(c){return c.count>1;});
   var rated=cs.filter(function(c){return c.count>0;});
   var noRate=cs.filter(function(c){return c.count===0;});
-  var quiet=noRate.filter(function(c){return c.st!==0;});
+  var quiet=noRate.filter(function(c){return c.st!==0&&cuKind(c)!=='ld';});
+  var leads=noRate.filter(function(c){return c.st!==0&&cuKind(c)==='ld';});
+  var won=cs.filter(cuWon);
   var away=cs.filter(function(c){return c.days>=45&&c.avg>=4;}).sort(function(a,b){return b.days-a.days;});
   /* الرقمان منفصلان عمداً: عملاء التقييمات شيء، وأرقام قائمة العروض شيء آخر */
   var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">عملاء قيّمونا</div><div class="sc-v">'+rated.length+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">عملاء متكررون</div><div class="sc-v" style="color:#16a34a">'+rep.length+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">أرقام في قائمة العروض</div><div class="sc-v" style="color:#b45309">'+CT.length+'</div></div>'+
-    '<div class="sc" style="border-top:3px solid #94a3b8"><div class="sc-l">منها ما قيّمونا بعد</div><div class="sc-v" style="color:#64748b">'+noRate.length+'</div></div></div>';
-  if(CT.length)h+='<div class="of-note" style="margin-bottom:12px">الرقمان منفصلان: «قيّمونا» عملاء وصلنا منهم تقييم فعلي، و«قائمة العروض» أرقام أضفتها أنت. من كان في الاثنين يُحسب مرة وحدة فقط — والتقييم العام والتقارير تُحسب من التقييمات وحدها، ما تتأثر بالقائمة.</div>';
+    '<div class="sc" style="border-top:3px solid #94a3b8"><div class="sc-l">منها ما قيّمونا بعد</div><div class="sc-v" style="color:#64748b">'+noRate.filter(function(c){return cuKind(c)!=='ld';}).length+'</div></div></div>';
+  if(leads.length||won.length)h+='<div class="sg" style="margin-top:-4px"><div class="sc" style="border-top:3px solid #c026d3"><div class="sc-l">🎯 ليدز ما جرّبونا</div><div class="sc-v" style="color:#c026d3">'+leads.length+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #4f46e5"><div class="sc-l">ليد صار عميلاً</div><div class="sc-v" style="color:#4f46e5">'+won.length+'</div></div></div>';
+  if(CT.length)h+='<div class="of-note" style="margin-bottom:12px">الأرقام منفصلة عمداً: «قيّمونا» عملاء وصلنا منهم تقييم فعلي، و«قائمة العروض» أرقام أضفتها أنت، و«الليدز» ناس من حملات الإعلان ما جرّبونا بعد — ما يُحسبون عملاء إلا لما يطلبون فعلاً. من كان في أكثر من خانة يُحسب مرة وحدة، والتقييم العام والتقارير تُحسب من التقييمات وحدها.</div>';
   h+='<div class="cc"><h3>🏅 أوفى العملاء</h3>';
   var top=rated.slice().sort(function(a,b){return b.count-a.count||b.avg-a.avg;}).slice(0,8);
   if(!top.length)h+='<div class="empty">لا يوجد</div>';
@@ -981,6 +1017,16 @@ function rCu(){
         '<a class="exp-wa" target="_blank" rel="noopener" href="'+inviteWaLink(c)+'">💬 اطلب تقييمه</a></div>';
     });
     if(quiet.length>15)h+='<div style="font-size:10px;color:#9ab;text-align:center;margin-top:8px">… و'+(quiet.length-15)+' غيرهم — أرسل لهم دفعة واحدة من تبويب 📣 العروض</div>';
+    h+='</div>';
+  }
+  /* ليدز الحملات: ما جرّبونا بعد — هدفهم أول طلب، ما هو تقييم */
+  if(leads.length){
+    h+='<div class="cc"><h3>🎯 ليدز الحملات — ما جرّبونا بعد ('+leads.length+')</h3><div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">سجّلوا اهتمامهم من إعلان — هدفك معهم أول طلب، وأول ما يطلبون ويقيّمون ينتقلون تلقائياً لعملائك</div>';
+    leads.slice(0,15).forEach(function(c){
+      h+='<div class="exp-item" style="border-right-color:#c026d3"><div class="exp-top"><div><div class="exp-nm">'+esc(c.n)+'</div><div style="font-size:10px;color:#9ab;margin-top:3px;direction:ltr;text-align:right">+'+esc(c.ph)+(c.sn?' · '+esc(c.sn):'')+'</div></div></div>'+
+        '<a class="exp-wa" target="_blank" rel="noopener" href="'+leadWaLink(c)+'">💬 ادعُه يجرّب</a></div>';
+    });
+    if(leads.length>15)h+='<div style="font-size:10px;color:#9ab;text-align:center;margin-top:8px">… و'+(leads.length-15)+' غيرهم — أرسل لهم دفعة واحدة من تبويب 📣 العروض («أرسل لـ: 🎯 الليدز فقط»)</div>';
     h+='</div>';
   }
   el.innerHTML=h;
@@ -1007,11 +1053,16 @@ function backWaLink(c){
 }
 /* ===== قائمة الأرقام ورسائل العروض ===== */
 var CT=[],OFSK={},OFQ='',OFF='all',OFSHOW=40;
+/* OFSRC: مصدر الدفعة عند الإضافة · OFTGT: لمن نرسل · OFSF: فلتر المصدر في القائمة */
+var OFSRC='cu',OFTGT='all',OFSF='all';
+var SRC={cu:{t:'عميل',i:'👤',c:'#16a34a',b:'#f0fdf4'},ld:{t:'ليد',i:'🎯',c:'#c026d3',b:'#fdf4ff'},'':{t:'غير مصنّف',i:'❓',c:'#64748b',b:'#f1f5f9'}};
 var OFTPL=[
 {t:'🎁 عرض عام',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nخصصنا لك خصم {الخصم} على أي خدمة تنظيف تختارها، وصالح {المدة} فقط.\nاكتب (حجز) وحنا نكفيك الباقي ✨'},
 {t:'🏠 تنظيف المنازل',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nبيتك يستاهل نظافة تفرق — عرض تنظيف شامل بخصم {الخصم}، صالح {المدة}.\nفريق ملتزم بالموعد وشغل تشوفه بعينك 👌\nاكتب (حجز) ونجيك بالوقت اللي يناسبك ✨'},
 {t:'🕌 قبل المناسبة',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nقربت المناسبة والمواعيد تنحجز بسرعة — احجز تنظيف بيتك الآن وخذ خصم {الخصم}، والعرض صالح {المدة}.\nاكتب (حجز) ونثبت لك موعدك قبل ما يمتلئ الجدول ✨'},
-{t:'🛋 السجاد والمفروشات',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nغسيل السجاد والكنب بالبخار — يرجع لونه ورائحته زي أول، وبخصم {الخصم} {المدة}.\nاكتب (حجز) ونمر عليك ونستلم ✨'}
+{t:'🛋 السجاد والمفروشات',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nغسيل السجاد والكنب بالبخار — يرجع لونه ورائحته زي أول، وبخصم {الخصم} {المدة}.\nاكتب (حجز) ونمر عليك ونستلم ✨'},
+/* لليدز: ما جرّبونا بعد — الرسالة تذكّرهم بالإعلان وتعرض تجربة أولى، وما تتكلم كأنهم عملاء قدامى */
+{t:'🎯 ليد من الحملة',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nوصلنا اهتمامك بخدمة التنظيف من إعلاننا، وحبيت أرد عليك بنفسي 🙏\nجهزنا لك خصم {الخصم} على أول طلب، صالح {المدة}.\n\nقل لي وش تبي تنظّف (شقة · فيلا · كنب · سجاد) وأجهز لك السعر والموعد على طول ✨'}
 ];
 /* الأرقام السعودية تُحوّل لصيغة 9665xxxxxxxx، وأي رقم دولي يُقبل كما هو */
 function ofNorm(raw){
@@ -1037,6 +1088,34 @@ function ofParse(txt){
   return res;
 }
 function ofGet(p){return CT.find(function(c){return c.p===p;});}
+/* أرقام وصلنا منها تقييم — تُبنى مرة وحدة وتتجدد لما تزيد التقييمات */
+var CTRV=null,CTRVN=-1;
+function ctRv(){
+  if(CTRVN!==D.length){
+    CTRV={};
+    D.forEach(function(r){var p=ofNorm(r.ph);if(p)CTRV[p]=1;});
+    CTRVN=D.length;
+  }
+  return CTRV;
+}
+/* تصنيف الرقم: من وصلنا منه تقييم فهو عميل مهما كان مصدره — التقييم دليل أنه جرّبنا فعلاً */
+function ctKind(c){
+  if(!c)return '';
+  if(ctRv()[c.p])return 'cu';
+  return c.sr==='ld'?'ld':c.sr==='cu'?'cu':'';
+}
+/* ليد أضافته الحملة ثم صار عميلاً — هذا مقياس نجاح الحملة */
+function ctWon(c){return !!(c&&c.sr==='ld'&&ctRv()[c.p]);}
+function ctTag(c){
+  var k=ctKind(c),s=SRC[k],w=ctWon(c);
+  return '<span class="ct-tag" style="background:'+(w?'#eef2ff':s.b)+';color:'+(w?'#4f46e5':s.c)+'">'+(w?'🎯→👤 تحوّل':s.i+' '+s.t)+'</span>';
+}
+/* مطابقة الرقم مع الفلتر المختار (الكل · عميل · ليد · غير مصنّف) */
+function ctIs(c,f){
+  if(!f||f==='all')return true;
+  var k=ctKind(c);
+  return f==='un'?k==='':k===f;
+}
 function loadContacts(){
   return db.collection('contacts').limit(5000).get().then(function(snap){
     CT=[];
@@ -1067,39 +1146,54 @@ function ofFromReviews(){
     var p=ofNorm(r.ph);if(!p||seen[p])return;
     seen[p]=1;list.push({p:p,n:String(r.n||'').trim().slice(0,60)});
   });
-  ofSave({ok:list,bad:[]});
+  ofSave({ok:list,bad:[]},null,'cu','');
 }
-/* الحفظ يضيف الجديد فقط ويكمل الأسماء الناقصة — ولا يمس حالة الإرسال ولا الموقوفين */
-function ofSave(parsed,done){
+/* الترقية مسموحة في اتجاه واحد: غير مصنّف ← ليد ← عميل. ما ننزّل عميلاً لليد أبداً */
+function ofUpg(ex,src){
+  if(!src)return false;
+  var cur=ex.sr==='cu'?2:ex.sr==='ld'?1:0,nw=src==='cu'?2:1;
+  return nw>cur;
+}
+/* الحفظ يضيف الجديد فقط ويكمل الأسماء الناقصة ويصنّف حسب مصدر الدفعة — ولا يمس حالة الإرسال ولا الموقوفين */
+function ofSave(parsed,done,src,sn){
+  if(src===undefined)src=OFSRC;
+  if(sn===undefined)sn=src==='ld'?String((document.getElementById('ofSn')||{}).value||'').trim().slice(0,30):'';
   var have={};CT.forEach(function(c){have[c.p]=c;});
-  var fresh=[],named=[],dup=0,now=new Date().toISOString();
+  var fresh=[],named=[],tagged=[],dup=0,now=new Date().toISOString();
   parsed.ok.forEach(function(o){
     var ex=have[o.p];
     if(!ex){fresh.push(o);return;}
     dup++;
     if(o.n&&!ex.n)named.push({c:ex,n:o.n});
+    if(ofUpg(ex,src))tagged.push(ex);
   });
   var box=document.getElementById('ofImp');
-  if(!fresh.length&&!named.length){
-    box.innerHTML=ofImpBox(0,dup,parsed.bad);
-    if(dup)showToast('كل الأرقام موجودة عندك مسبقاً ✓');
+  if(!fresh.length&&!named.length&&!tagged.length){
+    box.innerHTML=ofImpBox(0,dup,0,parsed.bad);
+    if(dup)showToast('كل الأرقام موجودة ومصنّفة عندك مسبقاً ✓');
     if(done)done();
     return;
   }
   var ops=[],chunk=[];
   fresh.forEach(function(o){chunk.push(o);if(chunk.length===400){ops.push(chunk);chunk=[];}});
   if(chunk.length)ops.push(chunk);
+  var tparts=[];for(var i=0;i<tagged.length;i+=400)tparts.push(tagged.slice(i,i+400));
   showToast('جاري الحفظ...');
   Promise.all(ops.map(function(part){
     var b=db.batch();
-    part.forEach(function(o){b.set(db.collection('contacts').doc(o.p),{p:o.p,n:o.n||'',at:now,st:1,cs:[]});});
+    part.forEach(function(o){b.set(db.collection('contacts').doc(o.p),{p:o.p,n:o.n||'',at:now,st:1,cs:[],sr:src,sn:sn});});
     return b.commit();
-  }).concat(named.map(function(u){
+  }).concat(tparts.map(function(part){
+    var b=db.batch();
+    part.forEach(function(c){b.update(db.collection('contacts').doc(c.p),{sr:src,sn:sn||c.sn||''});});
+    return b.commit();
+  })).concat(named.map(function(u){
     return db.collection('contacts').doc(u.c.p).update({n:u.n});
   }))).then(function(){
-    fresh.forEach(function(o){CT.push({p:o.p,n:o.n||'',at:now,st:1,cs:[]});});
+    fresh.forEach(function(o){CT.push({p:o.p,n:o.n||'',at:now,st:1,cs:[],sr:src,sn:sn});});
+    tagged.forEach(function(c){c.sr=src;if(sn)c.sn=sn;});
     named.forEach(function(u){u.c.n=u.n;});
-    box.innerHTML=ofImpBox(fresh.length,dup,parsed.bad);
+    box.innerHTML=ofImpBox(fresh.length,dup,tagged.length,parsed.bad);
     showToast('أضفنا '+fresh.length+' رقم جديد ✓');
     if(done)done();
     rOf();rCu();
@@ -1108,11 +1202,35 @@ function ofSave(parsed,done){
     else alert('صار خطأ أثناء الحفظ، حاول مرة ثانية');
   });
 }
-function ofImpBox(add,dup,bad){
+function ofImpBox(add,dup,tag,bad){
   var h='<div class="of-note" style="margin:10px 0 0;background:#f0fdf4;border-color:#bbf7d0;color:#166534">'+
-    '✅ جديد: <b>'+add+'</b> · مكرر تجاهلناه: <b>'+dup+'</b>'+(bad.length?' · غير صالح: <b>'+bad.length+'</b>':'')+'</div>';
+    '✅ جديد: <b>'+add+'</b> · مكرر تجاهلناه: <b>'+dup+'</b>'+(tag?' · صنّفنا موجوداً: <b>'+tag+'</b>':'')+(bad.length?' · غير صالح: <b>'+bad.length+'</b>':'')+'</div>';
   if(bad.length)h+='<div class="of-note" style="margin:8px 0 0;background:#fef2f2;border-color:#fecaca;color:#b91c1c">أسطر ما فيها رقم صحيح:<br>'+bad.slice(0,6).map(esc).join('<br>')+(bad.length>6?'<br>… و'+(bad.length-6)+' سطر آخر':'')+'</div>';
   return h;
+}
+/* تصنيف رقم واحد يدوياً من القائمة: عميل ← ليد ← غير مصنّف */
+function ofSetSrc(p){
+  var c=ofGet(p);if(!c)return;
+  var nx=c.sr==='cu'?'ld':c.sr==='ld'?'':'cu';
+  c.sr=nx;
+  db.collection('contacts').doc(p).update({sr:nx}).catch(function(){showToast('تعذّر الحفظ');});
+  showToast('صار: '+SRC[nx].i+' '+SRC[nx].t);
+  rOf();rCu();
+}
+/* علّم كل من بقي بلا تصنيف دفعة وحدة — لتصفية قائمة قديمة مخلوطة */
+function ofTagRest(src){
+  var rest=CT.filter(function(c){return !c.sr;});
+  if(!rest.length){showToast('ما فيه أرقام بلا تصنيف');return;}
+  if(!confirm('تعليم '+rest.length+' رقم بلا تصنيف كـ «'+SRC[src].t+'»؟'))return;
+  var parts=[];for(var i=0;i<rest.length;i+=400)parts.push(rest.slice(i,i+400));
+  Promise.all(parts.map(function(part){
+    var b=db.batch();
+    part.forEach(function(c){b.update(db.collection('contacts').doc(c.p),{sr:src});});
+    return b.commit();
+  })).then(function(){
+    rest.forEach(function(c){c.sr=src;});
+    showToast('علّمنا '+rest.length+' رقم ✓');rOf();rCu();
+  }).catch(function(){alert('صار خطأ، حاول مرة ثانية');});
 }
 function ofCamp(){
   var v=String((document.getElementById('ofName')||{}).value||'').trim();
@@ -1128,31 +1246,53 @@ function ofFill(m,c){
     .replace(/\{واتساب\}/g,bizWa());
 }
 function ofSentIn(c,k){return !!(c.cs&&c.cs.indexOf(k)>=0);}
-/* الدور: كل من لم يُرسل له هذا العرض، ما عدا الموقوفين والمتخطّين في هذه الجلسة */
+/* الدور: كل من لم يُرسل له هذا العرض ضمن الفئة المستهدفة، ما عدا الموقوفين والمتخطّين في هذه الجلسة */
 function ofQueue(){
   var k=ofCamp();
-  return CT.filter(function(c){return c.st!==0&&!OFSK[c.p]&&!ofSentIn(c,k);});
+  return CT.filter(function(c){return c.st!==0&&ctIs(c,OFTGT)&&!OFSK[c.p]&&!ofSentIn(c,k);});
 }
-function rOf(){rOfStats();rOfPv();rOfSend();rOfList();}
+/* أرقام الفئة المستهدفة وحدها — عليها تُحسب نسبة التقدم وملفات البث */
+function ofPool(){return CT.filter(function(c){return ctIs(c,OFTGT);});}
+function rOf(){rOfStats();rOfPv();rOfSend();rOfList();rOfUnc();}
 function rOfStats(){
-  var k=ofCamp(),sent=0,off=0;
-  CT.forEach(function(c){if(c.st===0)off++;else if(ofSentIn(c,k))sent++;});
-  var left=CT.length-off-sent;
-  document.getElementById('ofStats').innerHTML='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">أرقام في القائمة</div><div class="sc-v">'+CT.length+'</div></div>'+
+  var k=ofCamp(),pool=ofPool(),sent=0,off=0,cu=0,ld=0,un=0,won=0;
+  pool.forEach(function(c){if(c.st===0)off++;else if(ofSentIn(c,k))sent++;});
+  CT.forEach(function(c){
+    var kk=ctKind(c);
+    if(kk==='cu')cu++;else if(kk==='ld')ld++;else un++;
+    if(ctWon(c))won++;
+  });
+  var left=pool.length-off-sent;
+  var tl=OFTGT==='all'?'أرقام في القائمة':OFTGT==='cu'?'العملاء':OFTGT==='ld'?'الليدز':'غير المصنّف';
+  document.getElementById('ofStats').innerHTML='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">'+tl+'</div><div class="sc-v">'+pool.length+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">أُرسل لهم العرض</div><div class="sc-v" style="color:#16a34a">'+sent+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">باقي في الدور</div><div class="sc-v" style="color:#b45309">'+left+'</div></div>'+
-    '<div class="sc" style="border-top:3px solid #94a3b8"><div class="sc-l">موقوفون</div><div class="sc-v" style="color:#64748b">'+off+'</div></div></div>';
+    '<div class="sc" style="border-top:3px solid #94a3b8"><div class="sc-l">موقوفون</div><div class="sc-v" style="color:#64748b">'+off+'</div></div></div>'+
+    '<div class="sg" style="margin-top:-4px"><div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">👤 عملاء</div><div class="sc-v" style="color:#16a34a">'+cu+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #c026d3"><div class="sc-l">🎯 ليدز</div><div class="sc-v" style="color:#c026d3">'+ld+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #4f46e5"><div class="sc-l">ليد صار عميلاً</div><div class="sc-v" style="color:#4f46e5">'+won+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #94a3b8"><div class="sc-l">❓ غير مصنّف</div><div class="sc-v" style="color:#64748b">'+un+'</div></div></div>';
   document.getElementById('ofCount').textContent=CT.length;
+}
+/* تنبيه يظهر ما دام في أرقام قديمة بلا تصنيف — مع زرّين لتصفيتها دفعة وحدة */
+function rOfUnc(){
+  var el=document.getElementById('ofUnc');if(!el)return;
+  var n=CT.filter(function(c){return !c.sr&&!ctRv()[c.p];}).length;
+  if(!n){el.innerHTML='';return;}
+  el.innerHTML='<div class="of-note" style="margin:9px 0 0;background:#fff7ed;border-color:#fed7aa;color:#b45309">❓ عندك <b>'+n+'</b> رقم بلا تصنيف. الصق قائمة ليدز الحملة فوق واختر «🎯 ليدز» لتعليمهم، وعلّم الباقي دفعة وحدة:</div>'+
+    '<div class="of-row" style="margin-top:8px"><button type="button" class="exp-btn" style="margin:0;flex:1" onclick="ofTagRest(\'cu\')">👤 الباقي عملاء</button>'+
+    '<button type="button" class="exp-btn" style="margin:0;flex:1" onclick="ofTagRest(\'ld\')">🎯 الباقي ليدز</button></div>';
 }
 function rOfPv(){
   var q=ofQueue();
   document.getElementById('ofPv').textContent=ofFill(document.getElementById('ofMsg').value,q[0]||CT[0]);
 }
 function rOfSend(){
-  var el=document.getElementById('ofSend'),k=ofCamp();
+  var el=document.getElementById('ofSend'),k=ofCamp(),pool=ofPool();
   if(!CT.length){el.innerHTML='<div class="empty">أضف أرقام العملاء أولاً ☝️</div>';return;}
-  var q=ofQueue(),sent=CT.filter(function(c){return c.st!==0&&ofSentIn(c,k);}).length;
-  var skipped=CT.filter(function(c){return c.st!==0&&OFSK[c.p]&&!ofSentIn(c,k);}).length;
+  if(!pool.length){el.innerHTML='<div class="empty">ما فيه أرقام في هذي الفئة — غيّر «أرسل لـ» أو صنّف أرقامك أولاً</div>';return;}
+  var q=ofQueue(),sent=pool.filter(function(c){return c.st!==0&&ofSentIn(c,k);}).length;
+  var skipped=pool.filter(function(c){return c.st!==0&&OFSK[c.p]&&!ofSentIn(c,k);}).length;
   var tot=sent+skipped+q.length;
   if(!q.length){
     el.innerHTML='<div class="empty">خلّصنا «'+esc(k)+'» — أُرسل لـ '+sent+' عميل ✓'+(skipped?'<br><span style="font-size:11px">وتخطيت '+skipped+'</span>':'')+'</div>'+
@@ -1162,7 +1302,8 @@ function rOfSend(){
   }
   var c=q[0],txt=ofFill(document.getElementById('ofMsg').value,c);
   var pct=tot?Math.round((sent+skipped)/tot*100):0;
-  el.innerHTML='<div class="of-cur"><div class="of-cur-n">'+esc(c.n||'عميل')+'</div><div class="of-cur-p">+'+esc(c.p)+'</div>'+
+  el.innerHTML=ofTgtHint()+'<div class="of-cur"><div class="of-cur-n">'+esc(c.n||'عميل')+' '+ctTag(c)+'</div><div class="of-cur-p">+'+esc(c.p)+'</div>'+
+    (c.sn?'<div style="font-size:10px;color:#9ab;margin-top:4px">حملة: '+esc(c.sn)+'</div>':'')+
     (c.la?'<div style="font-size:10px;color:#9ab;margin-top:5px">آخر رسالة: '+esc(new Date(c.la).toLocaleDateString('ar-SA'))+(c.lc?' · '+esc(c.lc):'')+'</div>':'')+'</div>'+
     '<a class="of-send" target="_blank" rel="noopener" href="https://wa.me/'+c.p+'?text='+encodeURIComponent(txt)+'" onclick="ofSent(\''+c.p+'\')">💬 افتح واتساب وأرسل</a>'+
     '<div class="of-mini"><button type="button" onclick="ofSkip(\''+c.p+'\')">⏭ تخطي</button><button type="button" onclick="ofMute(\''+c.p+'\')">🔕 لا ترسل له</button></div>'+
@@ -1177,6 +1318,7 @@ function rOfList(){
     if(OFF!=='off'&&c.st===0)return false;
     if(OFF==='sent'&&!ofSentIn(c,k))return false;
     if(OFF==='pend'&&ofSentIn(c,k))return false;
+    if(!ctIs(c,OFSF))return false;
     if(q){
       var dq=q.replace(/\D/g,'');
       if(String(c.n||'').toLowerCase().indexOf(q)<0&&!(dq&&c.p.indexOf(dq)>=0))return false;
@@ -1190,8 +1332,9 @@ function rOfList(){
     var tag=c.st===0?'<span class="ct-tag" style="background:#f1f5f9;color:#64748b">موقوف</span>':
       done?'<span class="ct-tag" style="background:#f0fdf4;color:#16a34a">أُرسل ✓</span>':
       '<span class="ct-tag" style="background:#fff7ed;color:#b45309">في الدور</span>';
-    h+='<div class="ct-row"><div><div class="ct-n">'+esc(c.n||'عميل')+'</div><div class="ct-p">+'+esc(c.p)+'</div></div>'+
-      '<div style="display:flex;align-items:center;gap:6px">'+tag+
+    h+='<div class="ct-row"><div><div class="ct-n">'+esc(c.n||'عميل')+'</div><div class="ct-p">+'+esc(c.p)+(c.sn?' · '+esc(c.sn):'')+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:6px">'+ctTag(c)+tag+
+      '<button type="button" class="ct-b" title="غيّر التصنيف" onclick="ofSetSrc(\''+c.p+'\')">'+SRC[c.sr==='cu'?'cu':c.sr==='ld'?'ld':''].i+'</button>'+
       '<button type="button" class="ct-b" onclick="ofMute(\''+c.p+'\')">'+(c.st===0?'▶️':'🔕')+'</button>'+
       '<button type="button" class="ct-b" style="background:#fee2e2;color:#dc2626" onclick="ofDel(\''+c.p+'\')">🗑</button></div></div>';
   });
@@ -1249,15 +1392,16 @@ function ofDL(blob,name){
 }
 /* جهات الاتصال لقوائم البث — واتساب يحد قائمة البث بـ 256 رقم */
 function ofVcf(){
-  var list=CT.filter(function(c){return c.st!==0;});
-  if(!list.length){showToast('القائمة فارغة');return;}
+  var list=ofPool().filter(function(c){return c.st!==0;});
+  if(!list.length){showToast(OFTGT==='all'?'القائمة فارغة':'ما فيه أرقام في هذي الفئة');return;}
+  var sfx=OFTGT==='all'?'':'-'+OFTGT;
   var parts=[];for(var i=0;i<list.length;i+=250)parts.push(list.slice(i,i+250));
   parts.forEach(function(part,i){
     var v=part.map(function(c,j){
       var nm=String(c.n||('عميل '+(i*250+j+1))).replace(/[\r\n;:,]/g,' ').trim();
       return 'BEGIN:VCARD\nVERSION:3.0\nFN:'+nm+'\nTEL;TYPE=CELL:+'+c.p+'\nEND:VCARD';
     }).join('\n');
-    setTimeout(function(){ofDL(new Blob([v],{type:'text/vcard;charset=utf-8'}),'kleenology-contacts-'+(i+1)+'.vcf');},i*700);
+    setTimeout(function(){ofDL(new Blob([v],{type:'text/vcard;charset=utf-8'}),'kleenology-contacts'+sfx+'-'+(i+1)+'.vcf');},i*700);
   });
   showToast('نزّلنا '+parts.length+' ملف — كل ملف يصير قائمة بث وحدة');
 }
@@ -1270,8 +1414,8 @@ function ofCopyMsg(){
 function ofCsv(){
   if(!CT.length){showToast('القائمة فارغة');return;}
   var k=ofCamp();
-  var rows=[['الاسم','الجوال','أُضيف','آخر عرض','تاريخ آخر إرسال','أُرسل له '+k,'الحالة']];
-  CT.forEach(function(c){rows.push([c.n||'','+'+c.p,c.at||'',c.lc||'',c.la||'',ofSentIn(c,k)?'نعم':'لا',c.st===0?'موقوف':'نشط']);});
+  var rows=[['الاسم','الجوال','المصدر','الحملة','قيّمنا','أُضيف','آخر عرض','تاريخ آخر إرسال','أُرسل له '+k,'الحالة']];
+  CT.forEach(function(c){rows.push([c.n||'','+'+c.p,SRC[ctKind(c)].t+(ctWon(c)?' (ليد تحوّل)':''),c.sn||'',ctRv()[c.p]?'نعم':'لا',c.at||'',c.lc||'',c.la||'',ofSentIn(c,k)?'نعم':'لا',c.st===0?'موقوف':'نشط']);});
   var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   ofDL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-contacts-'+new Date().toISOString().slice(0,10)+'.csv');
 }
@@ -1299,6 +1443,34 @@ function ofInit(){
       c.classList.add('on');rOfList();
     };
   });
+  ofChipRow('ofSfChips','s',function(v){OFSF=v;OFSHOW=40;rOfList();});
+  ofChipRow('ofTgtChips','t',function(v){OFTGT=v;OFSK={};rOf();});
+  ofChipRow('ofSrcChips','s',function(v){OFSRC=v;rOfSrc();});
+  rOfSrc();
+}
+/* صفوف الأزرار: واحد فعّال في كل صف */
+function ofChipRow(id,key,fn){
+  var row=document.getElementById(id);if(!row)return;
+  row.querySelectorAll('.of-tp').forEach(function(c){
+    c.onclick=function(){
+      row.querySelectorAll('.of-tp').forEach(function(x){x.classList.remove('on');});
+      c.classList.add('on');fn(c.dataset[key]);
+    };
+  });
+}
+/* تنبيه فوق الإرسال: الليد ما جرّبنا، فرسالة «خصصنا لك خصم» تنفع، ورسالة العميل القديم لا */
+function ofTgtHint(){
+  if(OFTGT!=='ld')return '';
+  return '<div class="of-note" style="margin:0 0 10px;background:#fdf4ff;border-color:#f5d0fe;color:#a21caf">🎯 ترسل لليدز — هؤلاء ما جرّبونا بعد. استخدم قالب «🎯 ليد من الحملة» ولا ترسل لهم رسائل تخاطبهم كعملاء قدامى.</div>';
+}
+/* شرح مختصر لمعنى المصدر المختار عند الإضافة */
+function rOfSrc(){
+  var n=document.getElementById('ofSrcNote'),f=document.getElementById('ofSrcName');
+  if(!n)return;
+  f.style.display=OFSRC==='ld'?'block':'none';
+  n.innerHTML=OFSRC==='cu'?'👤 <b>عملاء:</b> ناس طلبوا خدمة منّا فعلاً — يستاهلون عروض الولاء وطلب التقييم.':
+    OFSRC==='ld'?'🎯 <b>ليدز:</b> سجّلوا اهتمامهم من إعلان (تيك توك مثلاً) وما جرّبونا بعد — رسالتهم تعريفية وعرض أول طلب، ولا نطلب منهم تقييماً.':
+    '❓ <b>غير مصنّف:</b> تحفظهم الآن وتصنّفهم لاحقاً. ما ننصح بها إلا لو فعلاً ما تدري.';
 }
 
 function avg(a,f){var s=0,n=0;a.forEach(function(r){var v=Number(r[f]);if(isFinite(v)&&v>=1&&v<=5){s+=v;n++;}});return n?(s/n).toFixed(1):'0';}
