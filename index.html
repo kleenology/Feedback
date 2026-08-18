@@ -447,6 +447,11 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
       <div id="ofUnc"></div>
       <button type="button" class="exp-btn" style="margin:9px 0 0;border-color:#d8e6f0;color:#5d8aa8" onclick="ofFromReviews()">👥 أضف أرقام عملاء التقييمات</button>
     </div>
+    <div class="cc" id="ofTriCard" style="display:none">
+      <h3>🗂 فرز سريع</h3>
+      <div class="of-note">رقم واحد في كل مرة — افتح محادثته لو نسيت، واضغط: طلب الخدمة ولا لا. يخلّص الفرز في دقائق ويصير كل رقم يوصله النص المناسب له.</div>
+      <div id="ofTri"></div>
+    </div>
     <div class="cc">
       <h3>✍️ رسالة العرض</h3>
       <div class="of-row" style="margin-bottom:10px" id="ofTpls"></div>
@@ -1053,6 +1058,8 @@ function backWaLink(c){
 }
 /* ===== قائمة الأرقام ورسائل العروض ===== */
 var CT=[],OFSK={},OFQ='',OFF='all',OFSHOW=40;
+/* OFTRI: أرقام تخطيتها في الفرز السريع لهذه الجلسة · OFUN: آخر عملية فرز للتراجع عنها */
+var OFTRI={},OFUN=null;
 /* OFSRC: مصدر الدفعة عند الإضافة · OFTGT: لمن نرسل · OFSF: فلتر المصدر في القائمة */
 var OFSRC='cu',OFTGT='all',OFSF='all';
 var SRC={cu:{t:'عميل',i:'👤',c:'#16a34a',b:'#f0fdf4'},ld:{t:'ليد',i:'🎯',c:'#c026d3',b:'#fdf4ff'},'':{t:'غير مصنّف',i:'❓',c:'#64748b',b:'#f1f5f9'}};
@@ -1253,7 +1260,7 @@ function ofQueue(){
 }
 /* أرقام الفئة المستهدفة وحدها — عليها تُحسب نسبة التقدم وملفات البث */
 function ofPool(){return CT.filter(function(c){return ctIs(c,OFTGT);});}
-function rOf(){rOfStats();rOfPv();rOfSend();rOfList();rOfUnc();}
+function rOf(){rOfStats();rOfPv();rOfSend();rOfList();rOfUnc();rOfTri();}
 function rOfStats(){
   var k=ofCamp(),pool=ofPool(),sent=0,off=0,cu=0,ld=0,un=0,won=0;
   pool.forEach(function(c){if(c.st===0)off++;else if(ofSentIn(c,k))sent++;});
@@ -1279,9 +1286,64 @@ function rOfUnc(){
   var el=document.getElementById('ofUnc');if(!el)return;
   var n=CT.filter(function(c){return !c.sr&&!ctRv()[c.p];}).length;
   if(!n){el.innerHTML='';return;}
-  el.innerHTML='<div class="of-note" style="margin:9px 0 0;background:#fff7ed;border-color:#fed7aa;color:#b45309">❓ عندك <b>'+n+'</b> رقم بلا تصنيف. الصق قائمة ليدز الحملة فوق واختر «🎯 ليدز» لتعليمهم، وعلّم الباقي دفعة وحدة:</div>'+
+  el.innerHTML='<div class="of-note" style="margin:9px 0 0;background:#fff7ed;border-color:#fed7aa;color:#b45309">❓ عندك <b>'+n+'</b> رقم بلا تصنيف. لو مخلوطين (بعضهم طلب وبعضهم لا) استخدم <b>🗂 الفرز السريع</b> تحت. ولو كلهم نفس النوع علّمهم دفعة وحدة:</div>'+
     '<div class="of-row" style="margin-top:8px"><button type="button" class="exp-btn" style="margin:0;flex:1" onclick="ofTagRest(\'cu\')">👤 الباقي عملاء</button>'+
     '<button type="button" class="exp-btn" style="margin:0;flex:1" onclick="ofTagRest(\'ld\')">🎯 الباقي ليدز</button></div>';
+}
+/* ===== الفرز السريع: يقسم دفعة مخلوطة لعملاء وليدز، رقماً رقماً ===== */
+function triQueue(){
+  var rv=ctRv();
+  return CT.filter(function(c){return !c.sr&&!rv[c.p]&&!OFTRI[c.p]&&c.st!==0;});
+}
+function rOfTri(){
+  var card=document.getElementById('ofTriCard'),el=document.getElementById('ofTri');
+  if(!card||!el)return;
+  var q=triQueue(),rv=ctRv();
+  var todo=CT.filter(function(c){return !c.sr&&!rv[c.p]&&c.st!==0;}).length;
+  if(!todo&&!OFUN){card.style.display='none';el.innerHTML='';return;}
+  card.style.display='block';
+  var done=CT.filter(function(c){return c.sr||rv[c.p];}).length,tot=done+todo;
+  var undo=OFUN?'<button type="button" class="ct-b" style="display:block;margin:9px auto 0;background:none;color:#9ab" onclick="triUndo()">↩️ تراجع عن آخر فرز ('+esc(OFUN.n||OFUN.p)+')</button>':'';
+  if(!q.length){
+    el.innerHTML='<div class="empty">'+(todo?'تخطيت الباقي — <span style="font-size:11px">'+todo+' رقم بانتظارك</span>':'خلّصت الفرز، ما بقي رقم بلا تصنيف ✓')+'</div>'+
+      (todo?'<button type="button" class="exp-btn" style="margin-bottom:0" onclick="triUnskip()">↩️ رجّع المتخطّين</button>':'')+undo;
+    return;
+  }
+  var c=q[0],pct=tot?Math.round(done/tot*100):0;
+  el.innerHTML='<div class="of-cur"><div class="of-cur-n">'+esc(c.n||'بدون اسم')+'</div><div class="of-cur-p">+'+esc(c.p)+'</div>'+
+    (c.sn?'<div style="font-size:10px;color:#9ab;margin-top:5px">🎯 '+esc(c.sn)+'</div>':'')+
+    '<a target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;padding:7px 14px;border-radius:9px;background:#e8f4fb;color:#0f7cb8;font-size:11.5px;font-weight:700;text-decoration:none" href="https://wa.me/'+c.p+'">💬 افتح محادثته وشوف</a></div>'+
+    '<div class="of-row"><button type="button" class="exp-btn" style="margin:0;flex:1;border-color:#16a34a;color:#16a34a" onclick="triSet(\''+c.p+'\',\'cu\')">👤 طلب الخدمة</button>'+
+    '<button type="button" class="exp-btn" style="margin:0;flex:1;border-color:#c026d3;color:#c026d3" onclick="triSet(\''+c.p+'\',\'ld\')">🎯 ما طلب</button></div>'+
+    '<div class="of-mini"><button type="button" onclick="triSkip(\''+c.p+'\')">⏭ بعدين</button>'+
+    '<button type="button" onclick="triOut(\''+c.p+'\')">🚫 رقم غلط · لا ترسل</button></div>'+
+    '<div class="of-prog"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="of-cnt">فرزت '+done+' من '+tot+' · باقي '+todo+'</div>'+undo;
+}
+function triSet(p,src){
+  var c=ofGet(p);if(!c)return;
+  OFUN={p:p,n:c.n,sr:c.sr,st:c.st};
+  c.sr=src;
+  db.collection('contacts').doc(p).update({sr:src}).catch(function(){showToast('تعذّر حفظ التصنيف — تحقق من الاتصال');});
+  rOf();rCu();
+}
+function triOut(p){
+  var c=ofGet(p);if(!c)return;
+  OFUN={p:p,n:c.n,sr:c.sr,st:c.st};
+  c.st=0;
+  db.collection('contacts').doc(p).update({st:0}).catch(function(){showToast('تعذّر الحفظ');});
+  rOf();rCu();
+}
+function triSkip(p){OFTRI[p]=1;rOfTri();}
+function triUnskip(){OFTRI={};rOfTri();}
+function triUndo(){
+  if(!OFUN)return;
+  var u=OFUN,c=ofGet(u.p);OFUN=null;
+  if(!c){rOf();return;}
+  c.sr=u.sr;c.st=u.st;
+  db.collection('contacts').doc(u.p).update({sr:u.sr||'',st:u.st===0?0:1}).catch(function(){showToast('تعذّر التراجع');});
+  showToast('رجّعناه للفرز ↩️');
+  rOf();rCu();
 }
 function rOfPv(){
   var q=ofQueue();
