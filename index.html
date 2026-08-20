@@ -238,6 +238,15 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .ct-tag{font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:6px;white-space:nowrap}
 .ct-b{padding:7px 9px;border-radius:8px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#64748b}
 
+/* رواتب */
+.py-r{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 2px;border-top:1px solid #f2f6f9}
+.py-n{font-size:13px;font-weight:700;color:#234}
+.py-sub{font-size:10px;color:#9ab;margin-top:2px}
+.py-amt{font-size:14px;font-weight:800;direction:ltr;white-space:nowrap}
+.py-pay{padding:9px 13px;border-radius:10px;border:none;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;background:#dcfce7;color:#16a34a;white-space:nowrap}
+.py-pay.done{background:#f1f5f9;color:#64748b}
+.py-due{border-radius:12px;padding:12px 13px;margin-bottom:11px;text-align:center;font-size:12px;font-weight:700;line-height:1.8}
+
 /* team select */
 .team-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .team-b{padding:9px 14px;border-radius:10px;border:1.5px solid #e5e5e5;background:#fafafa;font-size:12px;font-weight:600;color:#888;cursor:pointer;font-family:inherit;transition:all .2s}
@@ -405,6 +414,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <button class="adm-tb" data-t="coupons">🎟️ الكوبونات</button>
     <button class="adm-tb" data-t="customers">👥 العملاء</button>
     <button class="adm-tb" data-t="offers">📣 العروض</button>
+    <button class="adm-tb" data-t="payroll">💰 الرواتب</button>
     <button class="adm-tb" data-t="monthly">📈 الشهري</button>
     <button class="adm-tb" data-t="responses">💬 التقييمات</button>
   </div>
@@ -446,6 +456,11 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
       <div id="ofImp"></div>
       <div id="ofUnc"></div>
       <button type="button" class="exp-btn" style="margin:9px 0 0;border-color:#d8e6f0;color:#5d8aa8" onclick="ofFromReviews()">👥 أضف أرقام عملاء التقييمات</button>
+    </div>
+    <div class="cc" id="ofTriCard" style="display:none">
+      <h3>🗂 فرز سريع</h3>
+      <div class="of-note">رقم واحد في كل مرة — افتح محادثته لو نسيت، واضغط: طلب الخدمة ولا لا. يخلّص الفرز في دقائق ويصير كل رقم يوصله النص المناسب له.</div>
+      <div id="ofTri"></div>
     </div>
     <div class="cc">
       <h3>✍️ رسالة العرض</h3>
@@ -495,6 +510,47 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
         <button type="button" class="of-tp" data-s="un">❓ غير مصنّف</button>
       </div>
       <div id="ofList"></div>
+    </div>
+  </div>
+  <div class="tc" id="tcPayroll">
+    <div id="pyStats"></div>
+    <div class="cc">
+      <div class="of-row" style="margin-bottom:10px">
+        <button type="button" class="exp-btn" style="margin:0;flex:1;padding:8px" onclick="pyMove(-1)">◀ السابق</button>
+        <h3 style="flex:2;margin:0;align-self:center" id="pyMonthT"></h3>
+        <button type="button" class="exp-btn" style="margin:0;flex:1;padding:8px" onclick="pyMove(1)">التالي ▶</button>
+      </div>
+      <div id="pyDue"></div>
+      <div id="pyList"></div>
+      <div id="pyAct"></div>
+    </div>
+    <div class="cc" id="pyTrCard" style="display:none">
+      <h3>🔄 بدل أيام الانتقال</h3>
+      <div class="of-note">لما وحّدت الصرف على يوم <b id="pyTrDay">30</b>، صار كل موظف ينتظر أياماً زيادة عن موعده القديم. اكتب موعده السابق ونحسب له بدل تلك الأيام (الأجر اليومي = الراتب ÷ 30).</div>
+      <div id="pyTr"></div>
+    </div>
+    <div class="cc">
+      <h3>👷 الموظفون والرواتب</h3>
+      <div id="pyStaff"></div>
+      <div class="of-row" style="margin-top:10px">
+        <div class="of-fld" style="min-width:110px"><label class="of-lb" for="pyN">الاسم</label><input id="pyN" class="of-in" maxlength="40"></div>
+        <div class="of-fld"><label class="of-lb" for="pyS">الراتب</label><input id="pyS" class="of-in" inputmode="numeric" maxlength="7" placeholder="1400"></div>
+      </div>
+      <div class="of-row" style="margin-top:8px">
+        <div class="of-fld"><label class="of-lb" for="pyR">المسمى</label><input id="pyR" class="of-in" maxlength="24" placeholder="عامل"></div>
+        <div class="of-fld"><label class="of-lb" for="pyP">الجوال (اختياري)</label><input id="pyP" class="of-in" inputmode="tel" maxlength="20"></div>
+      </div>
+      <button type="button" class="exp-btn" style="margin:10px 0 0" onclick="pyAddStaff()">➕ أضف موظف</button>
+      <div id="pySeed"></div>
+    </div>
+    <div class="cc">
+      <h3>⚙️ موعد الصرف</h3>
+      <div class="of-note" id="pyDayNote"></div>
+      <div class="of-row">
+        <div class="of-fld"><label class="of-lb" for="pyDay">يوم الصرف من كل شهر</label><input id="pyDay" class="of-in" inputmode="numeric" maxlength="2"></div>
+        <div class="of-fld" style="align-self:flex-end"><button type="button" class="exp-btn" style="margin:0" onclick="pySaveDay()">حفظ</button></div>
+      </div>
+      <button type="button" class="exp-btn" style="margin:10px 0 0;border-color:#d8e6f0;color:#5d8aa8" onclick="pyCsv()">⬇️ كشف الشهر (CSV)</button>
     </div>
   </div>
   <div class="tc" id="tcMonthly"></div>
@@ -735,7 +791,7 @@ var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout
 function openAdmin(){
 go('pgAdm');
 if(window.Notification&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
-loadCh().then(function(){return loadPub();}).then(function(){return loadTargets();}).then(function(){return loadContacts();}).then(startLive);
+loadCh().then(function(){return loadPub();}).then(function(){return loadTargets();}).then(function(){return loadContacts();}).then(function(){return loadStaff();}).then(loadPayDay).then(function(){return loadPayrun(pyMonKey(new Date()));}).then(startLive);
 }
 function doLogin(){
 var em=document.getElementById('lgEmail').value.trim(),pw=document.getElementById('lgPass').value;
@@ -853,7 +909,7 @@ function togglePub(id){
   }
 }
 
-function renderAdm(){rOv();rCp();rCu();rOf();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
+function renderAdm(){rOv();rCp();rCu();rOf();rPy();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
 
 /* ===== نسخة احتياطية واستعادة ===== */
 function backupData(){
@@ -1051,8 +1107,322 @@ function backWaLink(c){
     '\n\nاكتب (حجز) وحنا نكفيك الباقي ✨';
   return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
 }
+/* ===== رواتب الموظفين ===== */
+/* ST: الموظفون · PRUN: كشف الشهر المعروض · PYM: الشهر (YYYY-MM) · PYDAY: يوم الصرف الموحّد */
+var ST=[],PRUN={},PYM='',PYDAY=30;
+function pyMonKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function pyMonName(m){var a=m.split('-');return MO[parseInt(a[1],10)-1]+' '+a[0];}
+function pyDaysIn(m){var a=m.split('-');return new Date(parseInt(a[0],10),parseInt(a[1],10),0).getDate();}
+/* لو الشهر أقصر من يوم الصرف (فبراير مثلاً) يُصرف آخر يوم فيه */
+function pyDueDay(m){return Math.min(PYDAY,pyDaysIn(m));}
+function pyDueDate(m){var a=m.split('-');return new Date(parseInt(a[0],10),parseInt(a[1],10)-1,pyDueDay(m));}
+/* تاريخ ميلادي مختصر — موعد الصرف ميلادي، فلا نخلطه بالهجري */
+function pyDate(iso){
+  var d=new Date(iso);if(isNaN(d))return '';
+  var t=d.getDate()+' '+MO[d.getMonth()];
+  return d.getFullYear()!==new Date().getFullYear()?t+' '+d.getFullYear():t;
+}
+function pyMoney(v){return (Math.round(Number(v)*100)/100).toLocaleString('en-US')+' ر.س';}
+function pyActive(){return ST.filter(function(e){return e.st!==0;});}
+function pyRec(id){var r=PRUN[id];return r||{};}
+function pyNet(e){var r=pyRec(e.id);return Number(e.s||0)+Number(r.adj||0)+Number(r.tr||0);}
+/* الأجر اليومي = الراتب الشهري ÷ 30 (المتبع في نظام العمل السعودي) */
+function pyDaily(e){return Number(e.s||0)/30;}
+function pyExtraDays(e){var od=parseInt(e.od,10);if(!isFinite(od)||od<1||od>=PYDAY)return 0;return PYDAY-od;}
+function pyTrAmt(e){return Math.round(pyDaily(e)*pyExtraDays(e)*100)/100;}
+function pyTrApplied(){return pyActive().some(function(e){return Number(pyRec(e.id).tr||0)>0;});}
+function pyTotal(){var t=0;pyActive().forEach(function(e){t+=pyNet(e);});return t;}
+function pyPaidTotal(){var t=0;pyActive().forEach(function(e){if(pyRec(e.id).pd)t+=pyNet(e);});return t;}
+
+function loadStaff(){
+  return db.collection('staff').limit(200).get().then(function(snap){
+    ST=[];snap.forEach(function(d){var e=d.data()||{};e.id=d.id;ST.push(e);});
+    ST.sort(function(a,b){return (Number(b.s)||0)-(Number(a.s)||0)||String(a.at||'').localeCompare(String(b.at||''));});
+  }).catch(function(e){
+    if(e&&e.code==='permission-denied')console.log('قواعد staff غير منشورة — راجع SETUP.md');
+  });
+}
+function loadPayDay(){
+  return db.collection('settings').doc('payroll').get().then(function(d){
+    if(d.exists&&d.data()&&d.data().day)PYDAY=parseInt(d.data().day,10)||30;
+  }).catch(function(){});
+}
+function loadPayrun(m){
+  PYM=m;PRUN={};
+  return db.collection('payruns').doc(m).get().then(function(d){
+    if(d.exists&&d.data()&&d.data().it)PRUN=d.data().it;
+  }).catch(function(e){
+    if(e&&e.code==='permission-denied')console.log('قواعد payruns غير منشورة');
+  });
+}
+function pyWrite(id,patch){
+  var it={};it[id]=patch;
+  return db.collection('payruns').doc(PYM).set({m:PYM,it:it},{merge:true})
+    .catch(function(){showToast('تعذّر الحفظ — تحقق من الاتصال');});
+}
+function pyMove(n){
+  var a=PYM.split('-'),d=new Date(parseInt(a[0],10),parseInt(a[1],10)-1+n,1);
+  showToast('جاري التحميل...');
+  loadPayrun(pyMonKey(d)).then(rPy);
+}
+function pySaveDay(){
+  var v=parseInt(document.getElementById('pyDay').value,10);
+  if(!isFinite(v)||v<1||v>31){alert('أدخل يوماً من 1 إلى 31');return;}
+  PYDAY=v;
+  db.collection('settings').doc('payroll').set({day:v},{merge:true})
+    .then(function(){showToast('موعد الصرف صار يوم '+v+' ✓');})
+    .catch(function(){showToast('حُفظ مؤقتاً — تحقق من قواعد Firestore');});
+  rPy();
+}
+function pyAddStaff(){
+  var n=document.getElementById('pyN').value.trim();
+  var sv=parseFloat(String(document.getElementById('pyS').value).replace(/[^\d.]/g,''));
+  var r=document.getElementById('pyR').value.trim()||'عامل';
+  var ph=document.getElementById('pyP').value.trim();
+  if(!n){alert('اكتب اسم الموظف');return;}
+  if(!isFinite(sv)||sv<=0){alert('اكتب راتباً صحيحاً');return;}
+  var e={n:n.slice(0,40),r:r.slice(0,24),s:sv,ph:ph.slice(0,20),st:1,at:new Date().toISOString()};
+  db.collection('staff').add(e).then(function(ref){
+    e.id=ref.id;ST.push(e);
+    ['pyN','pyS','pyR','pyP'].forEach(function(id){document.getElementById(id).value='';});
+    showToast('أضفنا '+e.n+' ✓');rPy();
+  }).catch(function(er){
+    if(er&&er.code==='permission-denied')alert('لا تملك صلاحية الحفظ — انشر قواعد Firestore المحدثة (راجع SETUP.md)');
+    else alert('صار خطأ، حاول مرة ثانية');
+  });
+}
+function pySeed(){
+  if(ST.length){showToast('عندك موظفون أصلاً');return;}
+  var now=new Date().toISOString();
+  var team=[{n:'المشرف',r:'مشرف',s:2500,od:20},{n:'عامل 1',r:'عامل',s:1400,od:22},{n:'عامل 2',r:'عامل',s:1400,od:27},{n:'عامل 3',r:'عامل',s:1400,od:27}];
+  var b=db.batch(),made=[];
+  team.forEach(function(t){
+    var ref=db.collection('staff').doc(),e={n:t.n,r:t.r,s:t.s,ph:'',od:t.od,st:1,at:now};
+    b.set(ref,e);e.id=ref.id;made.push(e);
+  });
+  b.commit().then(function(){
+    made.forEach(function(e){ST.push(e);});
+    ST.sort(function(a,b2){return (Number(b2.s)||0)-(Number(a.s)||0);});
+    showToast('جهزنا فريقك — عدّل الأسماء بالضغط عليها ✓');rPy();
+  }).catch(function(){alert('صار خطأ، حاول مرة ثانية');});
+}
+function pyEdit(id){
+  var e=ST.find(function(x){return x.id===id;});if(!e)return;
+  var n=prompt('اسم الموظف:',e.n);if(n===null)return;
+  n=String(n).trim();if(!n){alert('الاسم ما يصير فاضياً');return;}
+  var sv=prompt('راتب '+n+' الشهري (ر.س):',e.s);if(sv===null)return;
+  sv=parseFloat(String(sv).replace(/[^\d.]/g,''));
+  if(!isFinite(sv)||sv<=0){alert('راتب غير صحيح');return;}
+  var ph=prompt('جوال '+n+' (اختياري — لإرسال كشف الراتب):',e.ph||'');
+  if(ph===null)ph=e.ph||'';
+  e.n=n.slice(0,40);e.s=sv;e.ph=String(ph).trim().slice(0,20);
+  db.collection('staff').doc(id).update({n:e.n,s:e.s,ph:e.ph})
+    .then(function(){showToast('تم التعديل ✓');}).catch(function(){showToast('تعذّر الحفظ');});
+  rPy();
+}
+function pyDelStaff(id){
+  var e=ST.find(function(x){return x.id===id;});if(!e)return;
+  if(!confirm('حذف '+e.n+' من قائمة الموظفين؟\nكشوف الشهور السابقة تبقى كما هي.'))return;
+  db.collection('staff').doc(id).delete().then(function(){
+    var i=ST.indexOf(e);if(i>=0)ST.splice(i,1);
+    showToast('تم الحذف');rPy();
+  }).catch(function(){alert('خطأ في الحذف');});
+}
+function pyPay(id){
+  var e=ST.find(function(x){return x.id===id;});if(!e)return;
+  var r=pyRec(id),now=new Date().toISOString();
+  if(r.pd){
+    if(!confirm('تراجع عن صرف راتب '+e.n+'؟'))return;
+    PRUN[id]=PRUN[id]||{};PRUN[id].pd=false;PRUN[id].at='';
+    pyWrite(id,{pd:false,at:''});showToast('رجّعناه غير مصروف');
+  }else{
+    PRUN[id]=PRUN[id]||{};PRUN[id].pd=true;PRUN[id].at=now;PRUN[id].a=pyNet(e);
+    pyWrite(id,{pd:true,at:now,a:pyNet(e)});showToast('صُرف راتب '+e.n+' ✓');
+  }
+  rPy();
+}
+function pyPayAll(){
+  var left=pyActive().filter(function(e){return !pyRec(e.id).pd;});
+  if(!left.length){showToast('كل الرواتب مصروفة');return;}
+  if(!confirm('تأكيد صرف '+left.length+' راتب بإجمالي '+pyMoney(left.reduce(function(t,e){return t+pyNet(e);},0))+'؟'))return;
+  var now=new Date().toISOString(),it={};
+  left.forEach(function(e){
+    PRUN[e.id]=PRUN[e.id]||{};PRUN[e.id].pd=true;PRUN[e.id].at=now;PRUN[e.id].a=pyNet(e);
+    it[e.id]={pd:true,at:now,a:pyNet(e)};
+  });
+  db.collection('payruns').doc(PYM).set({m:PYM,it:it},{merge:true})
+    .then(function(){showToast('صُرفت كل الرواتب ✓');}).catch(function(){showToast('تعذّر الحفظ');});
+  rPy();
+}
+/* سلفة أو خصم أو مكافأة لهذا الشهر فقط — ما تمس الراتب الأساسي */
+function pyAdj(id){
+  var e=ST.find(function(x){return x.id===id;});if(!e)return;
+  var r=pyRec(id);
+  var v=prompt('خصم أو إضافة لـ '+e.n+' هذا الشهر فقط:\nسلفة أو خصم بالسالب (مثال: -300)\nمكافأة أو بدل بالموجب (مثال: 200)\nصفر لإلغائه',r.adj||0);
+  if(v===null)return;
+  var a=parseFloat(String(v).replace(/[^\d.\-]/g,''));
+  if(!isFinite(a))a=0;
+  var nt='';
+  if(a!==0){nt=prompt('السبب (سلفة · مكافأة · غياب):',r.nt||'')||'';}
+  PRUN[id]=PRUN[id]||{};PRUN[id].adj=a;PRUN[id].nt=String(nt).slice(0,40);
+  if(PRUN[id].pd){PRUN[id].a=pyNet(e);}
+  pyWrite(id,{adj:a,nt:PRUN[id].nt,a:pyNet(e)});
+  rPy();
+}
+/* كشف راتب يُرسل للموظف على واتساب */
+function pySlip(id){
+  var e=ST.find(function(x){return x.id===id;});if(!e||!e.ph)return;
+  var r=pyRec(id),adj=Number(r.adj||0);
+  var t='كشف راتب — '+pyMonName(PYM)+'\n'+BIZ.name+'\n\n'+
+    'الاسم: '+e.n+'\nالراتب الأساسي: '+pyMoney(e.s)+
+    (adj?'\n'+(adj<0?'خصم':'إضافة')+(r.nt?' ('+r.nt+')':'')+': '+pyMoney(Math.abs(adj)):'')+
+    (Number(r.tr||0)?'\nبدل أيام الانتقال ('+(r.trd||0)+' أيام): '+pyMoney(r.tr):'')+
+    '\nالصافي: '+pyMoney(pyNet(e))+
+    (r.pd?'\n\nصُرف بتاريخ '+pyDate(r.at)+' ✓':'')+
+    '\n\nشكراً لجهودك 🙏';
+  window.open('https://wa.me/'+waNum(e.ph)+'?text='+encodeURIComponent(t),'_blank');
+}
+function pyCsv(){
+  if(!ST.length){showToast('ما فيه موظفون');return;}
+  var rows=[['الشهر','الاسم','المسمى','الراتب الأساسي','خصم/إضافة','السبب','بدل أيام الانتقال','أيام البدل','الصافي','الحالة','تاريخ الصرف']];
+  pyActive().forEach(function(e){
+    var r=pyRec(e.id);
+    rows.push([pyMonName(PYM),e.n,e.r||'',e.s,r.adj||0,r.nt||'',r.tr||0,r.trd||0,pyNet(e),r.pd?'مصروف':'لم يُصرف',r.pd&&r.at?pyDate(r.at):'']);
+  });
+  rows.push(['','','','','','','','الإجمالي',pyTotal(),'','']);
+  var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+  ofDL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-payroll-'+PYM+'.csv');
+}
+function pySetOld(id,v){
+  var e=ST.find(function(x){return x.id===id;});if(!e)return;
+  var d=parseInt(v,10);
+  e.od=(isFinite(d)&&d>=1&&d<=31)?d:'';
+  db.collection('staff').doc(id).update({od:e.od===''?null:e.od}).catch(function(){showToast('تعذّر الحفظ');});
+  rPy();
+}
+/* يسجّل البدل في حقل مستقل (tr) حتى لا يمس السلف والخصومات، ولا يتضاعف لو ضغطت مرتين */
+function pyTrApply(){
+  var list=pyActive().filter(function(e){return pyTrAmt(e)>0;});
+  if(!list.length){showToast('اكتب مواعيد الصرف السابقة أولاً');return;}
+  var tot=list.reduce(function(t,e){return t+pyTrAmt(e);},0);
+  if(!confirm('إضافة بدل أيام الانتقال لـ '+list.length+' موظف بإجمالي '+pyMoney(tot)+' على كشف '+pyMonName(PYM)+'؟'))return;
+  var it={};
+  list.forEach(function(e){
+    var a=pyTrAmt(e),d=pyExtraDays(e);
+    PRUN[e.id]=PRUN[e.id]||{};PRUN[e.id].tr=a;PRUN[e.id].trd=d;
+    it[e.id]={tr:a,trd:d};
+    if(PRUN[e.id].pd){PRUN[e.id].a=pyNet(e);it[e.id].a=pyNet(e);}
+  });
+  db.collection('payruns').doc(PYM).set({m:PYM,it:it},{merge:true})
+    .then(function(){showToast('أُضيف البدل ✓');}).catch(function(){showToast('تعذّر الحفظ');});
+  rPy();
+}
+function pyTrClear(){
+  if(!confirm('إلغاء بدل أيام الانتقال من كشف '+pyMonName(PYM)+'؟'))return;
+  var it={};
+  pyActive().forEach(function(e){
+    if(!Number(pyRec(e.id).tr||0))return;
+    PRUN[e.id].tr=0;PRUN[e.id].trd=0;it[e.id]={tr:0,trd:0};
+    if(PRUN[e.id].pd)PRUN[e.id].a=pyNet(e);
+  });
+  db.collection('payruns').doc(PYM).set({m:PYM,it:it},{merge:true}).catch(function(){showToast('تعذّر الحفظ');});
+  showToast('أُلغي البدل');rPy();
+}
+function rPyTr(){
+  var card=document.getElementById('pyTrCard'),el=document.getElementById('pyTr');
+  if(!card||!el)return;
+  var act=pyActive();
+  if(!act.length){card.style.display='none';return;}
+  var applied=pyTrApplied();
+  /* نخفي البطاقة لو ما فيه أيام فرق ولا بدل مطبّق — انتهى الانتقال */
+  if(!applied&&!act.some(function(e){return pyExtraDays(e)>0;})&&!act.some(function(e){return e.od;})){card.style.display='none';return;}
+  card.style.display='block';
+  document.getElementById('pyTrDay').textContent=PYDAY;
+  var h='',tot=0;
+  act.forEach(function(e){
+    var d=pyExtraDays(e),a=pyTrAmt(e),paidTr=Number(pyRec(e.id).tr||0);
+    tot+=a;
+    h+='<div class="py-r"><div style="flex:1"><div class="py-n">'+esc(e.n)+'</div>'+
+      '<div class="py-sub">'+(d?d+(d===1?' يوم':d===2?' يومان':' أيام')+' × '+pyMoney(pyDaily(e)):'ما فيه فرق')+
+      (paidTr?' · <span style="color:#16a34a">مضاف ✓</span>':'')+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:7px">'+
+      '<span style="font-size:10px;color:#9ab">كان يوم</span>'+
+      '<input class="of-in" style="width:56px;padding:7px;text-align:center" inputmode="numeric" maxlength="2" value="'+(e.od||'')+'" onchange="pySetOld(\''+e.id+'\',this.value)">'+
+      '<div class="py-amt" style="min-width:78px;color:'+(a?'#16a34a':'#bbb')+'">'+pyMoney(a)+'</div></div></div>';
+  });
+  h+='<div class="py-r" style="border-top:2px solid #eef3f7"><div class="py-n">الإجمالي</div><div class="py-amt" style="color:#0b3954">'+pyMoney(tot)+'</div></div>';
+  h+=applied
+    ? '<button type="button" class="exp-btn" style="margin:11px 0 0;border-color:#d8e6f0;color:#5d8aa8" onclick="pyTrClear()">↩️ ألغِ البدل من هذا الشهر</button>'
+    : (tot?'<button type="button" class="exp-btn" style="margin:11px 0 0;background:#0891b2;color:#fff;border-color:#0891b2" onclick="pyTrApply()">✅ أضف البدل لكشف '+esc(pyMonName(PYM))+'</button>':'');
+  el.innerHTML=h;
+}
+function rPy(){
+  if(!PYM)PYM=pyMonKey(new Date());
+  var act=pyActive(),tot=pyTotal(),paid=pyPaidTotal(),left=tot-paid;
+  var paidN=act.filter(function(e){return pyRec(e.id).pd;}).length;
+  document.getElementById('pyStats').innerHTML='<div class="sg">'+
+    '<div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي رواتب الشهر</div><div class="sc-v" style="font-size:17px">'+pyMoney(tot)+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">مصروف</div><div class="sc-v" style="font-size:17px;color:#16a34a">'+pyMoney(paid)+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">المتبقي</div><div class="sc-v" style="font-size:17px;color:#b45309">'+pyMoney(left)+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #8b5cf6"><div class="sc-l">صُرف لهم</div><div class="sc-v" style="direction:ltr">'+paidN+' / '+act.length+'</div></div></div>';
+  document.getElementById('pyMonthT').textContent=pyMonName(PYM);
+  document.getElementById('pyDay').value=PYDAY;
+  var dim=pyDaysIn(PYM),dd=pyDueDay(PYM);
+  document.getElementById('pyDayNote').innerHTML='الصرف موحّد يوم <b>'+PYDAY+'</b> من كل شهر للجميع.'+
+    (PYDAY>28?' وفي الشهور الأقصر (فبراير مثلاً) يُصرف <b>آخر يوم في الشهر</b> تلقائياً حتى لا يتأخر أحد.':'');
+  /* موعد الصرف: باقي كم يوم، أو تأخّرنا كم يوم */
+  var due=pyDueDate(PYM),today=new Date();today.setHours(0,0,0,0);
+  var diff=Math.round((due-today)/86400000),allPaid=act.length&&paidN===act.length;
+  var box=document.getElementById('pyDue'),bg,cl,txt;
+  if(allPaid){bg='#f0fdf4';cl='#16a34a';txt='✅ رواتب '+pyMonName(PYM)+' مصروفة كاملة';}
+  else if(diff>0){bg='#f0f9ff';cl='#0f7cb8';txt='📅 موعد الصرف: '+dd+' '+pyMonName(PYM)+' · باقي '+(diff===1?'يوم واحد':diff===2?'يومان':diff+' يوم');}
+  else if(diff===0){bg='#fff7ed';cl='#b45309';txt='⏰ اليوم موعد الصرف — '+dd+' '+pyMonName(PYM);}
+  else{bg='#fef2f2';cl='#dc2626';txt='🚨 تأخّر الصرف '+Math.abs(diff)+' يوم عن موعده ('+dd+' '+pyMonName(PYM)+')';}
+  box.innerHTML='<div class="py-due" style="background:'+bg+';color:'+cl+'">'+txt+(dd<PYDAY?'<div style="font-size:10px;font-weight:600;margin-top:4px">الشهر '+dim+' يوم، فالصرف في آخر يوم فيه</div>':'')+'</div>';
+  /* صفوف الموظفين لهذا الشهر */
+  var el=document.getElementById('pyList');
+  if(!act.length){el.innerHTML='<div class="empty">أضف موظفيك من البطاقة تحت ⬇️</div>';document.getElementById('pyAct').innerHTML='';}
+  else{
+    var h='';
+    act.forEach(function(e){
+      var r=pyRec(e.id),adj=Number(r.adj||0);
+      h+='<div class="py-r"><div style="flex:1"><div class="py-n">'+esc(e.n)+' <span style="color:#bbb;font-weight:600;font-size:10px">'+esc(e.r||'')+'</span></div>'+
+        '<div class="py-sub">'+pyMoney(e.s)+(adj?' · <span style="color:'+(adj<0?'#dc2626':'#16a34a')+'">'+(adj<0?'خصم ':'إضافة ')+pyMoney(Math.abs(adj))+(r.nt?' ('+esc(r.nt)+')':'')+'</span>':'')+
+        (Number(r.tr||0)?' · <span style="color:#0891b2">بدل انتقال '+(r.trd||0)+' أيام '+pyMoney(r.tr)+'</span>':'')+
+        (r.pd&&r.at?' · صُرف '+esc(pyDate(r.at)):'')+'</div></div>'+
+        '<div style="text-align:left"><div class="py-amt" style="color:'+(r.pd?'#16a34a':'#0b3954')+'">'+pyMoney(pyNet(e))+'</div>'+
+        '<div style="display:flex;gap:5px;margin-top:6px;justify-content:flex-end">'+
+        '<button type="button" class="ct-b" title="خصم أو إضافة" onclick="pyAdj(\''+e.id+'\')">±</button>'+
+        (e.ph?'<button type="button" class="ct-b" title="أرسل كشف الراتب" onclick="pySlip(\''+e.id+'\')">💬</button>':'')+
+        '<button type="button" class="py-pay'+(r.pd?' done':'')+'" onclick="pyPay(\''+e.id+'\')">'+(r.pd?'✓ صُرف':'صرف')+'</button>'+
+        '</div></div></div>';
+    });
+    el.innerHTML=h;
+    document.getElementById('pyAct').innerHTML=allPaid?'':
+      '<button type="button" class="exp-btn" style="margin:12px 0 0;background:#16a34a;color:#fff;border-color:#16a34a" onclick="pyPayAll()">✅ صرف الكل ('+pyMoney(left)+')</button>';
+  }
+  /* بطاقة إدارة الموظفين */
+  var sel=document.getElementById('pyStaff');
+  if(!ST.length){
+    sel.innerHTML='<div class="empty">ما أضفت موظفين بعد</div>';
+    document.getElementById('pySeed').innerHTML='<button type="button" class="exp-btn" style="margin:9px 0 0;border-color:#d8e6f0;color:#5d8aa8" onclick="pySeed()">⚡ جهّز فريقي (مشرف 2500 + 3 عمال 1400)</button>';
+  }else{
+    var sh='';
+    ST.forEach(function(e){
+      sh+='<div class="py-r"><div style="flex:1"><div class="py-n">'+esc(e.n)+'</div><div class="py-sub">'+esc(e.r||'')+' · '+pyMoney(e.s)+(e.ph?' · '+esc(e.ph):'')+'</div></div>'+
+        '<div style="display:flex;gap:5px"><button type="button" class="ct-b" onclick="pyEdit(\''+e.id+'\')">✏️ تعديل</button>'+
+        '<button type="button" class="ct-b" style="background:#fee2e2;color:#dc2626" onclick="pyDelStaff(\''+e.id+'\')">🗑</button></div></div>';
+    });
+    sel.innerHTML=sh;
+    document.getElementById('pySeed').innerHTML='';
+  }
+  rPyTr();
+}
+
 /* ===== قائمة الأرقام ورسائل العروض ===== */
 var CT=[],OFSK={},OFQ='',OFF='all',OFSHOW=40;
+/* OFTRI: أرقام تخطيتها في الفرز السريع لهذه الجلسة · OFUN: آخر عملية فرز للتراجع عنها */
+var OFTRI={},OFUN=null;
 /* OFSRC: مصدر الدفعة عند الإضافة · OFTGT: لمن نرسل · OFSF: فلتر المصدر في القائمة */
 var OFSRC='cu',OFTGT='all',OFSF='all';
 var SRC={cu:{t:'عميل',i:'👤',c:'#16a34a',b:'#f0fdf4'},ld:{t:'ليد',i:'🎯',c:'#c026d3',b:'#fdf4ff'},'':{t:'غير مصنّف',i:'❓',c:'#64748b',b:'#f1f5f9'}};
@@ -1253,7 +1623,7 @@ function ofQueue(){
 }
 /* أرقام الفئة المستهدفة وحدها — عليها تُحسب نسبة التقدم وملفات البث */
 function ofPool(){return CT.filter(function(c){return ctIs(c,OFTGT);});}
-function rOf(){rOfStats();rOfPv();rOfSend();rOfList();rOfUnc();}
+function rOf(){rOfStats();rOfPv();rOfSend();rOfList();rOfUnc();rOfTri();}
 function rOfStats(){
   var k=ofCamp(),pool=ofPool(),sent=0,off=0,cu=0,ld=0,un=0,won=0;
   pool.forEach(function(c){if(c.st===0)off++;else if(ofSentIn(c,k))sent++;});
@@ -1279,9 +1649,64 @@ function rOfUnc(){
   var el=document.getElementById('ofUnc');if(!el)return;
   var n=CT.filter(function(c){return !c.sr&&!ctRv()[c.p];}).length;
   if(!n){el.innerHTML='';return;}
-  el.innerHTML='<div class="of-note" style="margin:9px 0 0;background:#fff7ed;border-color:#fed7aa;color:#b45309">❓ عندك <b>'+n+'</b> رقم بلا تصنيف. الصق قائمة ليدز الحملة فوق واختر «🎯 ليدز» لتعليمهم، وعلّم الباقي دفعة وحدة:</div>'+
+  el.innerHTML='<div class="of-note" style="margin:9px 0 0;background:#fff7ed;border-color:#fed7aa;color:#b45309">❓ عندك <b>'+n+'</b> رقم بلا تصنيف. لو مخلوطين (بعضهم طلب وبعضهم لا) استخدم <b>🗂 الفرز السريع</b> تحت. ولو كلهم نفس النوع علّمهم دفعة وحدة:</div>'+
     '<div class="of-row" style="margin-top:8px"><button type="button" class="exp-btn" style="margin:0;flex:1" onclick="ofTagRest(\'cu\')">👤 الباقي عملاء</button>'+
     '<button type="button" class="exp-btn" style="margin:0;flex:1" onclick="ofTagRest(\'ld\')">🎯 الباقي ليدز</button></div>';
+}
+/* ===== الفرز السريع: يقسم دفعة مخلوطة لعملاء وليدز، رقماً رقماً ===== */
+function triQueue(){
+  var rv=ctRv();
+  return CT.filter(function(c){return !c.sr&&!rv[c.p]&&!OFTRI[c.p]&&c.st!==0;});
+}
+function rOfTri(){
+  var card=document.getElementById('ofTriCard'),el=document.getElementById('ofTri');
+  if(!card||!el)return;
+  var q=triQueue(),rv=ctRv();
+  var todo=CT.filter(function(c){return !c.sr&&!rv[c.p]&&c.st!==0;}).length;
+  if(!todo&&!OFUN){card.style.display='none';el.innerHTML='';return;}
+  card.style.display='block';
+  var done=CT.filter(function(c){return c.sr||rv[c.p];}).length,tot=done+todo;
+  var undo=OFUN?'<button type="button" class="ct-b" style="display:block;margin:9px auto 0;background:none;color:#9ab" onclick="triUndo()">↩️ تراجع عن آخر فرز ('+esc(OFUN.n||OFUN.p)+')</button>':'';
+  if(!q.length){
+    el.innerHTML='<div class="empty">'+(todo?'تخطيت الباقي — <span style="font-size:11px">'+todo+' رقم بانتظارك</span>':'خلّصت الفرز، ما بقي رقم بلا تصنيف ✓')+'</div>'+
+      (todo?'<button type="button" class="exp-btn" style="margin-bottom:0" onclick="triUnskip()">↩️ رجّع المتخطّين</button>':'')+undo;
+    return;
+  }
+  var c=q[0],pct=tot?Math.round(done/tot*100):0;
+  el.innerHTML='<div class="of-cur"><div class="of-cur-n">'+esc(c.n||'بدون اسم')+'</div><div class="of-cur-p">+'+esc(c.p)+'</div>'+
+    (c.sn?'<div style="font-size:10px;color:#9ab;margin-top:5px">🎯 '+esc(c.sn)+'</div>':'')+
+    '<a target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;padding:7px 14px;border-radius:9px;background:#e8f4fb;color:#0f7cb8;font-size:11.5px;font-weight:700;text-decoration:none" href="https://wa.me/'+c.p+'">💬 افتح محادثته وشوف</a></div>'+
+    '<div class="of-row"><button type="button" class="exp-btn" style="margin:0;flex:1;border-color:#16a34a;color:#16a34a" onclick="triSet(\''+c.p+'\',\'cu\')">👤 طلب الخدمة</button>'+
+    '<button type="button" class="exp-btn" style="margin:0;flex:1;border-color:#c026d3;color:#c026d3" onclick="triSet(\''+c.p+'\',\'ld\')">🎯 ما طلب</button></div>'+
+    '<div class="of-mini"><button type="button" onclick="triSkip(\''+c.p+'\')">⏭ بعدين</button>'+
+    '<button type="button" onclick="triOut(\''+c.p+'\')">🚫 رقم غلط · لا ترسل</button></div>'+
+    '<div class="of-prog"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="of-cnt">فرزت '+done+' من '+tot+' · باقي '+todo+'</div>'+undo;
+}
+function triSet(p,src){
+  var c=ofGet(p);if(!c)return;
+  OFUN={p:p,n:c.n,sr:c.sr,st:c.st};
+  c.sr=src;
+  db.collection('contacts').doc(p).update({sr:src}).catch(function(){showToast('تعذّر حفظ التصنيف — تحقق من الاتصال');});
+  rOf();rCu();
+}
+function triOut(p){
+  var c=ofGet(p);if(!c)return;
+  OFUN={p:p,n:c.n,sr:c.sr,st:c.st};
+  c.st=0;
+  db.collection('contacts').doc(p).update({st:0}).catch(function(){showToast('تعذّر الحفظ');});
+  rOf();rCu();
+}
+function triSkip(p){OFTRI[p]=1;rOfTri();}
+function triUnskip(){OFTRI={};rOfTri();}
+function triUndo(){
+  if(!OFUN)return;
+  var u=OFUN,c=ofGet(u.p);OFUN=null;
+  if(!c){rOf();return;}
+  c.sr=u.sr;c.st=u.st;
+  db.collection('contacts').doc(u.p).update({sr:u.sr||'',st:u.st===0?0:1}).catch(function(){showToast('تعذّر التراجع');});
+  showToast('رجّعناه للفرز ↩️');
+  rOf();rCu();
 }
 function rOfPv(){
   var q=ofQueue();
