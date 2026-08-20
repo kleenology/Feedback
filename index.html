@@ -1114,7 +1114,7 @@ function backWaLink(c){
 }
 /* ===== رواتب الموظفين ===== */
 /* ST: الموظفون · PRUN: كشف الشهر المعروض · PYM: الشهر (YYYY-MM) · PYDAY: يوم الصرف الموحّد */
-var ST=[],PRUN={},PYM='',PYDAY=30;
+var ST=[],PRUN={},PYM='',PYDAY=30,PYADJ='';
 function pyMonKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function pyMonName(m){var a=m.split('-');return MO[parseInt(a[1],10)-1]+' '+a[0];}
 function pyDaysIn(m){var a=m.split('-');return new Date(parseInt(a[0],10),parseInt(a[1],10),0).getDate();}
@@ -1130,7 +1130,10 @@ function pyDate(iso){
 function pyMoney(v){return (Math.round(Number(v)*100)/100).toLocaleString('en-US')+' ر.س';}
 function pyActive(){return ST.filter(function(e){return e.st!==0;});}
 function pyRec(id){var r=PRUN[id];return r||{};}
-function pyNet(e){var r=pyRec(e.id);return Number(e.s||0)+Number(r.adj||0)+Number(r.tr||0);}
+/* الخصم والمكافأة حقلان مستقلان موجبان. السجلات القديمة كانت رقماً واحداً بإشارة (adj) فنقرأها كما هي */
+function pyDed(r){var v=r.ded;if(v!==undefined&&v!==null)return Math.abs(Number(v)||0);var a=Number(r.adj||0);return a<0?-a:0;}
+function pyBon(r){var v=r.bon;if(v!==undefined&&v!==null)return Math.abs(Number(v)||0);var a=Number(r.adj||0);return a>0?a:0;}
+function pyNet(e){var r=pyRec(e.id);return Number(e.s||0)-pyDed(r)+pyBon(r)+Number(r.tr||0);}
 /* الأجر اليومي = الراتب الشهري ÷ 30 (المتبع في نظام العمل السعودي) */
 function pyDaily(e){return Number(e.s||0)/30;}
 function pyExtraDays(e){var od=parseInt(e.od,10);if(!isFinite(od)||od<1||od>=PYDAY)return 0;return PYDAY-od;}
@@ -1287,27 +1290,60 @@ function pyPayAll(){
   rPy();
 }
 /* سلفة أو خصم أو مكافأة لهذا الشهر فقط — ما تمس الراتب الأساسي */
-function pyAdj(id){
+function pyAdj(id){PYADJ=(PYADJ===id?'':id);rPy();}
+function pyAdjClose(){PYADJ='';rPy();}
+function pyNum(id){var v=parseFloat(String((document.getElementById(id)||{}).value||'').replace(/[^\d.]/g,''));return isFinite(v)&&v>0?v:0;}
+/* الصافي يتحدث وأنت تكتب، عشان تشوف النتيجة قبل الحفظ */
+function pyAdjPv(){
+  var e=ST.find(function(x){return x.id===PYADJ;});if(!e)return;
+  var r=pyRec(e.id),net=Number(e.s||0)-pyNum('pyEdD')+pyNum('pyEdB')+Number(r.tr||0);
+  var el=document.getElementById('pyEdNet');if(!el)return;
+  el.textContent=pyMoney(net);
+  el.style.color=net<0?'#dc2626':'#0b3954';
+  var w=document.getElementById('pyEdWarn');
+  if(w)w.style.display=net<0?'block':'none';
+}
+function pyAdjSave(id){
   var e=ST.find(function(x){return x.id===id;});if(!e)return;
-  var r=pyRec(id);
-  var v=prompt('خصم أو إضافة لـ '+e.n+' هذا الشهر فقط:\nسلفة أو خصم بالسالب (مثال: -300)\nمكافأة أو بدل بالموجب (مثال: 200)\nصفر لإلغائه',r.adj||0);
-  if(v===null)return;
-  var a=parseFloat(String(v).replace(/[^\d.\-]/g,''));
-  if(!isFinite(a))a=0;
-  var nt='';
-  if(a!==0){nt=prompt('السبب (سلفة · مكافأة · غياب):',r.nt||'')||'';}
-  PRUN[id]=PRUN[id]||{};PRUN[id].adj=a;PRUN[id].nt=String(nt).slice(0,40);
-  if(PRUN[id].pd){PRUN[id].a=pyNet(e);}
-  pyWrite(id,{adj:a,nt:PRUN[id].nt,a:pyNet(e)});
-  rPy();
+  var ded=pyNum('pyEdD'),bon=pyNum('pyEdB');
+  var nt=String((document.getElementById('pyEdN')||{}).value||'').trim().slice(0,40);
+  var r=pyRec(id),net=Number(e.s||0)-ded+bon+Number(r.tr||0);
+  /* حارس ضد الأرقام الغلط: الصافي ما يصير بالسالب */
+  if(net<0){
+    alert('الخصم ('+pyMoney(ded)+') أكبر من مستحق '+e.n+' هذا الشهر ('+pyMoney(Number(e.s||0)+bon+Number(r.tr||0))+').\nالصافي ما يصير بالسالب — قسّم الخصم على أكثر من شهر أو صحّح الرقم.');
+    return;
+  }
+  PRUN[id]=PRUN[id]||{};
+  PRUN[id].ded=ded;PRUN[id].bon=bon;PRUN[id].adj=bon-ded;PRUN[id].nt=nt;
+  if(PRUN[id].pd)PRUN[id].a=pyNet(e);
+  pyWrite(id,{ded:ded,bon:bon,adj:bon-ded,nt:nt,a:pyNet(e)});
+  showToast(ded||bon?'حُفظ ✓':'أُلغي الخصم والمكافأة');
+  PYADJ='';rPy();
+}
+function pyAdjEditor(e){
+  var r=pyRec(e.id),ded=pyDed(r),bon=pyBon(r);
+  return '<div style="background:#f8fbfd;border:1.5px solid #e4edf4;border-radius:12px;padding:12px;margin:2px 0 10px">'+
+    '<div class="of-row">'+
+    '<div class="of-fld"><label class="of-lb" for="pyEdD">خصم أو سلفة</label><input id="pyEdD" class="of-in" inputmode="decimal" maxlength="7" placeholder="0" value="'+(ded||'')+'" oninput="pyAdjPv()"></div>'+
+    '<div class="of-fld"><label class="of-lb" for="pyEdB">مكافأة أو بدل</label><input id="pyEdB" class="of-in" inputmode="decimal" maxlength="7" placeholder="0" value="'+(bon||'')+'" oninput="pyAdjPv()"></div>'+
+    '</div>'+
+    '<div class="of-hint" style="margin-top:5px">اكتب الرقم موجباً في خانته — لا تستخدم إشارة السالب.</div>'+
+    '<div style="margin-top:9px"><label class="of-lb" for="pyEdN">السبب</label><input id="pyEdN" class="of-in" maxlength="40" placeholder="سلفة · مكافأة · غياب" value="'+esc(r.nt||'')+'"></div>'+
+    '<div id="pyEdWarn" style="display:none;margin-top:9px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:9px;padding:8px 10px;font-size:11px;line-height:1.7">⚠️ الخصم أكبر من المستحق — الصافي ما يصير بالسالب.</div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px;font-size:12px;font-weight:700"><span style="color:#5d8aa8">الصافي بعد التعديل</span><span id="pyEdNet" class="py-amt">'+pyMoney(pyNet(e))+'</span></div>'+
+    '<div class="of-row" style="margin-top:10px">'+
+    '<button type="button" class="exp-btn" style="margin:0;flex:1;background:#0891b2;color:#fff;border-color:#0891b2" onclick="pyAdjSave(\''+e.id+'\')">حفظ</button>'+
+    '<button type="button" class="exp-btn" style="margin:0;flex:1;border-color:#d8e6f0;color:#5d8aa8" onclick="pyAdjClose()">إلغاء</button>'+
+    '</div></div>';
 }
 /* كشف راتب يُرسل للموظف على واتساب */
 function pySlip(id){
   var e=ST.find(function(x){return x.id===id;});if(!e||!e.ph)return;
-  var r=pyRec(id),adj=Number(r.adj||0);
+  var r=pyRec(id),ded=pyDed(r),bon=pyBon(r);
   var t='كشف راتب — '+pyMonName(PYM)+'\n'+BIZ.name+'\n\n'+
     'الاسم: '+e.n+'\nالراتب الأساسي: '+pyMoney(e.s)+
-    (adj?'\n'+(adj<0?'خصم':'إضافة')+(r.nt?' ('+r.nt+')':'')+': '+pyMoney(Math.abs(adj)):'')+
+    (ded?'\nخصم'+(r.nt?' ('+r.nt+')':'')+': '+pyMoney(ded):'')+
+    (bon?'\nمكافأة'+(r.nt&&!ded?' ('+r.nt+')':'')+': '+pyMoney(bon):'')+
     (Number(r.tr||0)?'\nبدل أيام الانتقال ('+(r.trd||0)+' أيام): '+pyMoney(r.tr):'')+
     '\nالصافي: '+pyMoney(pyNet(e))+
     (r.pd?'\n\nصُرف بتاريخ '+pyDate(r.at)+' ✓':'')+
@@ -1316,12 +1352,12 @@ function pySlip(id){
 }
 function pyCsv(){
   if(!ST.length){showToast('ما فيه موظفون');return;}
-  var rows=[['الشهر','الاسم','المسمى','الراتب الأساسي','خصم/إضافة','السبب','بدل أيام الانتقال','أيام البدل','الصافي','الحالة','تاريخ الصرف']];
+  var rows=[['الشهر','الاسم','المسمى','الراتب الأساسي','خصم','مكافأة','السبب','بدل أيام الانتقال','أيام البدل','الصافي','الحالة','تاريخ الصرف']];
   pyActive().forEach(function(e){
     var r=pyRec(e.id);
-    rows.push([pyMonName(PYM),e.n,e.r||'',e.s,r.adj||0,r.nt||'',r.tr||0,r.trd||0,pyNet(e),r.pd?'مصروف':'لم يُصرف',r.pd&&r.at?pyDate(r.at):'']);
+    rows.push([pyMonName(PYM),e.n,e.r||'',e.s,pyDed(r),pyBon(r),r.nt||'',r.tr||0,r.trd||0,pyNet(e),r.pd?'مصروف':'لم يُصرف',r.pd&&r.at?pyDate(r.at):'']);
   });
-  rows.push(['','','','','','','','الإجمالي',pyTotal(),'','']);
+  rows.push(['','','','','','','','','الإجمالي',pyTotal(),'','']);
   var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   ofDL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-payroll-'+PYM+'.csv');
 }
@@ -1417,17 +1453,20 @@ function rPy(){
   else{
     var h='';
     act.forEach(function(e){
-      var r=pyRec(e.id),adj=Number(r.adj||0);
+      var r=pyRec(e.id),ded=pyDed(r),bon=pyBon(r);
       h+='<div class="py-r"><div style="flex:1"><div class="py-n">'+esc(e.n)+' <span style="color:#bbb;font-weight:600;font-size:10px">'+esc(e.r||'')+'</span></div>'+
-        '<div class="py-sub">'+pyMoney(e.s)+(adj?' · <span style="color:'+(adj<0?'#dc2626':'#16a34a')+'">'+(adj<0?'خصم ':'إضافة ')+pyMoney(Math.abs(adj))+(r.nt?' ('+esc(r.nt)+')':'')+'</span>':'')+
+        '<div class="py-sub">'+pyMoney(e.s)+
+        (ded?' · <span style="color:#dc2626">خصم '+pyMoney(ded)+'</span>':'')+
+        (bon?' · <span style="color:#16a34a">مكافأة '+pyMoney(bon)+'</span>':'')+
+        ((ded||bon)&&r.nt?' <span style="color:#9ab">('+esc(r.nt)+')</span>':'')+
         (Number(r.tr||0)?' · <span style="color:#0891b2">بدل انتقال '+(r.trd||0)+' أيام '+pyMoney(r.tr)+'</span>':'')+
         (r.pd&&r.at?' · صُرف '+esc(pyDate(r.at)):'')+'</div></div>'+
         '<div style="text-align:left"><div class="py-amt" style="color:'+(r.pd?'#16a34a':'#0b3954')+'">'+pyMoney(pyNet(e))+'</div>'+
         '<div style="display:flex;gap:5px;margin-top:6px;justify-content:flex-end">'+
-        '<button type="button" class="ct-b" title="خصم أو إضافة" onclick="pyAdj(\''+e.id+'\')">±</button>'+
+        '<button type="button" class="ct-b'+(PYADJ===e.id?' on':'')+'" title="خصم أو مكافأة" onclick="pyAdj(\''+e.id+'\')">± خصم/مكافأة</button>'+
         (e.ph?'<button type="button" class="ct-b" title="أرسل كشف الراتب" onclick="pySlip(\''+e.id+'\')">💬</button>':'')+
         '<button type="button" class="py-pay'+(r.pd?' done':'')+'" onclick="pyPay(\''+e.id+'\')">'+(r.pd?'✓ صُرف':'صرف')+'</button>'+
-        '</div></div></div>';
+        '</div></div></div>'+(PYADJ===e.id?pyAdjEditor(e):'');
     });
     el.innerHTML=h;
     document.getElementById('pyAct').innerHTML=allPaid?'':
