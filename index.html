@@ -527,6 +527,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     <div class="cc" id="pyTrCard" style="display:none">
       <h3>🔄 بدل أيام الانتقال</h3>
       <div class="of-note">لما وحّدت الصرف على يوم <b id="pyTrDay">30</b>، صار كل موظف ينتظر أياماً زيادة عن موعده القديم. اكتب موعده السابق ونحسب له بدل تلك الأيام (الأجر اليومي = الراتب ÷ 30).</div>
+      <div class="of-hint" id="pyTrOnce" style="margin:-4px 0 8px"></div>
       <div id="pyTr"></div>
     </div>
     <div class="cc">
@@ -1114,7 +1115,7 @@ function backWaLink(c){
 }
 /* ===== رواتب الموظفين ===== */
 /* ST: الموظفون · PRUN: كشف الشهر المعروض · PYM: الشهر (YYYY-MM) · PYDAY: يوم الصرف الموحّد */
-var ST=[],PRUN={},PYM='',PYDAY=30,PYADJ='';
+var ST=[],PRUN={},PYM='',PYDAY=30,PYADJ='',PYTRM='';
 function pyMonKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function pyMonName(m){var a=m.split('-');return MO[parseInt(a[1],10)-1]+' '+a[0];}
 function pyDaysIn(m){var a=m.split('-');return new Date(parseInt(a[0],10),parseInt(a[1],10),0).getDate();}
@@ -1152,7 +1153,9 @@ function loadStaff(){
 }
 function loadPayDay(){
   return db.collection('settings').doc('payroll').get().then(function(d){
-    if(d.exists&&d.data()&&d.data().day)PYDAY=parseInt(d.data().day,10)||30;
+    if(!d.exists||!d.data())return;
+    if(d.data().day)PYDAY=parseInt(d.data().day,10)||30;
+    if(d.data().trm)PYTRM=String(d.data().trm);
   }).catch(function(){});
 }
 function loadPayrun(m){
@@ -1383,6 +1386,9 @@ function pyTrApply(){
   });
   db.collection('payruns').doc(PYM).set({m:PYM,it:it},{merge:true})
     .then(function(){showToast('أُضيف البدل ✓');}).catch(function(){showToast('تعذّر الحفظ');});
+  /* نثبّت شهر الانتقال حتى لا تظهر البطاقة في بقية الشهور */
+  PYTRM=PYM;
+  db.collection('settings').doc('payroll').set({trm:PYM},{merge:true}).catch(function(){});
   rPy();
 }
 function pyTrClear(){
@@ -1402,10 +1408,14 @@ function rPyTr(){
   var act=pyActive();
   if(!act.length){card.style.display='none';return;}
   var applied=pyTrApplied();
+  /* البدل مستحق مرة واحدة، فالبطاقة تخص شهر الانتقال وحده — وقبل تطبيقه تظهر في الشهر الحالي */
+  if(PYM!==(PYTRM||pyMonKey(new Date()))){card.style.display='none';return;}
   /* نخفي البطاقة لو ما فيه أيام فرق ولا بدل مطبّق — انتهى الانتقال */
   if(!applied&&!act.some(function(e){return pyExtraDays(e)>0;})&&!act.some(function(e){return e.od;})){card.style.display='none';return;}
   card.style.display='block';
   document.getElementById('pyTrDay').textContent=PYDAY;
+  var nt=document.getElementById('pyTrOnce');
+  if(nt)nt.textContent='بدل مرة واحدة يخص شهر الانتقال ('+pyMonName(PYM)+') — ما يظهر ولا ينضاف في بقية الشهور.';
   var h='',tot=0;
   act.forEach(function(e){
     var d=pyExtraDays(e),a=pyTrAmt(e),paidTr=Number(pyRec(e.id).tr||0);
