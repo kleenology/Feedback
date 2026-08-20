@@ -816,7 +816,7 @@ auth.signInWithEmailAndPassword(em,pw).then(function(){
 document.getElementById('lgPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 function doLogout(){auth.signOut().then(goHome).catch(goHome);}
 
-document.querySelectorAll('.adm-tb').forEach(function(t){t.onclick=function(){document.querySelectorAll('.adm-tb').forEach(function(x){x.classList.remove('on');});document.querySelectorAll('.tc').forEach(function(x){x.classList.remove('on');});t.classList.add('on');document.getElementById('tc'+t.dataset.t.charAt(0).toUpperCase()+t.dataset.t.slice(1)).classList.add('on');};});
+document.querySelectorAll('.adm-tb').forEach(function(t){t.onclick=function(){document.querySelectorAll('.adm-tb').forEach(function(x){x.classList.remove('on');});document.querySelectorAll('.tc').forEach(function(x){x.classList.remove('on');});t.classList.add('on');document.getElementById('tc'+t.dataset.t.charAt(0).toUpperCase()+t.dataset.t.slice(1)).classList.add('on');clBarSync();};});
 
 function loadCh(){return new Promise(function(r){if(CHL){r();return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';s.onload=function(){CHL=true;r();};s.onerror=function(){r();};document.head.appendChild(s);});}
 function kC(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
@@ -909,7 +909,12 @@ function togglePub(id){
   }
 }
 
-function renderAdm(){rOv();rCp();rCu();rOf();rPy();rMo();rRe();document.getElementById('clBar').classList.toggle('hide',!D.length);}
+function renderAdm(){rOv();rCp();rCu();rOf();rPy();rMo();rRe();clBarSync();}
+/* زر المسح الأحمر يخص التقييمات وحدها — ما يطفو فوق الرواتب أو غيرها */
+function clBarSync(){
+  var on=document.querySelector('.adm-tb.on'),t=on?on.dataset.t:'';
+  document.getElementById('clBar').classList.toggle('hide',!(t==='responses'&&D.length));
+}
 
 /* ===== نسخة احتياطية واستعادة ===== */
 function backupData(){
@@ -1191,8 +1196,11 @@ function pyAddStaff(){
     else alert('صار خطأ، حاول مرة ثانية');
   });
 }
+var PYBUSY=false;
 function pySeed(){
+  if(PYBUSY)return;
   if(ST.length){showToast('عندك موظفون أصلاً');return;}
+  PYBUSY=true;
   var now=new Date().toISOString();
   var team=[{n:'المشرف',r:'مشرف',s:2500,od:20},{n:'عامل 1',r:'عامل',s:1400,od:22},{n:'عامل 2',r:'عامل',s:1400,od:27},{n:'عامل 3',r:'عامل',s:1400,od:27}];
   var b=db.batch(),made=[];
@@ -1203,8 +1211,9 @@ function pySeed(){
   b.commit().then(function(){
     made.forEach(function(e){ST.push(e);});
     ST.sort(function(a,b2){return (Number(b2.s)||0)-(Number(a.s)||0);});
+    PYBUSY=false;
     showToast('جهزنا فريقك — عدّل الأسماء بالضغط عليها ✓');rPy();
-  }).catch(function(){alert('صار خطأ، حاول مرة ثانية');});
+  }).catch(function(){PYBUSY=false;alert('صار خطأ، حاول مرة ثانية');});
 }
 function pyEdit(id){
   var e=ST.find(function(x){return x.id===id;});if(!e)return;
@@ -1219,6 +1228,29 @@ function pyEdit(id){
   db.collection('staff').doc(id).update({n:e.n,s:e.s,ph:e.ph})
     .then(function(){showToast('تم التعديل ✓');}).catch(function(){showToast('تعذّر الحفظ');});
   rPy();
+}
+/* أسماء مكررة بنفس الراتب — نُبقي واحداً ونحذف الباقي */
+function pyDupes(){
+  var seen={},dup=[];
+  ST.slice().sort(function(a,b){return String(a.at||'').localeCompare(String(b.at||''));}).forEach(function(e){
+    var k=String(e.n||'').trim()+'|'+Number(e.s||0);
+    /* نُبقي من صُرف له راتب هذا الشهر إن وُجد، وإلا الأقدم */
+    if(!seen[k]){seen[k]=e;return;}
+    if(pyRec(e.id).pd&&!pyRec(seen[k].id).pd){dup.push(seen[k]);seen[k]=e;return;}
+    dup.push(e);
+  });
+  return dup;
+}
+function pyDelDupes(){
+  var dup=pyDupes();
+  if(!dup.length){showToast('ما فيه مكرر');return;}
+  if(!confirm('حذف '+dup.length+' موظف مكرر؟\nيبقى من كل اسم نسخة واحدة.'))return;
+  var b=db.batch();
+  dup.forEach(function(e){b.delete(db.collection('staff').doc(e.id));});
+  b.commit().then(function(){
+    dup.forEach(function(e){var i=ST.indexOf(e);if(i>=0)ST.splice(i,1);});
+    showToast('حذفنا '+dup.length+' مكرر ✓');rPy();
+  }).catch(function(){alert('خطأ في الحذف، حاول مرة ثانية');});
 }
 function pyDelStaff(id){
   var e=ST.find(function(x){return x.id===id;});if(!e)return;
@@ -1413,7 +1445,8 @@ function rPy(){
         '<div style="display:flex;gap:5px"><button type="button" class="ct-b" onclick="pyEdit(\''+e.id+'\')">✏️ تعديل</button>'+
         '<button type="button" class="ct-b" style="background:#fee2e2;color:#dc2626" onclick="pyDelStaff(\''+e.id+'\')">🗑</button></div></div>';
     });
-    sel.innerHTML=sh;
+    var dup=pyDupes();
+    sel.innerHTML=(dup.length?'<div class="of-note" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c;margin-bottom:4px">⚠️ فيه <b>'+dup.length+'</b> موظف مكرر (نفس الاسم والراتب).<button type="button" class="exp-btn" style="margin:8px 0 0;border-color:#dc2626;color:#dc2626" onclick="pyDelDupes()">🧹 احذف المكرر</button></div>':'')+sh;
     document.getElementById('pySeed').innerHTML='';
   }
   rPyTr();
