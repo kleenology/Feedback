@@ -524,6 +524,11 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
       <div id="pyList"></div>
       <div id="pyAct"></div>
     </div>
+    <div class="cc" id="pyTrCard" style="display:none">
+      <h3>🔄 بدل أيام الانتقال</h3>
+      <div class="of-note">لما وحّدت الصرف على يوم <b id="pyTrDay">30</b>، صار كل موظف ينتظر أياماً زيادة عن موعده القديم. اكتب موعده السابق ونحسب له بدل تلك الأيام (الأجر اليومي = الراتب ÷ 30).</div>
+      <div id="pyTr"></div>
+    </div>
     <div class="cc">
       <h3>👷 الموظفون والرواتب</h3>
       <div id="pyStaff"></div>
@@ -1120,7 +1125,12 @@ function pyDate(iso){
 function pyMoney(v){return (Math.round(Number(v)*100)/100).toLocaleString('en-US')+' ر.س';}
 function pyActive(){return ST.filter(function(e){return e.st!==0;});}
 function pyRec(id){var r=PRUN[id];return r||{};}
-function pyNet(e){var r=pyRec(e.id);return Number(e.s||0)+Number(r.adj||0);}
+function pyNet(e){var r=pyRec(e.id);return Number(e.s||0)+Number(r.adj||0)+Number(r.tr||0);}
+/* الأجر اليومي = الراتب الشهري ÷ 30 (المتبع في نظام العمل السعودي) */
+function pyDaily(e){return Number(e.s||0)/30;}
+function pyExtraDays(e){var od=parseInt(e.od,10);if(!isFinite(od)||od<1||od>=PYDAY)return 0;return PYDAY-od;}
+function pyTrAmt(e){return Math.round(pyDaily(e)*pyExtraDays(e)*100)/100;}
+function pyTrApplied(){return pyActive().some(function(e){return Number(pyRec(e.id).tr||0)>0;});}
 function pyTotal(){var t=0;pyActive().forEach(function(e){t+=pyNet(e);});return t;}
 function pyPaidTotal(){var t=0;pyActive().forEach(function(e){if(pyRec(e.id).pd)t+=pyNet(e);});return t;}
 
@@ -1184,10 +1194,10 @@ function pyAddStaff(){
 function pySeed(){
   if(ST.length){showToast('عندك موظفون أصلاً');return;}
   var now=new Date().toISOString();
-  var team=[{n:'المشرف',r:'مشرف',s:2500},{n:'عامل 1',r:'عامل',s:1400},{n:'عامل 2',r:'عامل',s:1400},{n:'عامل 3',r:'عامل',s:1400}];
+  var team=[{n:'المشرف',r:'مشرف',s:2500,od:20},{n:'عامل 1',r:'عامل',s:1400,od:22},{n:'عامل 2',r:'عامل',s:1400,od:27},{n:'عامل 3',r:'عامل',s:1400,od:27}];
   var b=db.batch(),made=[];
   team.forEach(function(t){
-    var ref=db.collection('staff').doc(),e={n:t.n,r:t.r,s:t.s,ph:'',st:1,at:now};
+    var ref=db.collection('staff').doc(),e={n:t.n,r:t.r,s:t.s,ph:'',od:t.od,st:1,at:now};
     b.set(ref,e);e.id=ref.id;made.push(e);
   });
   b.commit().then(function(){
@@ -1266,6 +1276,7 @@ function pySlip(id){
   var t='كشف راتب — '+pyMonName(PYM)+'\n'+BIZ.name+'\n\n'+
     'الاسم: '+e.n+'\nالراتب الأساسي: '+pyMoney(e.s)+
     (adj?'\n'+(adj<0?'خصم':'إضافة')+(r.nt?' ('+r.nt+')':'')+': '+pyMoney(Math.abs(adj)):'')+
+    (Number(r.tr||0)?'\nبدل أيام الانتقال ('+(r.trd||0)+' أيام): '+pyMoney(r.tr):'')+
     '\nالصافي: '+pyMoney(pyNet(e))+
     (r.pd?'\n\nصُرف بتاريخ '+pyDate(r.at)+' ✓':'')+
     '\n\nشكراً لجهودك 🙏';
@@ -1273,14 +1284,77 @@ function pySlip(id){
 }
 function pyCsv(){
   if(!ST.length){showToast('ما فيه موظفون');return;}
-  var rows=[['الشهر','الاسم','المسمى','الراتب الأساسي','خصم/إضافة','السبب','الصافي','الحالة','تاريخ الصرف']];
+  var rows=[['الشهر','الاسم','المسمى','الراتب الأساسي','خصم/إضافة','السبب','بدل أيام الانتقال','أيام البدل','الصافي','الحالة','تاريخ الصرف']];
   pyActive().forEach(function(e){
     var r=pyRec(e.id);
-    rows.push([pyMonName(PYM),e.n,e.r||'',e.s,r.adj||0,r.nt||'',pyNet(e),r.pd?'مصروف':'لم يُصرف',r.pd&&r.at?pyDate(r.at):'']);
+    rows.push([pyMonName(PYM),e.n,e.r||'',e.s,r.adj||0,r.nt||'',r.tr||0,r.trd||0,pyNet(e),r.pd?'مصروف':'لم يُصرف',r.pd&&r.at?pyDate(r.at):'']);
   });
-  rows.push(['','','','','','الإجمالي',pyTotal(),'','']);
+  rows.push(['','','','','','','','الإجمالي',pyTotal(),'','']);
   var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   ofDL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-payroll-'+PYM+'.csv');
+}
+function pySetOld(id,v){
+  var e=ST.find(function(x){return x.id===id;});if(!e)return;
+  var d=parseInt(v,10);
+  e.od=(isFinite(d)&&d>=1&&d<=31)?d:'';
+  db.collection('staff').doc(id).update({od:e.od===''?null:e.od}).catch(function(){showToast('تعذّر الحفظ');});
+  rPy();
+}
+/* يسجّل البدل في حقل مستقل (tr) حتى لا يمس السلف والخصومات، ولا يتضاعف لو ضغطت مرتين */
+function pyTrApply(){
+  var list=pyActive().filter(function(e){return pyTrAmt(e)>0;});
+  if(!list.length){showToast('اكتب مواعيد الصرف السابقة أولاً');return;}
+  var tot=list.reduce(function(t,e){return t+pyTrAmt(e);},0);
+  if(!confirm('إضافة بدل أيام الانتقال لـ '+list.length+' موظف بإجمالي '+pyMoney(tot)+' على كشف '+pyMonName(PYM)+'؟'))return;
+  var it={};
+  list.forEach(function(e){
+    var a=pyTrAmt(e),d=pyExtraDays(e);
+    PRUN[e.id]=PRUN[e.id]||{};PRUN[e.id].tr=a;PRUN[e.id].trd=d;
+    it[e.id]={tr:a,trd:d};
+    if(PRUN[e.id].pd){PRUN[e.id].a=pyNet(e);it[e.id].a=pyNet(e);}
+  });
+  db.collection('payruns').doc(PYM).set({m:PYM,it:it},{merge:true})
+    .then(function(){showToast('أُضيف البدل ✓');}).catch(function(){showToast('تعذّر الحفظ');});
+  rPy();
+}
+function pyTrClear(){
+  if(!confirm('إلغاء بدل أيام الانتقال من كشف '+pyMonName(PYM)+'؟'))return;
+  var it={};
+  pyActive().forEach(function(e){
+    if(!Number(pyRec(e.id).tr||0))return;
+    PRUN[e.id].tr=0;PRUN[e.id].trd=0;it[e.id]={tr:0,trd:0};
+    if(PRUN[e.id].pd)PRUN[e.id].a=pyNet(e);
+  });
+  db.collection('payruns').doc(PYM).set({m:PYM,it:it},{merge:true}).catch(function(){showToast('تعذّر الحفظ');});
+  showToast('أُلغي البدل');rPy();
+}
+function rPyTr(){
+  var card=document.getElementById('pyTrCard'),el=document.getElementById('pyTr');
+  if(!card||!el)return;
+  var act=pyActive();
+  if(!act.length){card.style.display='none';return;}
+  var applied=pyTrApplied();
+  /* نخفي البطاقة لو ما فيه أيام فرق ولا بدل مطبّق — انتهى الانتقال */
+  if(!applied&&!act.some(function(e){return pyExtraDays(e)>0;})&&!act.some(function(e){return e.od;})){card.style.display='none';return;}
+  card.style.display='block';
+  document.getElementById('pyTrDay').textContent=PYDAY;
+  var h='',tot=0;
+  act.forEach(function(e){
+    var d=pyExtraDays(e),a=pyTrAmt(e),paidTr=Number(pyRec(e.id).tr||0);
+    tot+=a;
+    h+='<div class="py-r"><div style="flex:1"><div class="py-n">'+esc(e.n)+'</div>'+
+      '<div class="py-sub">'+(d?d+(d===1?' يوم':d===2?' يومان':' أيام')+' × '+pyMoney(pyDaily(e)):'ما فيه فرق')+
+      (paidTr?' · <span style="color:#16a34a">مضاف ✓</span>':'')+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:7px">'+
+      '<span style="font-size:10px;color:#9ab">كان يوم</span>'+
+      '<input class="of-in" style="width:56px;padding:7px;text-align:center" inputmode="numeric" maxlength="2" value="'+(e.od||'')+'" onchange="pySetOld(\''+e.id+'\',this.value)">'+
+      '<div class="py-amt" style="min-width:78px;color:'+(a?'#16a34a':'#bbb')+'">'+pyMoney(a)+'</div></div></div>';
+  });
+  h+='<div class="py-r" style="border-top:2px solid #eef3f7"><div class="py-n">الإجمالي</div><div class="py-amt" style="color:#0b3954">'+pyMoney(tot)+'</div></div>';
+  h+=applied
+    ? '<button type="button" class="exp-btn" style="margin:11px 0 0;border-color:#d8e6f0;color:#5d8aa8" onclick="pyTrClear()">↩️ ألغِ البدل من هذا الشهر</button>'
+    : (tot?'<button type="button" class="exp-btn" style="margin:11px 0 0;background:#0891b2;color:#fff;border-color:#0891b2" onclick="pyTrApply()">✅ أضف البدل لكشف '+esc(pyMonName(PYM))+'</button>':'');
+  el.innerHTML=h;
 }
 function rPy(){
   if(!PYM)PYM=pyMonKey(new Date());
@@ -1314,6 +1388,7 @@ function rPy(){
       var r=pyRec(e.id),adj=Number(r.adj||0);
       h+='<div class="py-r"><div style="flex:1"><div class="py-n">'+esc(e.n)+' <span style="color:#bbb;font-weight:600;font-size:10px">'+esc(e.r||'')+'</span></div>'+
         '<div class="py-sub">'+pyMoney(e.s)+(adj?' · <span style="color:'+(adj<0?'#dc2626':'#16a34a')+'">'+(adj<0?'خصم ':'إضافة ')+pyMoney(Math.abs(adj))+(r.nt?' ('+esc(r.nt)+')':'')+'</span>':'')+
+        (Number(r.tr||0)?' · <span style="color:#0891b2">بدل انتقال '+(r.trd||0)+' أيام '+pyMoney(r.tr)+'</span>':'')+
         (r.pd&&r.at?' · صُرف '+esc(pyDate(r.at)):'')+'</div></div>'+
         '<div style="text-align:left"><div class="py-amt" style="color:'+(r.pd?'#16a34a':'#0b3954')+'">'+pyMoney(pyNet(e))+'</div>'+
         '<div style="display:flex;gap:5px;margin-top:6px;justify-content:flex-end">'+
@@ -1341,6 +1416,7 @@ function rPy(){
     sel.innerHTML=sh;
     document.getElementById('pySeed').innerHTML='';
   }
+  rPyTr();
 }
 
 /* ===== قائمة الأرقام ورسائل العروض ===== */
