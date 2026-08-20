@@ -1457,6 +1457,20 @@ function rPyTr(){
     : (tot?'<button type="button" class="exp-btn" style="margin:11px 0 0;background:#0891b2;color:#fff;border-color:#0891b2" onclick="pyTrApply()">✅ أضف البدل لكشف '+esc(pyMonName(PYM))+'</button>':'');
   el.innerHTML=h;
 }
+/* من وين جاء الإجمالي — يظهر ما دام فيه خصم أو مكافأة أو بدل */
+function pyBreak(act){
+  var base=0,ded=0,bon=0,tr=0;
+  act.forEach(function(e){
+    var r=pyRec(e.id);
+    base+=Number(e.s||0);ded+=pyDed(r);bon+=pyBon(r);tr+=Number(r.tr||0);
+  });
+  if(!ded&&!bon&&!tr)return '';
+  return '<div class="of-note" style="margin:-4px 0 12px">الإجمالي = رواتب أساسية <b>'+pyMoney(base)+'</b>'+
+    (ded?' − خصومات <b style="color:#dc2626">'+pyMoney(ded)+'</b>':'')+
+    (bon?' + مكافآت <b style="color:#16a34a">'+pyMoney(bon)+'</b>':'')+
+    (tr?' + بدل انتقال <b style="color:#0891b2">'+pyMoney(tr)+'</b>':'')+
+    ' = <b>'+pyMoney(base-ded+bon+tr)+'</b></div>';
+}
 function rPy(){
   if(!PYM)PYM=pyMonKey(new Date());
   var act=pyActive(),tot=pyTotal(),paid=pyPaidTotal(),left=tot-paid;
@@ -1465,7 +1479,7 @@ function rPy(){
     '<div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">إجمالي رواتب الشهر</div><div class="sc-v" style="font-size:17px">'+pyMoney(tot)+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">مصروف</div><div class="sc-v" style="font-size:17px;color:#16a34a">'+pyMoney(paid)+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">المتبقي</div><div class="sc-v" style="font-size:17px;color:#b45309">'+pyMoney(left)+'</div></div>'+
-    '<div class="sc" style="border-top:3px solid #8b5cf6"><div class="sc-l">صُرف لهم</div><div class="sc-v" style="direction:ltr">'+paidN+' / '+act.length+'</div></div></div>';
+    '<div class="sc" style="border-top:3px solid #8b5cf6"><div class="sc-l">صُرف لهم</div><div class="sc-v" style="direction:ltr">'+paidN+' / '+act.length+'</div></div></div>'+pyBreak(act);
   document.getElementById('pyMonthT').textContent=pyMonName(PYM);
   document.getElementById('pyDay').value=PYDAY;
   var dim=pyDaysIn(PYM),dd=pyDueDay(PYM);
