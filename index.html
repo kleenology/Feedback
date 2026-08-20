@@ -526,7 +526,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     </div>
     <div class="cc" id="pyTrCard" style="display:none">
       <h3>🔄 بدل أيام الانتقال</h3>
-      <div class="of-note">لما وحّدت الصرف على يوم <b id="pyTrDay">30</b>، صار كل موظف ينتظر أياماً زيادة عن موعده القديم. اكتب موعده السابق ونحسب له بدل تلك الأيام (الأجر اليومي = الراتب ÷ 30).</div>
+      <div class="of-note">لما وحّدت الصرف على يوم <b id="pyTrDay">30</b>، صار كل موظف ينتظر أياماً زيادة عن موعده القديم. عدّل عدد الأيام لكل واحد والمبلغ يتحدث فوراً (الأجر اليومي = الراتب ÷ 30).</div>
       <div class="of-hint" id="pyTrOnce" style="margin:-4px 0 8px"></div>
       <div id="pyTr"></div>
     </div>
@@ -1137,7 +1137,14 @@ function pyBon(r){var v=r.bon;if(v!==undefined&&v!==null)return Math.abs(Number(
 function pyNet(e){var r=pyRec(e.id);return Number(e.s||0)-pyDed(r)+pyBon(r)+Number(r.tr||0);}
 /* الأجر اليومي = الراتب الشهري ÷ 30 (المتبع في نظام العمل السعودي) */
 function pyDaily(e){return Number(e.s||0)/30;}
-function pyExtraDays(e){var od=parseInt(e.od,10);if(!isFinite(od)||od<1||od>=PYDAY)return 0;return PYDAY-od;}
+/* عدد الأيام يُشتق من الموعد القديم، ويقبل تعديلاً يدوياً (xd) يعلو عليه */
+function pyExtraDays(e){
+  var x=parseInt(e.xd,10);
+  if(isFinite(x)&&x>=0)return Math.min(x,60);
+  var od=parseInt(e.od,10);
+  if(!isFinite(od)||od<1||od>=PYDAY)return 0;
+  return PYDAY-od;
+}
 function pyTrAmt(e){return Math.round(pyDaily(e)*pyExtraDays(e)*100)/100;}
 function pyTrApplied(){return pyActive().some(function(e){return Number(pyRec(e.id).tr||0)>0;});}
 function pyTotal(){var t=0;pyActive().forEach(function(e){t+=pyNet(e);});return t;}
@@ -1364,11 +1371,11 @@ function pyCsv(){
   var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   ofDL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-payroll-'+PYM+'.csv');
 }
-function pySetOld(id,v){
+function pySetDays(id,v){
   var e=ST.find(function(x){return x.id===id;});if(!e)return;
-  var d=parseInt(v,10);
-  e.od=(isFinite(d)&&d>=1&&d<=31)?d:'';
-  db.collection('staff').doc(id).update({od:e.od===''?null:e.od}).catch(function(){showToast('تعذّر الحفظ');});
+  var d=parseInt(String(v).replace(/[^\d]/g,''),10);
+  e.xd=(isFinite(d)&&d>=0&&d<=60)?d:0;
+  db.collection('staff').doc(id).update({xd:e.xd}).catch(function(){showToast('تعذّر الحفظ');});
   rPy();
 }
 /* يسجّل البدل في حقل مستقل (tr) حتى لا يمس السلف والخصومات، ولا يتضاعف لو ضغطت مرتين */
@@ -1422,10 +1429,11 @@ function rPyTr(){
     tot+=a;
     h+='<div class="py-r"><div style="flex:1"><div class="py-n">'+esc(e.n)+'</div>'+
       '<div class="py-sub">'+(d?d+(d===1?' يوم':d===2?' يومان':' أيام')+' × '+pyMoney(pyDaily(e)):'ما فيه فرق')+
+      (e.od?' <span style="color:#c9d6df">· كان يوم '+esc(String(e.od))+'</span>':'')+
       (paidTr?' · <span style="color:#16a34a">مضاف ✓</span>':'')+'</div></div>'+
       '<div style="display:flex;align-items:center;gap:7px">'+
-      '<span style="font-size:10px;color:#9ab">كان يوم</span>'+
-      '<input class="of-in" style="width:56px;padding:7px;text-align:center" inputmode="numeric" maxlength="2" value="'+(e.od||'')+'" onchange="pySetOld(\''+e.id+'\',this.value)">'+
+      '<span style="font-size:10px;color:#9ab">أيام</span>'+
+      '<input class="of-in" style="width:56px;padding:7px;text-align:center" inputmode="numeric" maxlength="2" value="'+d+'" onchange="pySetDays(\''+e.id+'\',this.value)">'+
       '<div class="py-amt" style="min-width:78px;color:'+(a?'#16a34a':'#bbb')+'">'+pyMoney(a)+'</div></div></div>';
   });
   h+='<div class="py-r" style="border-top:2px solid #eef3f7"><div class="py-n">الإجمالي</div><div class="py-amt" style="color:#0b3954">'+pyMoney(tot)+'</div></div>';
