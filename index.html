@@ -1447,7 +1447,7 @@ function rPy(){
   document.getElementById('pyDay').value=PYDAY;
   var dim=pyDaysIn(PYM),dd=pyDueDay(PYM);
   document.getElementById('pyDayNote').innerHTML='الصرف موحّد يوم <b>'+PYDAY+'</b> من كل شهر للجميع.'+
-    (PYDAY>28?' وفي الشهور الأقصر (فبراير مثلاً) يُصرف <b>آخر يوم في الشهر</b> تلقائياً حتى لا يتأخر أحد.':'');
+    (PYDAY>28?' وفي الشهور الأقصر (فبراير مثلاً) يُصرف <b>آخر يوم في الشهر</b> تلقائياً حتى لا يتأخر أحد.<br>الراتب شهري: مبلغه واحد سواء كان الشهر 28 أو 31 يوم — ما يُخصم منه لقصر الشهر ولا يُزاد لطوله.':'');
   /* موعد الصرف: باقي كم يوم، أو تأخّرنا كم يوم */
   var due=pyDueDate(PYM),today=new Date();today.setHours(0,0,0,0);
   var diff=Math.round((due-today)/86400000),allPaid=act.length&&paidN===act.length;
@@ -1456,7 +1456,7 @@ function rPy(){
   else if(diff>0){bg='#f0f9ff';cl='#0f7cb8';txt='📅 موعد الصرف: '+dd+' '+pyMonName(PYM)+' · باقي '+(diff===1?'يوم واحد':diff===2?'يومان':diff+' يوم');}
   else if(diff===0){bg='#fff7ed';cl='#b45309';txt='⏰ اليوم موعد الصرف — '+dd+' '+pyMonName(PYM);}
   else{bg='#fef2f2';cl='#dc2626';txt='🚨 تأخّر الصرف '+Math.abs(diff)+' يوم عن موعده ('+dd+' '+pyMonName(PYM)+')';}
-  box.innerHTML='<div class="py-due" style="background:'+bg+';color:'+cl+'">'+txt+(dd<PYDAY?'<div style="font-size:10px;font-weight:600;margin-top:4px">الشهر '+dim+' يوم، فالصرف في آخر يوم فيه</div>':'')+'</div>';
+  box.innerHTML='<div class="py-due" style="background:'+bg+';color:'+cl+'">'+txt+(dd<PYDAY?'<div style="font-size:10px;font-weight:600;margin-top:4px">الشهر '+dim+' يوم، فالصرف في آخر يوم فيه — والراتب شهري كامل ما ينقص</div>':'')+'</div>';
   /* صفوف الموظفين لهذا الشهر */
   var el=document.getElementById('pyList');
   if(!act.length){el.innerHTML='<div class="empty">أضف موظفيك من البطاقة تحت ⬇️</div>';document.getElementById('pyAct').innerHTML='';}
