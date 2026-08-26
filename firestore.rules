@@ -2,10 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    /* الأدمن = من له وثيقة باسم معرّفه في admins.
+       قبل هذا كان أي مسجّل دخول يُعد أدمن، وهذا ما ينفع بعد ما صار العملاء
+       يسجّلون دخولهم من التطبيق — العميل مسجّل دخول أيضاً. */
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function isUser(uid) { return request.auth != null && request.auth.uid == uid; }
+
+    // قائمة معرّفات الأدمن — تُدار من Firebase Console فقط، ولا تُكتب من التطبيق أبداً
+    match /admins/{uid} {
+      allow read: if isUser(uid) || isAdmin();
+      allow write: if false;
+    }
+
     // تقييمات العملاء
     match /reviews/{reviewId} {
 
-      // أي زائر يقدر "ينشئ" تقييم جديد فقط، بشرط أن تكون البيانات سليمة
+      // أي زائر يقدر "ينشئ" تقييم جديد فقط، بشرط أن تكون بياناته سليمة
       allow create: if
         request.resource.data.keys().hasOnly(['n','ph','o','c','p','tw','r','nt','cp','ts','used','tm','ok']) &&
         (!('tm' in request.resource.data) || (request.resource.data.tm is string && request.resource.data.tm.size() <= 50)) &&
@@ -22,8 +37,8 @@ service cloud.firestore {
         request.resource.data.ts is string && request.resource.data.ts.size() <= 40 &&
         request.resource.data.used == false;
 
-      // القراءة والتعديل والحذف للأدمن المسجّل دخوله فقط
-      allow read, update, delete: if request.auth != null;
+      // القراءة والتعديل والحذف للأدمن وحده
+      allow read, update, delete: if isAdmin();
     }
 
     // التقييمات المنشورة في صفحة العرض العامة
@@ -31,25 +46,57 @@ service cloud.firestore {
       // أي زائر يقدر يقرأها (هذا هدفها)
       allow read: if true;
       // النشر والإخفاء للأدمن فقط
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
-    // إعدادات لوحة التحكم (أهداف الفرق) — للأدمن فقط
+    // إعدادات لوحة التحكم (أهداف الفرق، يوم الصرف) — للأدمن فقط
     match /settings/{doc} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin();
     }
 
-    // قائمة أرقام العملاء لرسائل العروض — للأدمن فقط (لا يقرأها أي زائر)
+    // قائمة أرقام العملاء لرسائل العروض — للأدمن فقط (لا يقرأها أي زائر ولا أي عميل)
     match /contacts/{phone} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin();
     }
 
     // الموظفون ورواتبهم — للأدمن فقط
     match /staff/{id} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin();
     }
     match /payruns/{month} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin();
+    }
+
+    /* ===== تطبيق العميل ===== */
+
+    // ملف العميل وعناوينه — لصاحبه وحده، والأدمن يقرأ فقط
+    match /customers/{uid} {
+      allow read: if isUser(uid) || isAdmin();
+      allow create, update: if isUser(uid) &&
+        request.resource.data.n is string && request.resource.data.n.size() <= 60 &&
+        request.resource.data.ph is string && request.resource.data.ph.size() <= 20;
+      allow delete: if false;
+
+      match /addresses/{aid} {
+        allow read, write: if isUser(uid);
+        allow read: if isAdmin();
+      }
+    }
+
+    // الطلبات: العميل ينشئ طلبه ويقرأ طلباته ويلغيها قبل التأكيد. الأدمن يدير الكل.
+    match /orders/{oid} {
+      allow read: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow create: if request.auth != null &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.st == 'new' &&
+        request.resource.data.svc is string && request.resource.data.svc.size() <= 60 &&
+        request.resource.data.nt is string && request.resource.data.nt.size() <= 600;
+      // العميل ما يعدّل إلا الإلغاء، والسعر والحالة بيد الأدمن وحده
+      allow update: if isAdmin() ||
+        (request.auth != null && resource.data.uid == request.auth.uid &&
+         resource.data.st == 'new' && request.resource.data.st == 'cancelled' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['st','hist']));
+      allow delete: if isAdmin();
     }
 
     // أي مجموعة أخرى: ممنوعة بالكامل

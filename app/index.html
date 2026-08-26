@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>كلينولوجي — احجز خدمتك</title>
+<link rel="icon" type="image/png" href="../logo.png">
+<meta name="theme-color" content="#083b66">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --nv:#083b66;--nv2:#0f7cb8;--tl:#0891b2;--sk:#29a9e1;--gd:#f5b301;--mt:#5d8aa8;
+  --bg:#f4f7f9;--cd:#fff;--tx:#12242f;--ln:#e6edf2;
+  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+}
+body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--tx);
+  min-height:100vh;overscroll-behavior-y:none;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+.hide{display:none!important}
+
+/* ===== الهيكل ===== */
+.scr{display:none;padding-top:var(--safe-t);padding-bottom:calc(74px + var(--safe-b));min-height:100vh}
+.scr.on{display:block}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px}
+.hd{background:linear-gradient(135deg,var(--nv),var(--nv2) 60%,var(--sk));color:#fff;
+  padding:calc(var(--safe-t) + 20px) 16px 26px;border-radius:0 0 26px 26px}
+.hd h1{font-size:19px;font-weight:800}
+.hd p{font-size:12px;opacity:.75;margin-top:3px}
+
+/* ===== شريط التبويبات ===== */
+.tabs{position:fixed;bottom:0;right:0;left:0;background:rgba(255,255,255,.94);
+  backdrop-filter:blur(12px);border-top:1px solid var(--ln);display:flex;
+  padding:8px 0 calc(8px + var(--safe-b));z-index:40}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10px;font-weight:600;color:#9ab;padding:4px 0}
+.tab i{font-style:normal;font-size:21px;line-height:1}
+.tab.on{color:var(--tl)}
+
+/* ===== البطاقات ===== */
+.cd{background:var(--cd);border-radius:16px;padding:16px;margin:14px 0;
+  box-shadow:0 1px 3px rgba(8,59,102,.06),0 6px 20px rgba(8,59,102,.04)}
+.cd h3{font-size:14px;font-weight:700;margin-bottom:10px;color:var(--nv)}
+.empty{text-align:center;color:#9ab;font-size:12px;padding:26px 12px}
+
+/* ===== الأزرار ===== */
+.btn{display:block;width:100%;padding:15px;border-radius:14px;font-weight:700;font-size:14px;
+  background:linear-gradient(135deg,var(--tl),var(--nv2));color:#fff;text-align:center;
+  box-shadow:0 4px 14px rgba(8,145,178,.28);transition:transform .12s,opacity .2s}
+.btn:active{transform:scale(.985)}
+.btn[disabled]{opacity:.5;box-shadow:none}
+.btn.gh{background:none;color:var(--tl);border:1.5px solid var(--ln);box-shadow:none}
+.btn.dn{background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;box-shadow:none}
+
+/* ===== الخدمات ===== */
+.svg-g{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.svc{background:var(--cd);border:1.5px solid var(--ln);border-radius:15px;padding:16px 11px;
+  text-align:center;transition:all .18s}
+.svc.on{border-color:var(--tl);background:#f0fdff;box-shadow:0 0 0 3px rgba(8,145,178,.1)}
+.svc em{font-style:normal;font-size:31px;display:block;margin-bottom:7px}
+.svc b{font-size:12px;font-weight:700;display:block}
+.svc s{text-decoration:none;font-size:10px;color:var(--mt);display:block;margin-top:3px}
+
+/* ===== الحقول ===== */
+.fld{margin-bottom:13px}
+.lb{display:block;font-size:11px;font-weight:700;color:var(--mt);margin-bottom:6px}
+.in{width:100%;padding:13px 14px;border:1.5px solid var(--ln);border-radius:12px;
+  background:#fbfdfe;font-size:14px;transition:border-color .2s}
+.in:focus{outline:none;border-color:var(--tl);background:#fff}
+textarea.in{min-height:82px;resize:vertical;line-height:1.7}
+.row{display:flex;gap:9px;flex-wrap:wrap}
+.row>*{flex:1;min-width:0}
+
+/* ===== الشرائح ===== */
+.chip{padding:10px 14px;border-radius:11px;border:1.5px solid var(--ln);background:#fbfdfe;
+  font-size:12px;font-weight:600;color:var(--mt);transition:all .18s}
+.chip.on{border-color:var(--tl);background:var(--tl);color:#fff}
+
+/* ===== خطوات الحجز ===== */
+.steps{display:flex;gap:6px;margin:16px 0 4px}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--ln);transition:background .3s}
+.steps i.on{background:var(--tl)}
+.stp-t{font-size:17px;font-weight:800;color:var(--nv);margin:16px 0 4px}
+.stp-s{font-size:12px;color:var(--mt);margin-bottom:16px}
+
+/* ===== الطلبات ===== */
+.ord{background:var(--cd);border-radius:15px;padding:15px;margin-bottom:11px;
+  border-right:4px solid var(--tl);box-shadow:0 1px 3px rgba(8,59,102,.06)}
+.ord-t{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ord-n{font-size:14px;font-weight:700}
+.ord-m{font-size:11px;color:var(--mt);margin-top:4px;line-height:1.7}
+.st{font-size:10px;font-weight:700;padding:5px 10px;border-radius:20px;white-space:nowrap}
+.st-new{background:#fff7ed;color:#b45309}
+.st-confirmed{background:#eff6ff;color:#1d4ed8}
+.st-on_way{background:#f0fdff;color:#0891b2}
+.st-done{background:#f0fdf4;color:#16a34a}
+.st-cancelled{background:#f1f5f9;color:#64748b}
+
+/* ===== خط سير الطلب ===== */
+.tl{margin-top:14px;padding-top:14px;border-top:1px dashed var(--ln)}
+.tl-i{display:flex;gap:11px;align-items:flex-start;padding-bottom:15px;position:relative}
+.tl-i:last-child{padding-bottom:0}
+.tl-i::before{content:'';position:absolute;right:9px;top:20px;bottom:0;width:2px;background:var(--ln)}
+.tl-i:last-child::before{display:none}
+.tl-d{width:20px;height:20px;border-radius:50%;background:var(--ln);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:10px;z-index:1}
+.tl-i.dn .tl-d{background:var(--tl);color:#fff}
+.tl-x b{font-size:12px;font-weight:700;display:block}
+.tl-x s{text-decoration:none;font-size:10px;color:#9ab}
+
+/* ===== شاشة الدخول ===== */
+#scLogin{background:linear-gradient(160deg,var(--nv),#0a2f52 70%);color:#fff;
+  display:none;place-items:center;min-height:100vh;padding:30px 20px}
+#scLogin.on{display:grid}
+.lg{width:100%;max-width:360px;text-align:center}
+.lg img{width:96px;height:96px;object-fit:contain;border-radius:22px;background:#fff;
+  padding:11px;margin-bottom:20px;box-shadow:0 10px 34px rgba(0,0,0,.28)}
+.lg h1{font-size:24px;font-weight:800;margin-bottom:7px}
+.lg p{font-size:13px;opacity:.72;margin-bottom:28px;line-height:1.8}
+.lg .in{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff;text-align:center;
+  font-size:19px;letter-spacing:2px;direction:ltr}
+.lg .in::placeholder{color:rgba(255,255,255,.4);letter-spacing:0}
+.lg .btn{margin-top:15px;background:var(--gd);color:#4a3800;box-shadow:0 6px 20px rgba(245,179,1,.3)}
+.lg small{display:block;margin-top:18px;font-size:11px;opacity:.55;line-height:1.9}
+.lnk{color:var(--gd);font-weight:700;text-decoration:none}
+.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#fecaca;
+  padding:11px;border-radius:11px;font-size:12px;margin-top:13px}
+
+/* ===== متفرقات ===== */
+.toast{position:fixed;bottom:calc(88px + var(--safe-b));right:50%;transform:translateX(50%);
+  background:var(--nv);color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;
+  z-index:90;box-shadow:0 8px 26px rgba(0,0,0,.24);max-width:88%;text-align:center}
+.note{background:#f0fdff;border:1px solid #bae6fd;color:#075985;border-radius:11px;
+  padding:11px 13px;font-size:11.5px;line-height:1.8}
+.demo{background:var(--gd);color:#4a3800;text-align:center;font-size:11px;font-weight:700;
+  padding:6px;position:sticky;top:0;z-index:50}
+.bk{background:none;color:var(--mt);font-size:13px;font-weight:600;padding:10px 0}
+.tot{display:flex;justify-content:space-between;padding:9px 0;font-size:13px}
+.tot:not(:last-child){border-bottom:1px dashed var(--ln)}
+.tot b{font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="demo hide" id="demoBar">⚙️ وضع المعاينة — البيانات محفوظة على هذا الجهاز فقط</div>
+
+<!-- ===== تسجيل الدخول ===== -->
+<div class="scr" id="scLogin">
+  <div class="lg">
+    <img src="../logo.png" alt="كلينولوجي">
+    <h1>كلينولوجي</h1>
+    <p>احجز تنظيف بيتك أو مكتبك<br>بثلاث خطوات، ووقتك أنت تختاره</p>
+    <div id="lgPhone">
+      <input class="in" id="inPh" type="tel" inputmode="numeric" maxlength="10" placeholder="05XXXXXXXX" autocomplete="tel">
+      <button class="btn" id="btnPh" onclick="sendCode()">أرسل رمز التحقق</button>
+    </div>
+    <div id="lgCode" class="hide">
+      <input class="in" id="inCode" type="tel" inputmode="numeric" maxlength="6" placeholder="- - - - - -">
+      <button class="btn" id="btnCode" onclick="verifyCode()">تأكيد الرمز</button>
+      <button class="bk" style="color:rgba(255,255,255,.6)" onclick="backToPhone()">↩︎ تغيير الرقم</button>
+    </div>
+    <div class="err hide" id="lgErr"></div>
+    <div id="recaptcha"></div>
+    <small>بالمتابعة أنت توافق على <a class="lnk" href="#" onclick="go('scTerms');return false">الشروط وسياسة الخصوصية</a></small>
+  </div>
+</div>
+
+<!-- ===== الرئيسية ===== -->
+<div class="scr" id="scHome">
+  <div class="hd">
+    <h1 id="hiName">هلا وغلا 👋</h1>
+    <p>وش نظّف لك اليوم؟</p>
+  </div>
+  <div class="wrap">
+    <div id="activeOrder"></div>
+    <div class="cd">
+      <h3>خدماتنا</h3>
+      <div class="svg-g" id="svcGrid"></div>
+      <button class="btn" style="margin-top:14px" onclick="startBooking()">احجز الآن</button>
+    </div>
+    <div class="cd" id="cpnCard"></div>
+    <div class="cd">
+      <h3>ليش كلينولوجي؟</h3>
+      <div style="font-size:12.5px;line-height:2.1;color:var(--mt)">
+        ✅ فريق مدرّب وملتزم بالموعد<br>
+        ✅ مواد تنظيف آمنة على أطفالك<br>
+        ✅ تقييم بعد كل خدمة — ورأيك يغيّر شغلنا<br>
+        ✅ خصم على خدمتك الأولى 🎁
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== الحجز ===== -->
+<div class="scr" id="scBook">
+  <div class="wrap">
+    <button class="bk" onclick="bookBack()">↩︎ رجوع</button>
+    <div class="steps" id="bkSteps"></div>
+    <div id="bkBody"></div>
+  </div>
+</div>
+
+<!-- ===== طلباتي ===== -->
+<div class="scr" id="scOrders">
+  <div class="hd"><h1>طلباتي</h1><p>تابع حالة كل طلب لحظة بلحظة</p></div>
+  <div class="wrap"><div id="ordList"></div></div>
+</div>
+
+<!-- ===== حسابي ===== -->
+<div class="scr" id="scMe">
+  <div class="hd"><h1>حسابي</h1><p id="meePh"></p></div>
+  <div class="wrap"><div id="meBody"></div></div>
+</div>
+
+<!-- ===== الشروط ===== -->
+<div class="scr" id="scTerms">
+  <div class="wrap" style="padding-top:20px">
+    <button class="bk" onclick="go(AUTHED?'scMe':'scLogin')">↩︎ رجوع</button>
+    <div class="cd" id="termsBody"></div>
+  </div>
+</div>
+
+<div class="tabs hide" id="tabBar">
+  <button class="tab on" data-s="scHome"><i>🏠</i>الرئيسية</button>
+  <button class="tab" data-s="scOrders"><i>📋</i>طلباتي</button>
+  <button class="tab" data-s="scMe"><i>👤</i>حسابي</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+/* ================= إعدادات كلينولوجي ================= */
+var BIZ={name:'كلينولوجي',rep:'عبد الهادي',wa:'966537519929'};
+var SVCS=[
+ {k:'home', i:'🏠', t:'تنظيف المنازل',      s:'شقة · فيلا · دور'},
+ {k:'office',i:'🏢', t:'تنظيف المكاتب',      s:'مكتب · محل · عيادة'},
+ {k:'sofa', i:'🛋', t:'السجاد والمفروشات',  s:'كنب · سجاد · مجالس'},
+ {k:'post', i:'🧱', t:'بعد التشطيب',        s:'تنظيف عميق بعد البناء'}
+];
+var KINDS=['شقة','فيلا','دور','مكتب','محل','مستودع'];
+var SLOTS=[{k:'am',t:'صباحاً',s:'8ص – 12م'},{k:'pm',t:'بعد الظهر',s:'12م – 4م'},{k:'ev',t:'مساءً',s:'4م – 8م'}];
+var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'الفريق في الطريق',done:'اكتمل',cancelled:'ملغي'};
+var FLOW=['new','confirmed','on_way','done'];
+
+/* وضع المعاينة: يشغّل التطبيق كامل بدون فايربيس ولا رسائل SMS — للعرض والتجربة */
+var DEMO=/[?&]demo=1/.test(location.search)||location.protocol==='file:';
+var AUTHED=false,ME={uid:'',ph:'',n:''},ORD=[],ADR=[],CONF=null;
+var BK={step:0,svc:null,kind:'',rooms:1,date:'',slot:'',adr:null,nt:''};
+
+var db=null,auth=null;
+if(!DEMO){
+  firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"});
+  db=firebase.firestore();auth=firebase.auth();
+}else{document.getElementById('demoBar').classList.remove('hide');}
+
+/* ================= أدوات ================= */
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function go(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});$(id).classList.add('on');window.scrollTo(0,0);}
+function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);
+  setTimeout(function(){t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(function(){t.remove();},400);},3000);}
+function greet(){var h=new Date().getHours();return h<12?'صباح الخير':h<17?'هلا وغلا':'مساك الله بالخير';}
+function norm(p){var d=String(p||'').replace(/\D/g,'');if(d.indexOf('966')===0)d=d.slice(3);if(d.indexOf('0')===0)d=d.slice(1);return d.length===9&&d[0]==='5'?'966'+d:'';}
+function fmtDate(s){var d=new Date(s+'T00:00:00');
+  return ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][d.getDay()]+' '+d.getDate()+' '+
+    ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][d.getMonth()];}
+function stamp(iso){var d=new Date(iso);
+  return d.getDate()+' '+['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][d.getMonth()]+
+    ' · '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function slotOf(k){var s=SLOTS.filter(function(x){return x.k===k;})[0];return s?s.t+' ('+s.s+')':'';}
+function svcOf(k){return SVCS.filter(function(x){return x.k===k;})[0]||{t:k,i:'🧹'};}
+
+/* ================= طبقة البيانات ================= */
+/* كل قراءة/كتابة تمر من هنا، فوضع المعاينة يستبدل فايربيس بتخزين الجهاز بدون تكرار المنطق */
+var LS={
+  get:function(k,d){try{return JSON.parse(localStorage.getItem('kln_'+k))||d;}catch(e){return d;}},
+  set:function(k,v){try{localStorage.setItem('kln_'+k,JSON.stringify(v));}catch(e){}}
+};
+var API={
+  saveMe:function(){
+    if(DEMO){LS.set('me',ME);return Promise.resolve();}
+    return db.collection('customers').doc(ME.uid).set({n:ME.n,ph:ME.ph},{merge:true});
+  },
+  loadMe:function(){
+    if(DEMO){var m=LS.get('me',null);if(m)ME.n=m.n||'';return Promise.resolve();}
+    return db.collection('customers').doc(ME.uid).get().then(function(d){
+      if(d.exists&&d.data())ME.n=d.data().n||'';
+    }).catch(function(){});
+  },
+  orders:function(){
+    if(DEMO){ORD=LS.get('orders',[]);return Promise.resolve();}
+    return db.collection('orders').where('uid','==',ME.uid).limit(60).get().then(function(s){
+      ORD=[];s.forEach(function(d){var o=d.data();o.id=d.id;ORD.push(o);});
+      ORD.sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});
+    }).catch(function(e){console.log('orders:',e&&e.code);ORD=[];});
+  },
+  addOrder:function(o){
+    if(DEMO){o.id='d'+Date.now();ORD.unshift(o);LS.set('orders',ORD);return Promise.resolve(o);}
+    return db.collection('orders').add(o).then(function(r){o.id=r.id;ORD.unshift(o);return o;});
+  },
+  cancelOrder:function(o){
+    var hist=(o.hist||[]).concat([{s:'cancelled',at:new Date().toISOString()}]);
+    o.st='cancelled';o.hist=hist;
+    if(DEMO){LS.set('orders',ORD);return Promise.resolve();}
+    return db.collection('orders').doc(o.id).update({st:'cancelled',hist:hist});
+  },
+  addrs:function(){
+    if(DEMO){ADR=LS.get('addrs',[]);return Promise.resolve();}
+    return db.collection('customers').doc(ME.uid).collection('addresses').limit(20).get().then(function(s){
+      ADR=[];s.forEach(function(d){var a=d.data();a.id=d.id;ADR.push(a);});
+    }).catch(function(){ADR=[];});
+  },
+  addAddr:function(a){
+    if(DEMO){a.id='a'+Date.now();ADR.push(a);LS.set('addrs',ADR);return Promise.resolve(a);}
+    return db.collection('customers').doc(ME.uid).collection('addresses').add(a).then(function(r){a.id=r.id;ADR.push(a);return a;});
+  },
+  delAddr:function(a){
+    ADR=ADR.filter(function(x){return x.id!==a.id;});
+    if(DEMO){LS.set('addrs',ADR);return Promise.resolve();}
+    return db.collection('customers').doc(ME.uid).collection('addresses').doc(a.id).delete();
+  }
+};
+
+/* ================= تسجيل الدخول ================= */
+/* الرمز يصل عبر فايربيس. عند التغليف لتطبيق آيفون يُستبدل هذا الجزء بإضافة
+   @capacitor-firebase/authentication لأن reCAPTCHA ما تشتغل داخل WebView الأصلي */
+function lgErr(m){var e=$('lgErr');if(!m){e.classList.add('hide');return;}e.textContent=m;e.classList.remove('hide');}
+function recap(){
+  if(window.__rc)return window.__rc;
+  window.__rc=new firebase.auth.RecaptchaVerifier('recaptcha',{size:'invisible'});
+  return window.__rc;
+}
+function sendCode(){
+  var raw=$('inPh').value,p=norm(raw);
+  lgErr('');
+  if(!p){lgErr('أدخل رقم جوال سعودي صحيح (يبدأ بـ 05)');return;}
+  ME.ph=p;
+  var b=$('btnPh');b.disabled=true;b.textContent='جاري الإرسال...';
+  if(DEMO){
+    setTimeout(function(){
+      b.disabled=false;b.textContent='أرسل رمز التحقق';
+      $('lgPhone').classList.add('hide');$('lgCode').classList.remove('hide');$('inCode').focus();
+      toast('وضع المعاينة: أي 6 أرقام تمشّي');
+    },500);
+    return;
+  }
+  auth.signInWithPhoneNumber('+'+p,recap()).then(function(c){
+    CONF=c;b.disabled=false;b.textContent='أرسل رمز التحقق';
+    $('lgPhone').classList.add('hide');$('lgCode').classList.remove('hide');$('inCode').focus();
+  }).catch(function(e){
+    b.disabled=false;b.textContent='أرسل رمز التحقق';
+    var c=e&&e.code||'';
+    lgErr(c==='auth/invalid-phone-number'?'الرقم غير صحيح':
+      c==='auth/too-many-requests'?'محاولات كثيرة — انتظر شوي وحاول':
+      c==='auth/operation-not-allowed'?'تسجيل الدخول بالجوال غير مفعّل في Firebase (راجع app/README.md)':
+      'تعذّر إرسال الرمز'+(c?' ('+c+')':''));
+  });
+}
+function verifyCode(){
+  var code=String($('inCode').value||'').replace(/\D/g,'');
+  lgErr('');
+  if(code.length!==6){lgErr('الرمز 6 أرقام');return;}
+  var b=$('btnCode');b.disabled=true;b.textContent='جاري التحقق...';
+  if(DEMO){setTimeout(function(){b.disabled=false;b.textContent='تأكيد الرمز';onSignedIn('demo-uid');},400);return;}
+  CONF.confirm(code).then(function(r){
+    b.disabled=false;b.textContent='تأكيد الرمز';
+    onSignedIn(r.user.uid);
+  }).catch(function(e){
+    b.disabled=false;b.textContent='تأكيد الرمز';
+    lgErr((e&&e.code)==='auth/invalid-verification-code'?'الرمز غير صحيح':'تعذّر التحقق، حاول مرة ثانية');
+  });
+}
+function backToPhone(){$('lgCode').classList.add('hide');$('lgPhone').classList.remove('hide');lgErr('');}
+function onSignedIn(uid){
+  ME.uid=uid;AUTHED=true;
+  $('tabBar').classList.remove('hide');
+  Promise.all([API.loadMe(),API.orders(),API.addrs()]).then(function(){
+    if(!ME.n){go('scMe');renderMe();toast('اكتب اسمك عشان نعرف نناديك 🙂');}
+    else{go('scHome');}
+    renderAll();
+  });
+}
+function logout(){
+  if(!confirm('تسجيل الخروج؟'))return;
+  function done(){AUTHED=false;ME={uid:'',ph:'',n:''};ORD=[];ADR=[];
+    $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';$('inCode').value='';go('scLogin');}
+  if(DEMO){done();return;}
+  auth.signOut().then(done).catch(done);
+}
+</script>
+<script>
+/* ================= الرئيسية ================= */
+function renderAll(){renderHome();renderOrders();renderMe();}
+function renderHome(){
+  $('hiName').textContent=greet()+' '+(ME.n||'👋');
+  $('svcGrid').innerHTML=SVCS.map(function(s){
+    return '<button class="svc" onclick="pickSvc(\''+s.k+'\')"><em>'+s.i+'</em><b>'+esc(s.t)+'</b><s>'+esc(s.s)+'</s></button>';
+  }).join('');
+  var live=ORD.filter(function(o){return o.st!=='done'&&o.st!=='cancelled';})[0];
+  $('activeOrder').innerHTML=live?
+    '<div class="cd" style="border-right:4px solid var(--gd)"><h3>طلبك الحالي</h3>'+ordRow(live,true)+'</div>':'';
+  var used=ORD.filter(function(o){return o.st==='done';}).length;
+  $('cpnCard').innerHTML='<h3>🎁 عرضك</h3>'+(used?
+    '<div class="note">شكراً لثقتك — خدمناك '+used+' '+(used===1?'مرة':'مرات')+'. اطلب الحين ولك خصم <b>15%</b> على خدمتك الجاية.</div>':
+    '<div class="note">أول طلب لك معنا؟ خصم <b>10%</b> يُطبّق تلقائياً عند التأكيد 🎉</div>');
+}
+function pickSvc(k){BK.svc=k;startBooking();}
+
+/* ================= الحجز ================= */
+function startBooking(){BK.step=0;if(!BK.svc)BK.svc=null;go('scBook');renderBook();}
+function bookBack(){if(BK.step===0){go('scHome');return;}BK.step--;renderBook();}
+function bookNext(){BK.step++;renderBook();}
+function renderBook(){
+  $('bkSteps').innerHTML=[0,1,2,3,4].map(function(i){return '<i class="'+(i<=BK.step?'on':'')+'"></i>';}).join('');
+  var b=$('bkBody');
+  if(BK.step===0)b.innerHTML=stepSvc();
+  else if(BK.step===1)b.innerHTML=stepDetails();
+  else if(BK.step===2)b.innerHTML=stepWhen();
+  else if(BK.step===3)b.innerHTML=stepWhere();
+  else b.innerHTML=stepConfirm();
+  window.scrollTo(0,0);
+}
+function stepSvc(){
+  return '<div class="stp-t">وش الخدمة؟</div><div class="stp-s">اختر الخدمة اللي تحتاجها</div>'+
+    '<div class="svg-g">'+SVCS.map(function(s){
+      return '<button class="svc'+(BK.svc===s.k?' on':'')+'" onclick="BK.svc=\''+s.k+'\';renderBook()"><em>'+s.i+'</em><b>'+esc(s.t)+'</b><s>'+esc(s.s)+'</s></button>';
+    }).join('')+'</div>'+
+    '<button class="btn" style="margin-top:18px" '+(BK.svc?'':'disabled')+' onclick="bookNext()">التالي</button>';
+}
+function stepDetails(){
+  return '<div class="stp-t">تفاصيل المكان</div><div class="stp-s">عشان نجهّز الفريق والمعدات الصح</div>'+
+    '<div class="fld"><label class="lb">نوع المكان</label><div class="row">'+
+      KINDS.map(function(k){return '<button class="chip'+(BK.kind===k?' on':'')+'" style="flex:0 0 auto" onclick="BK.kind=\''+k+'\';renderBook()">'+k+'</button>';}).join('')+
+    '</div></div>'+
+    '<div class="fld"><label class="lb">عدد الغرف تقريباً</label><div class="row">'+
+      [1,2,3,4,5,'+6'].map(function(n){return '<button class="chip'+(String(BK.rooms)===String(n)?' on':'')+'" onclick="BK.rooms=\''+n+'\';renderBook()">'+n+'</button>';}).join('')+
+    '</div></div>'+
+    '<div class="note">السعر النهائي يوصلك بعد ما نراجع طلبك — ما فيه مبالغ مخفية.</div>'+
+    '<button class="btn" style="margin-top:18px" '+(BK.kind?'':'disabled')+' onclick="bookNext()">التالي</button>';
+}
+function stepWhen(){
+  var days='',now=new Date();
+  for(var i=1;i<=14;i++){
+    var d=new Date(now);d.setDate(d.getDate()+i);
+    var iso=d.toISOString().slice(0,10);
+    days+='<button class="chip'+(BK.date===iso?' on':'')+'" style="flex:0 0 auto;min-width:78px" onclick="BK.date=\''+iso+'\';renderBook()">'+
+      ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'][d.getDay()]+'<br><b style="font-size:14px">'+d.getDate()+'</b></button>';
+  }
+  return '<div class="stp-t">متى يناسبك؟</div><div class="stp-s">اختر اليوم والفترة</div>'+
+    '<div class="fld"><label class="lb">اليوم</label><div class="row" style="overflow-x:auto;flex-wrap:nowrap;padding-bottom:6px">'+days+'</div></div>'+
+    '<div class="fld"><label class="lb">الفترة</label><div class="row">'+
+      SLOTS.map(function(s){return '<button class="chip'+(BK.slot===s.k?' on':'')+'" onclick="BK.slot=\''+s.k+'\';renderBook()">'+s.t+'<br><s style="font-size:10px;opacity:.7;text-decoration:none">'+s.s+'</s></button>';}).join('')+
+    '</div></div>'+
+    '<button class="btn" style="margin-top:18px" '+(BK.date&&BK.slot?'':'disabled')+' onclick="bookNext()">التالي</button>';
+}
+function stepWhere(){
+  var h='<div class="stp-t">وين نجيك؟</div><div class="stp-s">اختر عنواناً محفوظاً أو أضف جديداً</div>';
+  if(ADR.length){
+    h+='<div class="fld">'+ADR.map(function(a,i){
+      return '<button class="chip'+(BK.adr&&BK.adr.id===a.id?' on':'')+'" style="display:block;width:100%;text-align:right;margin-bottom:8px;padding:13px" onclick="BK.adr=ADR['+i+'];renderBook()">'+
+        '<b>'+esc(a.t||'عنوان')+'</b><br><s style="font-size:11px;opacity:.75;text-decoration:none">'+esc(a.c+' · '+a.d+' · '+a.s)+'</s></button>';
+    }).join('')+'</div>';
+  }
+  h+='<div class="cd"><h3>➕ عنوان جديد</h3>'+
+    '<div class="fld"><label class="lb">وصف مختصر</label><input class="in" id="aT" maxlength="24" placeholder="البيت · المكتب"></div>'+
+    '<div class="row"><div class="fld"><label class="lb">المدينة</label><input class="in" id="aC" maxlength="24" placeholder="الرياض"></div>'+
+    '<div class="fld"><label class="lb">الحي</label><input class="in" id="aD" maxlength="24" placeholder="النرجس"></div></div>'+
+    '<div class="fld"><label class="lb">الشارع ورقم المبنى</label><input class="in" id="aS" maxlength="60" placeholder="شارع الأمير — مبنى 12"></div>'+
+    '<button class="btn gh" onclick="saveAddr()">حفظ العنوان</button></div>'+
+    '<button class="btn" style="margin-top:6px" '+(BK.adr?'':'disabled')+' onclick="bookNext()">التالي</button>';
+  return h;
+}
+function saveAddr(){
+  var a={t:$('aT').value.trim()||'عنوان',c:$('aC').value.trim(),d:$('aD').value.trim(),s:$('aS').value.trim(),at:new Date().toISOString()};
+  if(!a.c||!a.d){toast('اكتب المدينة والحي');return;}
+  API.addAddr(a).then(function(saved){BK.adr=saved;toast('حُفظ العنوان ✓');renderBook();})
+   .catch(function(){toast('تعذّر الحفظ — تحقق من الاتصال');});
+}
+function stepConfirm(){
+  var s=svcOf(BK.svc);
+  return '<div class="stp-t">راجع طلبك</div><div class="stp-s">تأكد من التفاصيل قبل الإرسال</div>'+
+    '<div class="cd">'+
+      '<div class="tot"><span>الخدمة</span><b>'+s.i+' '+esc(s.t)+'</b></div>'+
+      '<div class="tot"><span>المكان</span><b>'+esc(BK.kind)+' · '+esc(BK.rooms)+' غرف</b></div>'+
+      '<div class="tot"><span>الموعد</span><b>'+esc(fmtDate(BK.date))+'</b></div>'+
+      '<div class="tot"><span>الفترة</span><b>'+esc(slotOf(BK.slot))+'</b></div>'+
+      '<div class="tot"><span>العنوان</span><b>'+esc(BK.adr?BK.adr.t:'')+'</b></div>'+
+    '</div>'+
+    '<div class="fld"><label class="lb">ملاحظات للفريق (اختياري)</label>'+
+      '<textarea class="in" id="bkNt" maxlength="600" placeholder="فيه كلب في البيت · الباب الجانبي · أي شي يفيد الفريق">'+esc(BK.nt)+'</textarea></div>'+
+    '<div class="note">بعد الإرسال يراجع '+esc(BIZ.rep)+' الطلب ويأكده لك مع السعر — وتقدر تلغيه قبل التأكيد.</div>'+
+    '<button class="btn" style="margin-top:14px" id="bkGo" onclick="submitOrder()">أرسل الطلب</button>';
+}
+function submitOrder(){
+  var b=$('bkGo');b.disabled=true;b.textContent='جاري الإرسال...';
+  var now=new Date().toISOString();
+  var o={uid:ME.uid,ph:ME.ph,n:ME.n||'',svc:svcOf(BK.svc).t,svck:BK.svc,kind:BK.kind,rooms:String(BK.rooms),
+    date:BK.date,slot:BK.slot,adr:BK.adr?{t:BK.adr.t,c:BK.adr.c,d:BK.adr.d,s:BK.adr.s}:{},
+    nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
+  API.addOrder(o).then(function(){
+    BK={step:0,svc:null,kind:'',rooms:1,date:'',slot:'',adr:null,nt:''};
+    renderAll();go('scOrders');setTab('scOrders');
+    toast('وصلنا طلبك ✓ نتواصل معك قريب');
+  }).catch(function(e){
+    b.disabled=false;b.textContent='أرسل الطلب';
+    alert((e&&e.code)==='permission-denied'?'تحتاج تسجيل دخول صحيح — أعد المحاولة':'تعذّر إرسال الطلب، تحقق من الاتصال');
+  });
+}
+
+/* ================= الطلبات ================= */
+function ordRow(o,inline){
+  var s=svcOf(o.svck);
+  return '<div class="'+(inline?'':'ord')+'"><div class="ord-t"><div>'+
+    '<div class="ord-n">'+s.i+' '+esc(o.svc)+'</div>'+
+    '<div class="ord-m">'+esc(fmtDate(o.date))+' · '+esc(slotOf(o.slot))+'<br>'+esc((o.adr&&o.adr.t)||'')+' — '+esc((o.adr&&o.adr.d)||'')+'</div>'+
+    '</div><span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>'+
+    (o.price?'<div class="tot" style="margin-top:10px"><span>السعر</span><b>'+esc(o.price)+' ر.س</b></div>':'')+
+    timeline(o)+
+    (o.st==='new'?'<button class="btn dn" style="margin-top:12px;padding:11px" onclick="cancelOrder(\''+o.id+'\')">إلغاء الطلب</button>':'')+
+    (o.st==='done'?'<a class="btn gh" style="margin-top:12px;padding:11px;text-decoration:none" href="'+waLink(o)+'" target="_blank" rel="noopener">💬 تواصل معنا</a>':'')+
+    '</div>';
+}
+function timeline(o){
+  if(o.st==='cancelled')return '';
+  var at=FLOW.indexOf(o.st),lbl={new:'استلمنا طلبك',confirmed:'أكدنا الموعد',on_way:'الفريق في الطريق',done:'اكتملت الخدمة'};
+  return '<div class="tl">'+FLOW.map(function(s,i){
+    var h=(o.hist||[]).filter(function(x){return x.s===s;})[0];
+    return '<div class="tl-i'+(i<=at?' dn':'')+'"><div class="tl-d">'+(i<=at?'✓':'')+'</div>'+
+      '<div class="tl-x"><b>'+lbl[s]+'</b>'+(h?'<s>'+esc(stamp(h.at))+'</s>':'')+'</div></div>';
+  }).join('')+'</div>';
+}
+function waLink(o){
+  var t='السلام عليكم، بخصوص طلبي:\n'+o.svc+' — '+fmtDate(o.date)+'\n';
+  return 'https://wa.me/'+BIZ.wa+'?text='+encodeURIComponent(t);
+}
+function cancelOrder(id){
+  var o=ORD.filter(function(x){return x.id===id;})[0];if(!o)return;
+  if(!confirm('إلغاء هذا الطلب؟'))return;
+  API.cancelOrder(o).then(function(){renderAll();toast('أُلغي الطلب');})
+   .catch(function(){toast('تعذّر الإلغاء');});
+}
+function renderOrders(){
+  var el=$('ordList');
+  if(!ORD.length){el.innerHTML='<div class="cd"><div class="empty">ما عندك طلبات بعد 🧹<br><br><button class="btn" onclick="go(\'scHome\');setTab(\'scHome\')">احجز أول خدمة</button></div></div>';return;}
+  el.innerHTML=ORD.map(function(o){return ordRow(o,false);}).join('');
+}
+
+/* ================= حسابي ================= */
+function renderMe(){
+  $('meePh').textContent=ME.ph?'+'+ME.ph:'';
+  $('meBody').innerHTML=
+    '<div class="cd"><h3>معلوماتي</h3>'+
+      '<div class="fld"><label class="lb">الاسم</label><input class="in" id="meN" maxlength="60" value="'+esc(ME.n)+'" placeholder="وش نناديك؟"></div>'+
+      '<button class="btn gh" onclick="saveName()">حفظ</button></div>'+
+    '<div class="cd"><h3>عناويني ('+ADR.length+')</h3>'+
+      (ADR.length?ADR.map(function(a,i){
+        return '<div class="ord-t" style="padding:11px 0;border-bottom:1px dashed var(--ln)"><div>'+
+          '<div class="ord-n">'+esc(a.t)+'</div><div class="ord-m">'+esc(a.c+' · '+a.d+' · '+a.s)+'</div></div>'+
+          '<button class="st st-cancelled" onclick="rmAddr('+i+')">حذف</button></div>';
+      }).join(''):'<div class="empty">ما فيه عناوين — تنحفظ تلقائياً أول ما تحجز</div>')+'</div>'+
+    '<div class="cd"><h3>تواصل معنا</h3>'+
+      '<a class="btn gh" style="text-decoration:none" href="https://wa.me/'+BIZ.wa+'" target="_blank" rel="noopener">💬 واتساب '+esc(BIZ.rep)+'</a>'+
+      '<button class="btn gh" style="margin-top:9px" onclick="go(\'scTerms\');renderTerms()">📄 الشروط وسياسة الخصوصية</button>'+
+      '<button class="btn dn" style="margin-top:9px" onclick="logout()">تسجيل الخروج</button></div>';
+}
+function saveName(){
+  var n=String($('meN').value||'').trim().slice(0,60);
+  if(!n){toast('اكتب اسمك');return;}
+  ME.n=n;API.saveMe().then(function(){toast('حُفظ ✓');renderHome();}).catch(function(){toast('تعذّر الحفظ');});
+}
+function rmAddr(i){
+  var a=ADR[i];if(!a||!confirm('حذف «'+a.t+'»؟'))return;
+  API.delAddr(a).then(function(){renderMe();toast('حُذف');}).catch(function(){toast('تعذّر الحذف');});
+}
+function renderTerms(){
+  $('termsBody').innerHTML='<h3>الشروط وسياسة الخصوصية</h3>'+
+    '<div style="font-size:12.5px;line-height:2.1;color:var(--mt)">'+
+    '<b style="color:var(--nv)">وش نجمع عنك؟</b><br>رقم جوالك (لتسجيل الدخول والتواصل)، اسمك، وعناوينك وطلباتك.<br><br>'+
+    '<b style="color:var(--nv)">وش نسوي فيه؟</b><br>نستخدمها لتنفيذ طلبك والتواصل معك بخصوصه فقط. ما نبيع بياناتك ولا نشاركها مع أي طرف ثالث لأغراض تسويقية.<br><br>'+
+    '<b style="color:var(--nv)">وين تُحفظ؟</b><br>على خوادم Google Firebase، ومحمية بصلاحيات ما تسمح لأي عميل آخر يشوف بياناتك.<br><br>'+
+    '<b style="color:var(--nv)">حذف حسابك</b><br>راسلنا على واتساب '+esc(BIZ.rep)+' ونحذف حسابك وبياناتك خلال 7 أيام.<br><br>'+
+    '<b style="color:var(--nv)">الإلغاء</b><br>تقدر تلغي أي طلب قبل تأكيده مجاناً من تبويب «طلباتي».<br><br>'+
+    '<b style="color:var(--nv)">الدفع</b><br>الدفع يتم عند تنفيذ الخدمة مباشرة مع الفريق — التطبيق ما يستوفي أي مبالغ.'+
+    '</div>';
+}
+
+/* ================= التبويبات والإقلاع ================= */
+function setTab(id){document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.s===id);});}
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick=function(){go(t.dataset.s);setTab(t.dataset.s);if(t.dataset.s==='scMe')renderMe();};
+});
+['inPh','inCode'].forEach(function(id){
+  $(id).addEventListener('keydown',function(e){if(e.key==='Enter')id==='inPh'?sendCode():verifyCode();});
+});
+renderTerms();
+if(DEMO){
+  var saved=LS.get('me',null);
+  if(saved&&saved.uid){ME=saved;onSignedIn(saved.uid);}
+  else go('scLogin');
+}else{
+  auth.onAuthStateChanged(function(u){
+    if(u){ME.ph=String(u.phoneNumber||'').replace('+','');onSignedIn(u.uid);}
+    else go('scLogin');
+  });
+}
+</script>
+</body>
+</html>
