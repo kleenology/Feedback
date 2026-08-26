@@ -124,7 +124,33 @@ npm run ios        # ينسخ الملفات ويفتح Xcode
 | ضبط الدبوس | لا | **العميل يسحب الدبوس** على باب البيت بالضبط |
 | التكلفة | مجاناً | طبقة مجانية شهرية ثم حسب الاستخدام |
 
-لتفعيل السحب: خذ مفتاحاً من [Google Cloud Console](https://console.cloud.google.com/) ← فعّل **Maps JavaScript API** ← ضعه في `MAPS_KEY` بأعلى `app/index.html`. قيّد المفتاح على نطاقك (HTTP referrers) حتى لا يستخدمه غيرك.
+#### خطوات الحصول على مفتاح خرائط قوقل
+
+**قبل ما تبدأ:** قوقل تطلب **بطاقة ائتمانية** لتفعيل الخرائط حتى لو ما تجاوزت الحد المجاني. هذا شرطهم، ما فيه طريقة تتجاوزه.
+
+1. افتح [console.cloud.google.com](https://console.cloud.google.com/) وسجّل بحساب قوقل.
+2. من أعلى الصفحة: **Select a project → New Project** — سمّه `Kleenology` واضغط **Create**.
+3. من القائمة الجانبية: **Billing → Link a billing account** وأضف بطاقتك.
+4. من القائمة: **APIs & Services → Library**، ابحث عن **Maps JavaScript API** واضغط **Enable**.
+5. **APIs & Services → Credentials → Create credentials → API key**. انسخ المفتاح.
+6. **قيّد المفتاح فوراً** (اضغط عليه بعد إنشائه):
+   - **Application restrictions → Websites** ← أضف `kleenology.github.io/*`
+   - **API restrictions → Restrict key** ← اختر **Maps JavaScript API** وحدها
+   - **Save**
+7. الصق المفتاح في `app/index.html`:
+   ```js
+   var MAPS_KEY='ضع-المفتاح-هنا';
+   ```
+
+#### ⚠️ ضع سقفاً للاستهلاك — قبل أي شي
+
+بدون سقف، أي استخدام غير متوقع يجيك في الفاتورة. من **APIs & Services → Maps JavaScript API → Quotas** حدد سقفاً يومياً (١٠٠٠ طلب أكثر من كافٍ لشركة تنظيف). وفعّل تنبيه ميزانية من **Billing → Budgets & alerts**.
+
+الحد المجاني الشهري يتغيّر من قوقل بين فترة وأخرى — راجع [صفحة الأسعار](https://mapsplatform.google.com/pricing/) وقت التفعيل. بحجم أعمالك الحالي ستبقى داخل المجاني على الأغلب.
+
+#### مفتاح ثاني لتطبيق آيفون
+
+تقييد «Websites» ما ينفع داخل التطبيق الأصلي — أصل الصفحة هناك `capacitor://localhost` مو نطاق ويب. أنشئ **مفتاحاً ثانياً** بتقييد **iOS apps** واكتب فيه معرّف التطبيق `sa.kleenology.app`، واستخدمه في نسخة التطبيق. لا تستخدم مفتاحاً بلا تقييد أبداً.
 
 > **الخريطة ما تظهر في رابط المعاينة** — استضافة المعاينة تحجب المواقع الخارجية. تشتغل على `kleenology.github.io` وداخل تطبيق آيفون. ولو تعذّر تحميلها لأي سبب تظهر لوحة بديلة فيها الإحداثيات وزر «افتح في خرائط قوقل» — ما يطلع للعميل مربع أبيض فاضي.
 
