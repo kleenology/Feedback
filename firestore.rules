@@ -89,8 +89,13 @@ service cloud.firestore {
       allow create: if request.auth != null &&
         request.resource.data.uid == request.auth.uid &&
         request.resource.data.st == 'new' &&
-        request.resource.data.svc is string && request.resource.data.svc.size() <= 60 &&
-        request.resource.data.nt is string && request.resource.data.nt.size() <= 600;
+        request.resource.data.svc is string && request.resource.data.svc.size() <= 120 &&
+        request.resource.data.nt is string && request.resource.data.nt.size() <= 600 &&
+        // السلة: قائمة أصناف بحد معقول، والإجمالي تقديري لا يُلزم الشركة
+        request.resource.data.items is list && request.resource.data.items.size() <= 60 &&
+        request.resource.data.est is number && request.resource.data.est >= 0 &&
+        // السعر النهائي بيد الأدمن وحده — العميل ما يكتبه عند الإنشاء
+        !('price' in request.resource.data);
       // العميل ما يعدّل إلا الإلغاء، والسعر والحالة بيد الأدمن وحده
       allow update: if isAdmin() ||
         (request.auth != null && resource.data.uid == request.auth.uid &&
