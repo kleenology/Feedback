@@ -97,6 +97,8 @@ service cloud.firestore {
     }
     match /slots/{day} {
       allow read: if request.auth != null;
+      // الأدمن يصحّح العدّاد بحرية (إلغاء، تعديل يدوي، إغلاق يوم)
+      allow write: if isAdmin();
       allow create: if request.auth != null &&
         request.resource.data.keys().hasOnly(['am','pm','ev']) &&
         slotOk(request.resource.data,'am') && slotOk(request.resource.data,'pm') && slotOk(request.resource.data,'ev');

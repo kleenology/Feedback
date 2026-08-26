@@ -146,6 +146,25 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .adm-tabs::-webkit-scrollbar{display:none}
 .adm-tb{padding:8px 12px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,0.35);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s}
 .adm-tb.on{background:rgba(255,255,255,0.12);color:#fff}
+.tb-b{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;margin-right:3px;
+  border-radius:9px;background:#f5b301;color:#4a3200;font-size:10px;font-weight:700;vertical-align:1px}
+.or{border:1px solid #e6eef3;border-radius:12px;padding:14px;margin-bottom:10px;background:#fff}
+.or.new{border-color:#f5b301;box-shadow:inset 3px 0 0 #f5b301}
+.or-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.or-n{font-size:14px;font-weight:700}
+.or-p{font-size:11px;color:#9ab;direction:ltr;text-align:right;font-family:monospace}
+.or-m{font-size:11.5px;color:#5d8aa8;line-height:1.9;margin-bottom:10px}
+.or-m b{color:#0b3954}
+.or-it{background:#f7fafc;border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:11.5px;color:#5d8aa8}
+.or-it div{display:flex;justify-content:space-between;padding:2px 0}
+.or-ac{display:flex;gap:6px;flex-wrap:wrap}
+.or-ac button,.or-ac a{flex:1;min-width:78px;padding:9px 6px;border-radius:8px;font-size:11.5px;
+  font-weight:600;font-family:inherit;text-align:center;text-decoration:none;border:1px solid #d8e6f0;
+  background:#fff;color:#0f7cb8;cursor:pointer}
+.or-ac .go{background:#0891b2;border-color:#0891b2;color:#fff}
+.or-ac .dn{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a}
+.or-ac .x{background:#fef2f2;border-color:#fecaca;color:#dc2626}
+.or-st{font-size:10px;font-weight:700;padding:4px 9px;border-radius:20px;white-space:nowrap}
 .adm-bd{padding:14px 14px 90px}
 .tc{display:none}.tc.on{display:block}
 
@@ -417,6 +436,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
   </div>
   <div class="adm-tabs">
     <button class="adm-tb on" data-t="overview">📊 نظرة عامة</button>
+    <button class="adm-tb" data-t="orders">🧾 الطلبات <span id="ordBadge" class="tb-b hide"></span></button>
     <button class="adm-tb" data-t="coupons">🎟️ الكوبونات</button>
     <button class="adm-tb" data-t="customers">👥 العملاء</button>
     <button class="adm-tb" data-t="offers">📣 العروض</button>
@@ -427,6 +447,20 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 </div>
 <div class="adm-bd">
   <div class="tc on" id="tcOverview"></div>
+  <div class="tc" id="tcOrders">
+    <div id="orStats"></div>
+    <div class="cc" style="padding:12px 14px">
+      <input id="orSearch" class="rv-search" placeholder="🔍 بحث بالاسم أو الرقم أو الحي..." autocomplete="off">
+      <div class="of-row" id="orChips">
+        <button type="button" class="of-tp on" data-f="live">🔔 النشطة</button>
+        <button type="button" class="of-tp" data-f="new">بانتظار التأكيد</button>
+        <button type="button" class="of-tp" data-f="confirmed">مؤكدة</button>
+        <button type="button" class="of-tp" data-f="done">مكتملة</button>
+        <button type="button" class="of-tp" data-f="all">الكل</button>
+      </div>
+      <div id="orList"></div>
+    </div>
+  </div>
   <div class="tc" id="tcCoupons">
     <div class="cc">
       <h3>🔍 تحقق من كوبون</h3>
@@ -799,7 +833,7 @@ function openAdmin(){
 go('pgAdm');
 if(window.Notification&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
 /* التقييمات أولاً — هي أول ما تعرضه اللوحة، فما تنتظر بقية البيانات */
-startLive();
+startLive();startOrders();
 /* البقية مستقلة عن بعضها: تُجلب دفعة وحدة بدل ما تنتظر كل وحدة اللي قبلها */
 Promise.all([loadPub(),loadTargets(),loadContacts(),loadStaff(),loadPayDay(),loadPayrun(pyMonKey(new Date()))])
   .then(function(){if(auth.currentUser)renderAdm();});
@@ -849,6 +883,148 @@ function startLive(){
   },function(e){
     console.log('Live error:',e);
     if(e&&e.code==='permission-denied')alert('لا تملك صلاحية قراءة البيانات — تأكد من تسجيل الدخول ومن نشر قواعد Firestore (راجع SETUP.md)');
+  });
+}
+
+/* ================= الطلبات ================= */
+var OR=[],ORQ='',ORF='live',ORUN=null,ORFIRST=true;
+var ORST={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
+var ORCOL={new:['#fff7ed','#b45309'],confirmed:['#eff6ff','#1d4ed8'],on_way:['#f0fdff','#0891b2'],
+           done:['#f0fdf4','#16a34a'],cancelled:['#f1f5f9','#64748b']};
+var ORNEXT={new:'confirmed',confirmed:'on_way',on_way:'done'};
+var ORNEXTL={new:'أكّد الطلب',confirmed:'الفريق انطلق',on_way:'تم التنفيذ'};
+var ORSLOT={am:'صباحاً (8–12)',pm:'بعد الظهر (12–4)',ev:'مساءً (4–8)'};
+
+function startOrders(){
+  if(ORUN){ORUN();ORUN=null;}
+  ORFIRST=true;
+  ORUN=db.collection('orders').orderBy('at','desc').limit(300).onSnapshot(function(snap){
+    var first=ORFIRST;ORFIRST=false;
+    OR=[];snap.forEach(function(d){var o=d.data();o._id=d.id;OR.push(o);});
+    rOr();
+    if(!first)snap.docChanges().forEach(function(ch){if(ch.type==='added')notifyOrder(ch.doc.data());});
+  },function(e){
+    if(e&&e.code==='permission-denied')console.log('قواعد orders غير منشورة — راجع app/README.md');
+    else console.log('Orders live:',e&&e.code);
+  });
+}
+function notifyOrder(o){
+  var nm=o.n||'عميل';
+  showToast('🔔 طلب جديد من '+nm+' — '+(o.svc||''));
+  if(window.Notification&&Notification.permission==='granted'){
+    try{new Notification('كلينولوجي — طلب جديد',{body:nm+'\n'+(o.svc||'')+'\n'+orWhen(o)});}catch(e){}
+  }
+}
+function orWhen(o){
+  if(!o.date)return '';
+  var d=new Date(o.date+'T00:00:00');
+  return ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][d.getDay()]+' '+
+    d.getDate()+' '+MO[d.getMonth()]+' · '+(ORSLOT[o.slot]||'');
+}
+function orMap(o){return o.adr&&o.adr.lat?'https://maps.google.com/?q='+o.adr.lat+','+o.adr.lng:'';}
+function orAddr(o){
+  var a=o.adr||{};
+  return [a.t,a.d,a.c,a.s].filter(function(x){return x;}).join(' · ')||'بدون عنوان';
+}
+function orLive(o){return o.st==='new'||o.st==='confirmed'||o.st==='on_way';}
+function rOr(){
+  var nw=OR.filter(function(o){return o.st==='new';}).length;
+  var live=OR.filter(orLive).length;
+  var b=document.getElementById('ordBadge');
+  b.textContent=nw||'';b.classList.toggle('hide',!nw);
+  var today=new Date().toISOString().slice(0,10);
+  var tdy=OR.filter(function(o){return o.date===today&&orLive(o);}).length;
+  var mo=new Date().toISOString().slice(0,7);
+  var earned=OR.filter(function(o){return o.st==='done'&&String(o.at||'').slice(0,7)===mo;})
+               .reduce(function(t,o){return t+(parseFloat(o.price)||parseFloat(o.est)||0);},0);
+  document.getElementById('orStats').innerHTML='<div class="sg">'+
+    '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">بانتظار التأكيد</div><div class="sc-v" style="color:#b45309">'+nw+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #0891b2"><div class="sc-l">طلبات نشطة</div><div class="sc-v" style="color:#0891b2">'+live+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">مواعيد اليوم</div><div class="sc-v" style="color:#1d4ed8">'+tdy+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">مكتمل هذا الشهر</div><div class="sc-v" style="color:#16a34a">'+Math.round(earned)+'</div></div></div>';
+  rOrList();
+}
+function rOrList(){
+  var el=document.getElementById('orList'),q=ORQ.toLowerCase();
+  var list=OR.filter(function(o){
+    if(ORF==='live'&&!orLive(o))return false;
+    if(ORF!=='live'&&ORF!=='all'&&o.st!==ORF)return false;
+    if(q){
+      var dq=q.replace(/\D/g,'');
+      var hay=(String(o.n||'')+' '+orAddr(o)+' '+String(o.svc||'')).toLowerCase();
+      if(hay.indexOf(q)<0&&!(dq&&String(o.ph||'').indexOf(dq)>=0))return false;
+    }
+    return true;
+  });
+  if(!list.length){el.innerHTML='<div class="empty">'+(OR.length?'ما فيه طلبات في هذا الفلتر':'ما وصلك طلب بعد — الطلبات من التطبيق تظهر هنا مباشرة')+'</div>';return;}
+  el.innerHTML=list.map(orCard).join('');
+}
+function orCard(o){
+  var c=ORCOL[o.st]||ORCOL.new,items=o.items||[];
+  var nx=ORNEXT[o.st];
+  return '<div class="or'+(o.st==='new'?' new':'')+'">'+
+    '<div class="or-h"><div><div class="or-n">'+(o.sub?'🔁 ':'')+esc(o.n||'عميل')+'</div>'+
+      '<div class="or-p">+'+esc(o.ph||'')+'</div></div>'+
+      '<span class="or-st" style="background:'+c[0]+';color:'+c[1]+'">'+(ORST[o.st]||o.st)+'</span></div>'+
+    '<div class="or-m"><b>'+esc(o.svc||'')+'</b><br>'+esc(orWhen(o))+'<br>'+esc(orAddr(o))+
+      (o.nt?'<br>📝 '+esc(o.nt):'')+'</div>'+
+    (items.length?'<div class="or-it">'+items.map(function(i){
+      return '<div><span>'+esc(i.t)+' <span style="opacity:.7">'+esc(i.u)+' × '+i.q+'</span></span><b>'+(i.p*i.q)+' ر.س</b></div>';
+    }).join('')+'<div style="border-top:1px dashed #dde8ee;margin-top:5px;padding-top:6px"><span>'+
+      (o.sub?'شهرياً':'التقديري'+(o.off?' (بعد خصم '+o.off+'%)':''))+'</span><b>'+(o.est||0)+' ر.س</b></div>'+
+      (o.price?'<div><span style="color:#16a34a">السعر النهائي</span><b style="color:#16a34a">'+esc(o.price)+' ر.س</b></div>':'')+
+      '</div>':'')+
+    '<div class="or-ac">'+
+      (nx?'<button class="go" onclick="orAdvance(\''+o._id+'\')">'+ORNEXTL[o.st]+'</button>':'')+
+      '<button onclick="orPrice(\''+o._id+'\')">'+(o.price?'عدّل السعر':'حدّد السعر')+'</button>'+
+      (o.ph?'<a href="https://wa.me/'+esc(o.ph)+'?text='+encodeURIComponent(orMsg(o))+'" target="_blank" rel="noopener">واتساب</a>':'')+
+      (orMap(o)?'<a href="'+orMap(o)+'" target="_blank" rel="noopener">الخريطة</a>':'')+
+      (orLive(o)?'<button class="x" onclick="orCancel(\''+o._id+'\')">إلغاء</button>':'')+
+    '</div></div>';
+}
+function orMsg(o){
+  var g=greetAr(),nm=o.n||'يا غالي';
+  if(o.st==='new')return g+' '+nm+' 🌟\nمعك '+BIZ.rep+' من '+BIZ.name+'\n\nوصلنا طلبك: '+(o.svc||'')+
+    '\nالموعد: '+orWhen(o)+'\n\n'+(o.price?'السعر: '+o.price+' ر.س':'أبي أتأكد من التفاصيل قبل ما أثبّت الموعد')+' ✨';
+  if(o.st==='confirmed')return g+' '+nm+' 🌟\nموعدك مثبّت: '+orWhen(o)+'\nنشوفك على خير ✨';
+  if(o.st==='on_way')return g+' '+nm+' 🌟\nالفريق في الطريق لك الحين ✨';
+  return g+' '+nm+' 🌟\nمعك '+BIZ.rep+' من '+BIZ.name;
+}
+function orSet(id,patch){
+  var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return Promise.resolve();
+  for(var k in patch)o[k]=patch[k];
+  rOr();
+  return db.collection('orders').doc(id).update(patch).catch(function(){showToast('تعذّر الحفظ — تحقق من الاتصال');});
+}
+function orAdvance(id){
+  var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
+  var nx=ORNEXT[o.st];if(!nx)return;
+  var h=(o.hist||[]).concat([{s:nx,at:new Date().toISOString()}]);
+  orSet(id,{st:nx,hist:h}).then(function(){showToast(ORST[nx]+' ✓');});
+}
+function orPrice(id){
+  var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
+  var v=prompt('السعر النهائي للطلب (ر.س)\nالتقديري: '+(o.est||0),o.price||o.est||'');
+  if(v===null)return;
+  var n=parseFloat(String(v).replace(/[^\d.]/g,''));
+  if(!isFinite(n)||n<0){alert('أدخل رقماً صحيحاً');return;}
+  orSet(id,{price:String(Math.round(n))}).then(function(){showToast('حُفظ السعر ✓');});
+}
+/* الإلغاء يرجّع الفترة للمتاح — وإلا ضاعت على عملاء آخرين */
+function orCancel(id){
+  var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
+  if(!confirm('إلغاء طلب '+(o.n||'')+'؟\nالموعد يرجع متاحاً لغيره.'))return;
+  var h=(o.hist||[]).concat([{s:'cancelled',at:new Date().toISOString()}]);
+  orSet(id,{st:'cancelled',hist:h}).then(function(){
+    showToast('أُلغي الطلب');
+    if(!o.date||!o.slot)return;
+    var sref=db.collection('slots').doc(o.date);
+    db.runTransaction(function(tx){
+      return tx.get(sref).then(function(d){
+        var cur=(d.exists&&d.data()&&d.data()[o.slot])||0;
+        if(cur>0){var p={};p[o.slot]=cur-1;tx.update(sref,p);}
+      });
+    }).catch(function(){});
   });
 }
 
@@ -1975,6 +2151,18 @@ function ofCsv(){
   var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   ofDL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-contacts-'+new Date().toISOString().slice(0,10)+'.csv');
 }
+function orInit(){
+  var se=document.getElementById('orSearch');
+  if(se)se.addEventListener('input',function(){ORQ=this.value.trim();rOrList();});
+  var ch=document.getElementById('orChips');
+  if(ch)ch.querySelectorAll('.of-tp').forEach(function(c){
+    c.onclick=function(){
+      ORF=c.dataset.f;
+      ch.querySelectorAll('.of-tp').forEach(function(x){x.classList.remove('on');});
+      c.classList.add('on');rOrList();
+    };
+  });
+}
 function ofInit(){
   var tb=document.getElementById('ofTpls');
   OFTPL.forEach(function(t,i){
@@ -2525,7 +2713,7 @@ Promise.all(chunks.map(function(chunk){
   return batch.commit();
 })).then(function(){D=[];USED={};renderAdm();}).catch(function(){alert('خطأ في المسح');});}
 
-ofInit();
+ofInit();orInit();
 
 /* الصفحة تُخدم من الكاش لتفتح فوراً، فلما ينزل تحديث بالخلفية نخبرك بدل ما تشوف نسخة قديمة بدون ما تدري */
 if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventListener('load',function(){
