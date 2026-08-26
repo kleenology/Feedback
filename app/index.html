@@ -363,6 +363,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
     <div style="display:flex;gap:8px"><button class="ib" id="cartBtn" onclick="go('scCart');setTab('')" aria-label="السلة"></button></div>
   </div></header>
   <div class="wrap">
+    <div id="nameCard"></div>
     <div class="sec" style="border:none;padding-bottom:0">
       <div class="hero"><span class="hero-w"></span><span class="hero-w2"></span>
         <h2>خدمات بيتك كلها<br><em>في سلة وحدة</em></h2>
@@ -745,8 +746,8 @@ function onSignedIn(uid){
   CART=LS.get('cart',{});
   Promise.all([API.loadMe(),API.orders(),API.addrs()]).then(function(){
     renderAll();
-    if(!ME.n){go('scMe');setTab('scMe');toast('اكتب اسمك عشان نعرف نناديك');}
-    else{go('scHome');setTab('scHome');}
+    /* الرئيسية أول شي دائماً — والاسم يُطلب من بطاقة داخلها بدل ما نرمي العميل في «حسابي» */
+    go('scHome');setTab('scHome');
   });
 }
 function logout(){
@@ -769,6 +770,15 @@ function renderHome(){
       '<b>'+esc(s.t)+'</b><s>'+esc(s.s)+'</s></button>';}).join('');
   var live=ORD.filter(function(o){return o.st!=='done'&&o.st!=='cancelled';})[0];
   $('activeOrder').innerHTML=live?'<div class="sec"><div class="sec-h"><h2>طلبك الحالي</h2></div>'+ordCard(live,true)+'</div>':'';
+  $('nameCard').innerHTML=ME.n?'':
+    '<div class="sec" style="padding-bottom:0"><div class="card">'+
+      '<label class="lb" for="hmN">وش نناديك؟</label>'+
+      '<div style="display:flex;gap:9px;align-items:stretch">'+
+        '<input class="in" id="hmN" maxlength="60" placeholder="اسمك" autocomplete="name">'+
+        '<button class="btn" style="width:auto;flex:0 0 auto;padding:15px 24px" onclick="saveName(\'hmN\')">حفظ</button>'+
+      '</div>'+
+      '<p style="font-size:12.5px;color:var(--mut);margin-top:10px">عشان نناديك باسمك في الرسائل وعند وصول الفريق.</p>'+
+    '</div></div>';
   $('featList').innerHTML=FEATS.map(function(f){return '<div><span class="tick">'+ic('check')+'</span><span>'+esc(f)+'</span></div>';}).join('');
 }
 
@@ -1026,10 +1036,13 @@ function renderMe(){
       '<button class="btn btn-x btn-sm" onclick="logout()">'+ic('out','','ic-sm')+'<span>تسجيل الخروج</span></button>'+
     '</div></div>';
 }
-function saveName(){
-  var n=String($('meN').value||'').trim().slice(0,60);
+function saveName(from){
+  var el=$(from||'meN');if(!el)return;
+  var n=String(el.value||'').trim().slice(0,60);
   if(!n){toast('اكتب اسمك');return;}
-  ME.n=n;API.saveMe().then(function(){toast('حُفظ');renderHome();}).catch(function(){toast('تعذّر الحفظ');});
+  ME.n=n;
+  API.saveMe().then(function(){toast('أهلاً '+n);renderHome();renderMe();})
+   .catch(function(){toast('تعذّر الحفظ');});
 }
 function rmAddr(i){var a=ADR[i];if(!a||!confirm('حذف «'+a.t+'»؟'))return;
   API.delAddr(a).then(function(){renderMe();toast('حُذف');}).catch(function(){toast('تعذّر الحذف');});}
