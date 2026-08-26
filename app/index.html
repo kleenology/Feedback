@@ -356,6 +356,16 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .mapfb .ic{width:26px;height:26px;color:var(--blue)}
 .mapfb s{text-decoration:none;font-size:11.5px;font-weight:400;color:var(--faint)}
 
+.mappin{position:absolute;left:50%;top:50%;width:36px;height:36px;padding:0;background:none;
+  transform:translate(-50%,-100%);cursor:grab;touch-action:none;z-index:3;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.35))}
+.mappin svg{width:100%;height:100%;display:block;pointer-events:none}
+.mappin.grab{cursor:grabbing;transition:none}
+.mappin::after{content:"";position:absolute;left:50%;top:100%;width:8px;height:4px;
+  transform:translate(-50%,-1px);border-radius:50%;background:rgba(0,0,0,.28)}
+.lnkb{background:none;border:none;padding:0;font:inherit;color:var(--blue-d);
+  font-weight:700;text-decoration:underline;cursor:pointer}
+
 /* ===== خطوة العنوان ===== */
 .btn-loc{background:var(--card);color:var(--blue-d);box-shadow:0 0 0 2px var(--blue), var(--sh);
   padding:18px;font-size:16px}
@@ -1149,13 +1159,13 @@ var STEPS=['الموعد','العنوان','التأكيد'];
 function startBooking(){
   if(!cartLines().length){toast('سلتك فاضية');return;}
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
-  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,loc:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
+  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
 /* الاشتراك يمر بنفس الخطوات — الفرق أن المطلوب باقة متكررة لا سلة أصناف */
 function startPkgBooking(){
   if(!PKG)return;
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
-  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,loc:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
+  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
 function bookBack(){if(BK.step===0){if(BK.pkg){go('scPkg');}else{go('scCart');}return;}BK.step--;renderBook();}
 function bookNext(){
@@ -1167,7 +1177,7 @@ function renderBook(){
   $('bkBtn').innerHTML=ic('back','','ic-sm')+'<span>'+(BK.step===0?(BK.pkg?'الباقة':'السلة'):STEPS[BK.step-1])+'</span>';
   $('bkStepN').innerHTML='<span dir="ltr" style="unicode-bidi:isolate">'+(BK.step+1)+' / '+STEPS.length+'</span>';
   $('bkBody').innerHTML=[stepWhen,stepWhere,stepConfirm][BK.step]();
-  if(BK.step===1&&BK.loc)initMapPin();
+  if(BK.step===1&&BK.loc){initMapPin();pinDrag($('mapPin'));}
   window.scrollTo(0,0);
 }
 function head(t,s){return '<div class="stp-n">'+esc(STEPS[BK.step])+'</div><h2 class="stp-t">'+esc(t)+'</h2><p class="stp-s">'+esc(s)+'</p>';}
@@ -1228,19 +1238,63 @@ function locErrMsg(err,ms){
   }
   return 'تعذّر تحديد موقعك — اكتب عنوانك يدوياً.';
 }
+/* أول قراءة تجي من أبراج الشبكة والواي-فاي ودقتها ضعيفة، والـGPS يوصل بعدها بثوانٍ.
+   فبدل أخذ أول قراءة، نراقب لثوانٍ ونحتفظ بالأدق، ونتوقف مبكراً إذا وصلت دقة ممتازة. */
 function useMyLocation(){
   var b=$('locBtn');
   if(!navigator.geolocation){BK.manual=true;BK.locErr='جهازك ما يدعم تحديد الموقع — اكتب عنوانك يدوياً.';renderBook();return;}
-  b.disabled=true;b.innerHTML=ic('pin','','ic-sm')+'<span>جاري تحديد موقعك…</span>';
-  var t0=Date.now();
-  navigator.geolocation.getCurrentPosition(function(pos){
-    BK.loc={lat:+pos.coords.latitude.toFixed(6),lng:+pos.coords.longitude.toFixed(6)};
-    BK.adr=null;BK.locErr='';renderBook();toast('حدّدنا موقعك');
+  b.disabled=true;b.innerHTML=ic('pin','','ic-sm')+'<span>نلتقط أدق موقع…</span>';
+  var best=null,t0=Date.now(),wid=null,done=false;
+  function stop(){if(wid!==null){navigator.geolocation.clearWatch(wid);wid=null;}}
+  function finish(){
+    if(done)return;done=true;stop();
+    if(!best){BK.manual=true;BK.locErr=locErrMsg({code:2},Date.now()-t0);renderBook();return;}
+    BK.loc={lat:+best.coords.latitude.toFixed(6),lng:+best.coords.longitude.toFixed(6),
+            acc:Math.round(best.coords.accuracy||0)};
+    BK.base={lat:BK.loc.lat,lng:BK.loc.lng};  /* مركز الخريطة الثابت — منه نحسب إزاحة الدبوس */
+    BK.adr=null;BK.locErr='';renderBook();
+  }
+  wid=navigator.geolocation.watchPosition(function(pos){
+    if(!best||pos.coords.accuracy<best.coords.accuracy)best=pos;
+    if(best.coords.accuracy<=20||Date.now()-t0>8000)finish();
   },function(err){
+    if(best){finish();return;}
+    if(done)return;done=true;stop();
     BK.manual=true;BK.locErr=locErrMsg(err,Date.now()-t0);renderBook();
-  },{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
+  },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+  setTimeout(finish,9000);
 }
-function clearLoc(){BK.loc=null;BK.locErr='';renderBook();}
+/* تصحيح الدبوس بدون مفتاح: الخريطة تبقى ثابتة على نقطة الـGPS، والعميل يسحب الدبوس فوقها.
+   نحوّل إزاحة البكسل إلى إحداثيات بمقياس مركاتور — يكفي لتصحيح عشرات الأمتار، وهو المطلوب. */
+var MZOOM=17;
+function mPerPx(lat){return 156543.03392*Math.cos(lat*Math.PI/180)/Math.pow(2,MZOOM);}
+function pinDrag(el){
+  if(!el||!BK.base)return;
+  var dx=0,dy=0,sx=0,sy=0,drag=false;
+  el.addEventListener('pointerdown',function(e){
+    drag=true;sx=e.clientX-dx;sy=e.clientY-dy;
+    el.setPointerCapture(e.pointerId);el.classList.add('grab');e.preventDefault();
+  });
+  el.addEventListener('pointermove',function(e){
+    if(!drag)return;
+    var w=el.parentNode.clientWidth/2-18,h=el.parentNode.clientHeight/2-18;
+    dx=Math.max(-w,Math.min(w,e.clientX-sx));
+    dy=Math.max(-h,Math.min(h,e.clientY-sy));
+    el.style.transform='translate(-50%,-100%) translate('+dx+'px,'+dy+'px)';
+  });
+  function end(e){
+    if(!drag)return;drag=false;el.classList.remove('grab');
+    try{el.releasePointerCapture(e.pointerId);}catch(x){}
+    var m=mPerPx(BK.base.lat);
+    BK.loc={lat:+(BK.base.lat-dy*m/111320).toFixed(6),
+            lng:+(BK.base.lng+dx*m/(111320*Math.cos(BK.base.lat*Math.PI/180))).toFixed(6),
+            acc:BK.loc?BK.loc.acc:0,moved:true};
+    var c=document.querySelector('.mapfb s');if(c)c.textContent=BK.loc.lat+', '+BK.loc.lng;
+    var lk=document.getElementById('mapOpen');if(lk)lk.href=mapUrl(BK.loc);
+  }
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+}
+function clearLoc(){BK.loc=null;BK.base=null;BK.locErr='';renderBook();}
 /* الخريطة التفاعلية تحتاج مفتاحاً — نحمّل السكربت مرة وحدة فقط */
 var GM=null;
 function loadMaps(){
@@ -1281,19 +1335,27 @@ function stepWhere(){
       '<s style="text-decoration:none;font-size:12px;color:var(--mut)">'+esc(a.c+(a.d?' · '+a.d:''))+'</s></span></button>';}).join('')+
     '<div class="or">أو أضف موقعاً جديداً</div></div>';
   if(BK.loc){
+    if(!BK.base)BK.base={lat:BK.loc.lat,lng:BK.loc.lng};
+    var acc=BK.loc.acc||0,weak=acc>80&&!BK.loc.moved;
     h+='<div class="locbox">'+
-      '<div class="mapwrap">'+
-        /* لوحة تحتية تظهر لو تعذّر تحميل الخريطة (شبكة أو حجب) — بدل مربع أبيض فاضي */
+      '<div class="mapwrap" id="mapWrap">'+
         '<div class="mapfb">'+ic('pin')+'<span>موقعك محدَّد</span>'+
           '<s class="mono" dir="ltr">'+BK.loc.lat+', '+BK.loc.lng+'</s></div>'+
         (MAPS_KEY?'<div class="mapjs" id="mapJs"></div>'
-                 :'<iframe class="mapfr" src="'+mapEmbed(BK.loc.lat,BK.loc.lng)+'" title="موقعك على الخريطة" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>')+
+                 :'<iframe class="mapfr" src="'+mapEmbed(BK.base.lat,BK.base.lng)+'" title="موقعك على الخريطة" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>'+
+                  '<button class="mappin" id="mapPin" aria-label="اسحب الدبوس لضبط موقعك">'+
+                    '<svg viewBox="0 0 24 34" aria-hidden="true"><path d="M12 .8C5.9.8.9 5.8.9 11.9c0 8.4 11.1 21.3 11.1 21.3s11.1-12.9 11.1-21.3C23.1 5.8 18.1.8 12 .8z" fill="#EA4335"/><circle cx="12" cy="11.9" r="4.2" fill="#fff"/></svg>'+
+                  '</button>')+
       '</div>'+
-      '<div class="locbox-h" style="margin-top:14px"><span class="tick">'+ic('check')+'</span>'+
+      (MAPS_KEY?'':'<p class="hint" style="margin-top:10px">'+(BK.loc.moved?'ضبطت الموقع ✓ — تقدر تسحبه مرة ثانية':'اسحب الدبوس لو الموقع مو مضبوط بالضبط')+'</p>')+
+      (weak?'<div class="note warn" style="margin-top:10px">دقة الموقع ضعيفة (±'+acc+' م). اسحب الدبوس على بيتك، أو '+
+            '<button class="lnkb" onclick="useMyLocation()">أعد المحاولة</button> من مكان مكشوف.</div>'
+           :acc?'<p class="hint" style="margin-top:8px">دقة الموقع ±'+acc+' متر</p>':'')+
+      '<div class="locbox-h" style="margin-top:12px"><span class="tick">'+ic('check')+'</span>'+
         '<div><b>'+(MAPS_KEY?'اسحب الدبوس لضبط موقعك':'حدّدنا موقعك')+'</b>'+
-          '<s>'+(MAPS_KEY?'حرّك الدبوس على باب البيت بالضبط':'الفريق يوصلك على هذي النقطة')+'</s></div>'+
+          '<s>الفريق يوصلك على هذي النقطة</s></div>'+
         '<button class="lnk" onclick="clearLoc()" style="padding:0">تغيير</button></div>'+
-      '<a class="btn btn-2 btn-sm" style="margin-top:12px;text-decoration:none" target="_blank" rel="noopener" href="'+mapUrl(BK.loc)+'">'+
+      '<a class="btn btn-2 btn-sm" id="mapOpen" style="margin-top:12px;text-decoration:none" target="_blank" rel="noopener" href="'+mapUrl(BK.loc)+'">'+
         ic('pin','','ic-sm')+'<span>افتح في خرائط قوقل</span></a>'+
       '<div class="fld" style="margin:14px 0 0"><input class="in" id="aS" maxlength="60" placeholder="شقة 3، الدور الثاني (اختياري)"></div>'+
     '</div>';
