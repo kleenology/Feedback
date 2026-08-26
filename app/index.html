@@ -301,6 +301,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
   color:var(--tx);line-height:1.75}
 .note b{font-weight:700;color:var(--blue-d)}
 .note.acc{background:var(--gold-l)}
+.note.warn{background:var(--warnl);color:var(--warn)}
 .note.acc b{color:var(--gold-d)}
 .empty{text-align:center;color:var(--mut);font-size:14px;padding:50px 20px}
 .empty .il{margin:0 auto 14px;opacity:.6}
@@ -710,7 +711,7 @@ var DAYS_S=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جم
 var DEMO=/[?&]demo=1/.test(location.search)||location.protocol==='file:';
 var AUTHED=false,ME={uid:'',ph:'',n:''},ORD=[],ADR=[],CONF=null,PREV='scMe';
 var CART={},CTV='sofa',RT=0,RTM=null;
-var BK={step:0,date:'',slot:'',adr:null,kind:''};
+var BK={step:0,date:'',slot:'',adr:null,kind:'',locErr:''};
 
 var db=null,auth=null;
 if(!DEMO){
@@ -1069,12 +1070,12 @@ function clearCart(){if(!confirm('تفريغ السلة؟'))return;CART={};LS.se
 var STEPS=['الموعد','العنوان','التأكيد'];
 function startBooking(){
   if(!cartLines().length){toast('سلتك فاضية');return;}
-  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,loc:null,manual:false,city:''};go('scBook');setTab('');renderBook();
+  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,loc:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
 /* الاشتراك يمر بنفس الخطوات — الفرق أن المطلوب باقة متكررة لا سلة أصناف */
 function startPkgBooking(){
   if(!PKG)return;
-  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,loc:null,manual:false,city:''};go('scBook');setTab('');renderBook();
+  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,loc:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
 function bookBack(){if(BK.step===0){if(BK.pkg){go('scPkg');}else{go('scCart');}return;}BK.step--;renderBook();}
 function bookNext(){
@@ -1118,19 +1119,32 @@ function whereReady(){
 }
 /* أسرع طريق: ضغطة وحدة تلتقط الإحداثيات — الفريق يفتحها في الخرائط ويوصل.
    الكتابة اليدوية تبقى موجودة لمن ما يبي يشارك موقعه */
+function inFrame(){try{return window.self!==window.top;}catch(e){return true;}}
+/* رفض المتصفح لا يعني أن العميل رفض: داخل إطار مضمّن يُرفض الطلب فوراً بحكم سياسة
+   الأذونات وبدون أن يُسأل أحد. نفرّق بالزمن — الرفض الفوري ليس قراراً من العميل. */
+function locErrMsg(err,ms){
+  if(!err)return 'تعذّر تحديد موقعك — اكتب عنوانك يدوياً.';
+  if(err.code===3)return 'تحديد الموقع أخذ وقتاً طويلاً — اكتب عنوانك يدوياً.';
+  if(err.code===2)return 'ما قدرنا نلقى إشارة موقعك — اكتب عنوانك يدوياً.';
+  if(err.code===1){
+    if(inFrame()&&ms<600)return 'هذي الصفحة مفتوحة داخل إطار ما يسمح بتحديد الموقع. تشتغل عادي في التطبيق — اكتب عنوانك يدوياً الآن.';
+    return 'إذن الموقع مقفل. افتح إعدادات المتصفح ← الموقع ← اسمح، أو اكتب عنوانك يدوياً.';
+  }
+  return 'تعذّر تحديد موقعك — اكتب عنوانك يدوياً.';
+}
 function useMyLocation(){
   var b=$('locBtn');
-  if(!navigator.geolocation){BK.manual=true;renderBook();toast('جهازك ما يدعم تحديد الموقع');return;}
+  if(!navigator.geolocation){BK.manual=true;BK.locErr='جهازك ما يدعم تحديد الموقع — اكتب عنوانك يدوياً.';renderBook();return;}
   b.disabled=true;b.innerHTML=ic('pin','','ic-sm')+'<span>جاري تحديد موقعك…</span>';
+  var t0=Date.now();
   navigator.geolocation.getCurrentPosition(function(pos){
     BK.loc={lat:+pos.coords.latitude.toFixed(6),lng:+pos.coords.longitude.toFixed(6)};
-    BK.adr=null;renderBook();toast('حدّدنا موقعك');
+    BK.adr=null;BK.locErr='';renderBook();toast('حدّدنا موقعك');
   },function(err){
-    BK.manual=true;renderBook();
-    toast(err&&err.code===1?'ما سمحت بالوصول للموقع — اكتبه يدوياً':'تعذّر تحديد الموقع — اكتبه يدوياً');
+    BK.manual=true;BK.locErr=locErrMsg(err,Date.now()-t0);renderBook();
   },{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
 }
-function clearLoc(){BK.loc=null;renderBook();}
+function clearLoc(){BK.loc=null;BK.locErr='';renderBook();}
 /* الخريطة التفاعلية تحتاج مفتاحاً — نحمّل السكربت مرة وحدة فقط */
 var GM=null;
 function loadMaps(){
@@ -1190,7 +1204,8 @@ function stepWhere(){
   }else{
     h+='<button class="btn btn-loc" id="locBtn" onclick="useMyLocation()">'+ic('pin','','ic-sm')+
         '<span>حدّد موقعي الآن</span></button>'+
-       '<p class="hint">أسرع طريقة — ضغطة وحدة، ويوصلك الفريق بالخرائط.</p>';
+       (BK.locErr?'<div class="note warn" style="margin-top:12px">'+esc(BK.locErr)+'</div>'
+                 :'<p class="hint">أسرع طريقة — ضغطة وحدة، ويوصلك الفريق بالخرائط.</p>');
     if(!BK.manual)h+='<button class="lnk" style="width:100%;justify-content:center;margin-top:6px" onclick="BK.manual=true;renderBook()">أو اكتب العنوان يدوياً</button>';
   }
   if(BK.manual&&!BK.loc){
