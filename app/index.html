@@ -1159,12 +1159,7 @@ function startPkgBooking(){
 }
 function bookBack(){if(BK.step===0){if(BK.pkg){go('scPkg');}else{go('scCart');}return;}BK.step--;renderBook();}
 function bookNext(){
-  if(BK.step===1&&!BK.adr){
-    var b=$('bkNext');if(b){b.disabled=true;b.textContent='لحظة…';}
-    commitWhere().then(function(){BK.step++;renderBook();})
-     .catch(function(){if(b){b.disabled=false;b.textContent='التالي';}toast('تعذّر حفظ العنوان — تحقق من الاتصال');});
-    return;
-  }
+  if(BK.step===1&&!BK.adr)commitWhere();
   BK.step++;renderBook();
 }
 function renderBook(){
@@ -1322,17 +1317,21 @@ function stepWhere(){
 }
 /* الحقول تُفعّل زر التالي مباشرة — بدون زر حفظ منفصل يربك العميل */
 function syncNext(){var b=$('bkNext');if(b)b.disabled=!whereReady();}
-/* العنوان يُحفظ تلقائياً عند «التالي» — ما فيه خطوة حفظ يدوية */
+/* العنوان يُحفظ تلقائياً عند «التالي» — ما فيه خطوة حفظ يدوية.
+   الحفظ في دفتر عناوينه راحة للمرات الجاية، مو شرطاً للحجز: نمضي بالعنوان
+   في يدنا فوراً، والحفظ يجري بالخلفية. فشله ما يوقف العميل. */
 function commitWhere(){
-  if(BK.adr)return Promise.resolve();
+  if(BK.adr)return;
   var note=$('aS')?$('aS').value.trim().slice(0,60):'';
-  if(BK.loc){
-    var a={t:note||'موقعي',c:'',d:'',s:note,lat:BK.loc.lat,lng:BK.loc.lng,at:new Date().toISOString()};
-    return API.addAddr(a).then(function(x){BK.adr=x;renderMe();});
+  var a;
+  if(BK.loc)a={t:note||'موقعي',c:'',d:'',s:note,lat:BK.loc.lat,lng:BK.loc.lng,at:new Date().toISOString()};
+  else{
+    var d=$('aD')?$('aD').value.trim().slice(0,30):'';
+    a={t:BK.city+(d?' · '+d:''),c:BK.city,d:d,s:note,at:new Date().toISOString()};
   }
-  var d=$('aD')?$('aD').value.trim().slice(0,30):'';
-  var a2={t:BK.city+(d?' · '+d:''),c:BK.city,d:d,s:note,at:new Date().toISOString()};
-  return API.addAddr(a2).then(function(x){BK.adr=x;renderMe();});
+  BK.adr=a;
+  API.addAddr(a).then(function(){renderMe();})
+   .catch(function(e){console.log('حفظ العنوان:',e&&e.code);});
 }
 function stepConfirm(){
   if(BK.pkg)return stepConfirmPkg();
@@ -1380,7 +1379,13 @@ function onSubmitErr(e){
     });
     return;
   }
-  alert(c==='permission-denied'?'تحتاج تسجيل دخول صحيح — أعد المحاولة':'تعذّر الإرسال، تحقق من الاتصال');
+  /* permission-denied يعني القواعد ما هي منشورة أو الجلسة انتهت — لا علاقة له بالاتصال */
+  if(c==='permission-denied'){
+    alert('ما قدرنا نحفظ الطلب.\n\nإذا كنت صاحب التطبيق: قواعد Firestore غير منشورة — راجع app/README.md.\nوإذا كنت عميلاً: سجّل خروج ودخول مرة ثانية.');
+    return;
+  }
+  if(c==='unavailable'||c==='deadline-exceeded'){alert('الشبكة ضعيفة — حاول مرة ثانية.');return;}
+  alert('تعذّر إرسال الطلب'+(c?' ('+c+')':'')+' — حاول مرة ثانية.');
 }
 function submitOrder(){
   var b=$('bkGo');b.disabled=true;b.textContent='جاري الإرسال…';
