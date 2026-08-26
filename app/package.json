@@ -1,0 +1,19 @@
+{
+  "name": "kleenology-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "تطبيق عملاء كلينولوجي — حجز خدمات التنظيف",
+  "scripts": {
+    "sync": "mkdir -p www && cp index.html www/ && cp ../logo.png www/ && npx cap sync ios",
+    "ios": "npm run sync && npx cap open ios"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor/splash-screen": "^6.0.2",
+    "@capacitor-firebase/authentication": "^6.1.0"
+  }
+}
