@@ -324,6 +324,28 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .sticky-in{max-width:520px;margin:0 auto}
 .demo{background:var(--gold);color:#4A3200;text-align:center;font-size:12px;font-weight:700;
   padding:8px 14px;font-family:var(--dsp)}
+/* ===== اختيار الموعد ===== */
+.days{padding:4px 0 8px}
+.day{flex:0 0 auto;width:74px;padding:12px 6px 10px;border-radius:var(--r3);background:var(--card);
+  box-shadow:var(--sh);display:flex;flex-direction:column;align-items:center;gap:1px;transition:all .16s}
+.day s{text-decoration:none;font-size:11px;color:var(--mut);font-weight:500}
+.day b{font-size:20px;font-weight:700;font-family:var(--dsp);line-height:1.2}
+.day i{font-style:normal;font-size:10px;color:var(--faint);min-height:13px;font-weight:500}
+.day.on{background:var(--blue);box-shadow:var(--sh-blue)}
+.day.on s,.day.on b,.day.on i{color:#fff}
+.day.full{opacity:.42;box-shadow:none;background:var(--sunk)}
+.day.full i{color:var(--stop)}
+.slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.slot{padding:14px 8px;border-radius:var(--r3);background:var(--card);box-shadow:var(--sh);
+  display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .16s}
+.slot b{font-size:14px;font-weight:700;font-family:var(--dsp)}
+.slot s{text-decoration:none;font-size:11.5px;color:var(--mut)}
+.slot i{font-style:normal;font-size:10.5px;font-weight:600;color:var(--ok);margin-top:3px}
+.slot.on{background:var(--blue);box-shadow:var(--sh-blue)}
+.slot.on b,.slot.on s,.slot.on i{color:#fff}
+.slot.full{opacity:.5;box-shadow:none;background:var(--sunk)}
+.slot.full i{color:var(--stop)}
+
 /* ===== الخريطة ===== */
 .mapwrap{position:relative;height:210px;border-radius:var(--r2);overflow:hidden;background:var(--sunk)}
 .mapfr,.mapjs{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
@@ -697,6 +719,11 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
+/* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
+   ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
+var SLOT_CAP=1;
+var BOOKED={};   /* {'2026-09-10':{am:1,pm:0,ev:0}} — كم محجوز في كل فترة */
+var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
 var FLOW=['new','confirmed','on_way','done'];
 var FLOWL={new:{t:'استلمنا طلبك'},confirmed:{t:'أكدنا الموعد'},on_way:{t:'الفريق في الطريق'},done:{t:'اكتملت الخدمة'}};
@@ -768,12 +795,43 @@ var API={
       ORD=[];s.forEach(function(d){var o=d.data();o.id=d.id;ORD.push(o);});
       ORD.sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});
     }).catch(function(e){console.log('orders:',e&&e.code);ORD=[];});},
-  addOrder:function(o){if(DEMO){o.id='d'+Date.now();ORD.unshift(o);LS.set('orders',ORD);return Promise.resolve(o);}
-    return db.collection('orders').add(o).then(function(r){o.id=r.id;ORD.unshift(o);return o;});},
-  cancelOrder:function(o){var h=(o.hist||[]).concat([{s:'cancelled',at:new Date().toISOString()}]);
+  /* المعاملة تعيد قراءة العدّاد لحظة الحفظ: لو سبقك أحد للفترة يُرفض طلبك بدل ما يُكتب فوق حجزه */
+  addOrder:function(o){
+    if(DEMO){
+      var bk=LS.get('booked',{});bk[o.date]=bk[o.date]||{};
+      if((bk[o.date][o.slot]||0)>=SLOT_CAP)return Promise.reject({code:'slot-taken'});
+      bk[o.date][o.slot]=(bk[o.date][o.slot]||0)+1;LS.set('booked',bk);BOOKED=bk;
+      o.id='d'+Date.now();ORD.unshift(o);LS.set('orders',ORD);return Promise.resolve(o);
+    }
+    var sref=db.collection('slots').doc(o.date),oref=db.collection('orders').doc();
+    return db.runTransaction(function(tx){
+      return tx.get(sref).then(function(d){
+        var cur=(d.exists&&d.data()&&d.data()[o.slot])||0;
+        if(cur>=SLOT_CAP)throw {code:'slot-taken'};
+        var patch={};patch[o.slot]=cur+1;
+        if(d.exists)tx.update(sref,patch);else tx.set(sref,patch);
+        tx.set(oref,o);
+      });
+    }).then(function(){
+      o.id=oref.id;ORD.unshift(o);
+      BOOKED[o.date]=BOOKED[o.date]||{};BOOKED[o.date][o.slot]=(BOOKED[o.date][o.slot]||0)+1;
+      return o;
+    });},
+  /* الإلغاء يرجّع الفترة للمتاح — وإلا ضاعت على عملاء آخرين */
+  cancelOrder:function(o){
+    var h=(o.hist||[]).concat([{s:'cancelled',at:new Date().toISOString()}]);
     o.st='cancelled';o.hist=h;
-    if(DEMO){LS.set('orders',ORD);return Promise.resolve();}
-    return db.collection('orders').doc(o.id).update({st:'cancelled',hist:h});},
+    if(BOOKED[o.date]&&BOOKED[o.date][o.slot])BOOKED[o.date][o.slot]--;
+    if(DEMO){LS.set('orders',ORD);LS.set('booked',BOOKED);return Promise.resolve();}
+    var sref=db.collection('slots').doc(o.date);
+    return db.collection('orders').doc(o.id).update({st:'cancelled',hist:h}).then(function(){
+      return db.runTransaction(function(tx){
+        return tx.get(sref).then(function(d){
+          var cur=(d.exists&&d.data()&&d.data()[o.slot])||0;
+          if(cur>0){var p={};p[o.slot]=cur-1;tx.update(sref,p);}
+        });
+      }).catch(function(){});
+    });},
   addrs:function(){if(DEMO){ADR=LS.get('addrs',[]);return Promise.resolve();}
     return db.collection('customers').doc(ME.uid).collection('addresses').limit(20).get().then(function(s){
       ADR=[];s.forEach(function(d){var a=d.data();a.id=d.id;ADR.push(a);});}).catch(function(){ADR=[];});},
@@ -862,7 +920,7 @@ function backToPhone(){clearInterval(RTM);$('lgCode').classList.add('hide');$('l
 function onSignedIn(uid){
   ME.uid=uid;AUTHED=true;$('tabBar').classList.remove('hide');
   CART=LS.get('cart',{});
-  Promise.all([API.loadMe(),API.orders(),API.addrs()]).then(function(){
+  Promise.all([API.loadMe(),API.orders(),API.addrs(),loadSlots()]).then(function(){
     renderAll();
     /* الرئيسية أول شي دائماً — والاسم يُطلب من بطاقة داخلها بدل ما نرمي العميل في «حسابي» */
     go('scHome');setTab('scHome');
@@ -919,6 +977,26 @@ function renderService(){
       }).join('')+'</div></div><div style="height:70px"></div>';
   galInit();
 }
+
+/* ================= توفّر المواعيد ================= */
+/* عدّاد لكل يوم يمنع حجزين على نفس الفترة. القراءة للجميع، والزيادة تتم داخل معاملة
+   تعيد الفحص لحظة الحفظ — فلو سبقك أحد بجزء من ثانية يُرفض الطلب بدل ما يُكتب فوقه */
+function dayKeys(){
+  var out=[],now=new Date();
+  for(var i=1;i<=DAYS_AHEAD;i++){var d=new Date(now);d.setDate(d.getDate()+i);out.push(d.toISOString().slice(0,10));}
+  return out;
+}
+function loadSlots(){
+  var ks=dayKeys(),from=ks[0],to=ks[ks.length-1];
+  if(DEMO){BOOKED=LS.get('booked',{});return Promise.resolve();}
+  return db.collection('slots').orderBy(firebase.firestore.FieldPath.documentId())
+    .startAt(from).endAt(to).get().then(function(sn){
+      BOOKED={};sn.forEach(function(d){BOOKED[d.id]=d.data()||{};});
+    }).catch(function(e){console.log('slots:',e&&e.code);BOOKED={};});
+}
+function taken(date,slot){var d=BOOKED[date];return d&&d[slot]?d[slot]:0;}
+function slotLeft(date,slot){return Math.max(0,SLOT_CAP-taken(date,slot));}
+function dayFull(date){return SLOTS.every(function(s){return slotLeft(date,s.k)<=0;});}
 
 /* ================= الباقات ================= */
 var PKG=null;
@@ -1070,11 +1148,13 @@ function clearCart(){if(!confirm('تفريغ السلة؟'))return;CART={};LS.se
 var STEPS=['الموعد','العنوان','التأكيد'];
 function startBooking(){
   if(!cartLines().length){toast('سلتك فاضية');return;}
+  loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
   BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,loc:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
 /* الاشتراك يمر بنفس الخطوات — الفرق أن المطلوب باقة متكررة لا سلة أصناف */
 function startPkgBooking(){
   if(!PKG)return;
+  loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
   BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,loc:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
 function bookBack(){if(BK.step===0){if(BK.pkg){go('scPkg');}else{go('scCart');}return;}BK.step--;renderBook();}
@@ -1098,19 +1178,40 @@ function renderBook(){
 function head(t,s){return '<div class="stp-n">'+esc(STEPS[BK.step])+'</div><h2 class="stp-t">'+esc(t)+'</h2><p class="stp-s">'+esc(s)+'</p>';}
 function nextBtn(ok,l){return '<button class="btn" style="margin-top:24px" '+(ok?'':'disabled')+' onclick="bookNext()">'+(l||'التالي')+'</button>';}
 function stepWhen(){
-  var days='',now=new Date();
-  var lead=BK.pkg?'متى نبدأ اشتراكك؟':'متى يناسبك؟';
-  for(var i=1;i<=14;i++){
-    var d=new Date(now);d.setDate(d.getDate()+i);var iso=d.toISOString().slice(0,10);
-    days+='<button class="opt opt-w" aria-pressed="'+(BK.date===iso)+'" onclick="BK.date=\''+iso+'\';renderBook()">'+
-      '<s>'+DAYS_S[d.getDay()]+'</s><span class="mono" style="font-size:16px;font-weight:600">'+d.getDate()+'</span></button>';
+  var now=new Date(),days='',lastMo=-1;
+  for(var i=1;i<=DAYS_AHEAD;i++){
+    var d=new Date(now);d.setDate(d.getDate()+i);
+    var iso=d.toISOString().slice(0,10),full=dayFull(iso),sel=BK.date===iso;
+    /* اسم الشهر يظهر عند تغيّره فقط — بدونه تلقى «31 ثم 1» بلا سياق */
+    var mo=d.getMonth(),newMo=mo!==lastMo;lastMo=mo;
+    var label=i===1?'بكرة':i===2?'بعد بكرة':DAYS_S[d.getDay()];
+    days+='<button class="day'+(sel?' on':'')+(full?' full':'')+'" '+(full?'disabled':'')+
+      ' aria-pressed="'+sel+'" onclick="pickDay(\''+iso+'\')">'+
+      '<s>'+label+'</s><b class="mono">'+d.getDate()+'</b>'+
+      '<i'+(full?'':' class="q"')+'>'+(full?'مكتمل':newMo?MO[mo].slice(0,4):'')+'</i></button>';
   }
-  return head(lead,BK.pkg?'أول زيارة — وبعدها '+BK.pkg.every+' بنفس الموعد':'اختر اليوم والفترة')+
-    '<div class="fld"><span class="lb">اليوم</span><div class="scrollx">'+days+'</div></div>'+
-    '<div class="fld"><span class="lb">الفترة</span><div class="opts">'+
-      SLOTS.map(function(s){return '<button class="opt opt-w" style="flex:1" aria-pressed="'+(BK.slot===s.k)+'" onclick="BK.slot=\''+s.k+'\';renderBook()">'+
-        '<span style="font-weight:600">'+s.t+'</span><s class="mono">'+s.s+'</s></button>';}).join('')+'</div></div>'+
+  var slots='';
+  SLOTS.forEach(function(sl){
+    var left=BK.date?slotLeft(BK.date,sl.k):SLOT_CAP,full=BK.date&&left<=0;
+    slots+='<button class="slot'+(BK.slot===sl.k?' on':'')+(full?' full':'')+'" '+(full?'disabled':'')+
+      ' aria-pressed="'+(BK.slot===sl.k)+'" onclick="BK.slot=\''+sl.k+'\';renderBook()">'+
+      '<b>'+sl.t+'</b><s class="mono">'+sl.s+'</s>'+
+      '<i>'+(full?'محجوز':left===1?'باقي موعد واحد':'متاح')+'</i></button>';
+  });
+  return head(BK.pkg?'متى نبدأ اشتراكك؟':'متى يناسبك؟',
+      BK.pkg?'أول زيارة — وبعدها '+BK.pkg.every+' بنفس الموعد':'اختر اليوم والفترة — المواعيد المحجوزة تظهر مقفلة')+
+    '<div class="fld"><span class="lb">اليوم</span><div class="scrollx days">'+days+'</div></div>'+
+    '<div class="fld"><span class="lb">الفترة</span><div class="slots">'+slots+'</div></div>'+
+    '<div class="note">'+(BK.date&&BK.slot
+      ? 'موعدك يُحجز لك أول ما ترسل الطلب — ما أحد يقدر ياخذه بعدها.'
+      : (SLOT_CAP===1?'موعد واحد في كل فترة':'كل فترة تسع '+SLOT_CAP+' مواعيد')+' — عشان الفريق يعطيك وقته كامل.')+'</div>'+
     nextBtn(!!(BK.date&&BK.slot));
+}
+/* تغيير اليوم يلغي فترة صارت غير متاحة فيه */
+function pickDay(iso){
+  BK.date=iso;
+  if(BK.slot&&slotLeft(iso,BK.slot)<=0)BK.slot='';
+  renderBook();
 }
 function whereReady(){
   if(BK.adr)return true;
@@ -1269,6 +1370,18 @@ function stepConfirmPkg(){
     '<div class="note">يتواصل معك '+esc(BIZ.rep)+' لتأكيد الاشتراك وترتيب المواعيد. تقدر توقفه في أي وقت.</div>'+
     '<button class="btn" style="margin-top:20px" id="bkGo" onclick="submitOrder()">اشترك الآن</button>';
 }
+/* لو سُبق العميل على الفترة نرجّعه لخطوة الموعد بعد تحديث التوفر — لا نتركه في شاشة ميتة */
+function onSubmitErr(e){
+  var c=e&&e.code;
+  if(c==='slot-taken'){
+    loadSlots().then(function(){
+      BK.slot='';BK.step=0;renderBook();
+      toast('سبقك أحد على هذي الفترة — اختر فترة ثانية');
+    });
+    return;
+  }
+  alert(c==='permission-denied'?'تحتاج تسجيل دخول صحيح — أعد المحاولة':'تعذّر الإرسال، تحقق من الاتصال');
+}
 function submitOrder(){
   var b=$('bkGo');b.disabled=true;b.textContent='جاري الإرسال…';
   var now=new Date().toISOString();
@@ -1282,8 +1395,7 @@ function submitOrder(){
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
     API.addOrder(po).then(function(){
       BK.pkg=null;renderAll();go('scOrders');setTab('scOrders');toast('وصلنا اشتراكك — نتواصل معك قريب');
-    }).catch(function(e){b.disabled=false;b.textContent='اشترك الآن';
-      alert((e&&e.code)==='permission-denied'?'تحتاج تسجيل دخول صحيح — أعد المحاولة':'تعذّر الإرسال، تحقق من الاتصال');});
+    }).catch(function(e){b.disabled=false;b.textContent='اشترك الآن';onSubmitErr(e);});
     return;
   }
   var L=cartLines(),t=cartTotals();
@@ -1297,8 +1409,7 @@ function submitOrder(){
   API.addOrder(o).then(function(){
     CART={};LS.set('cart',{});
     renderAll();go('scOrders');setTab('scOrders');toast('وصلنا طلبك — نتواصل معك قريب');
-  }).catch(function(e){b.disabled=false;b.textContent='أرسل الطلب';
-    alert((e&&e.code)==='permission-denied'?'تحتاج تسجيل دخول صحيح — أعد المحاولة':'تعذّر إرسال الطلب، تحقق من الاتصال');});
+  }).catch(function(e){b.disabled=false;b.textContent='أرسل الطلب';onSubmitErr(e);});
 }
 </script>
 <script>

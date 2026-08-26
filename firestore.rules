@@ -83,6 +83,32 @@ service cloud.firestore {
       }
     }
 
+    /* عدّاد المواعيد المحجوزة لكل يوم: {am:1, pm:0, ev:2}
+       الحارس الحقيقي ضد الحجز المزدوج — التطبيق يفحص، والقاعدة تمنع.
+       ⚠️ SLOT_CAP هنا لازم يطابق SLOT_CAP في app/index.html */
+    function SLOT_CAP() { return 1; }
+    function slotOk(d, k) {
+      return !(k in d) || (d[k] is int && d[k] >= 0 && d[k] <= SLOT_CAP());
+    }
+    // لا قفزات: كل فترة تتغيّر بمقدار واحد فقط في المرة
+    function stepOk(nu, old, k) {
+      return !(k in nu) ||
+        ((k in old ? nu[k] - old[k] : nu[k]) <= 1 && (k in old ? old[k] - nu[k] : 0) <= 1);
+    }
+    match /slots/{day} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null &&
+        request.resource.data.keys().hasOnly(['am','pm','ev']) &&
+        slotOk(request.resource.data,'am') && slotOk(request.resource.data,'pm') && slotOk(request.resource.data,'ev');
+      allow update: if request.auth != null &&
+        request.resource.data.keys().hasOnly(['am','pm','ev']) &&
+        slotOk(request.resource.data,'am') && slotOk(request.resource.data,'pm') && slotOk(request.resource.data,'ev') &&
+        stepOk(request.resource.data, resource.data,'am') &&
+        stepOk(request.resource.data, resource.data,'pm') &&
+        stepOk(request.resource.data, resource.data,'ev');
+      allow delete: if isAdmin();
+    }
+
     // الطلبات: العميل ينشئ طلبه ويقرأ طلباته ويلغيها قبل التأكيد. الأدمن يدير الكل.
     match /orders/{oid} {
       allow read: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
