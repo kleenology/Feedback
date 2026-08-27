@@ -153,6 +153,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .or-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
 .or-n{font-size:14px;font-weight:700}
 .or-p{font-size:11px;color:#9ab;direction:ltr;text-align:right;font-family:monospace}
+.or-no{display:inline-block;margin-inline-end:6px;padding:1px 7px;border-radius:999px;background:#eef4f8;color:#4a6a80;font-size:11px;font-weight:700;direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
 .or-m{font-size:11.5px;color:#5d8aa8;line-height:1.9;margin-bottom:10px}
 .or-m b{color:#0b3954}
 .or-it{background:#f7fafc;border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:11.5px;color:#5d8aa8}
@@ -951,8 +952,8 @@ function rOrList(){
     if(ORF!=='live'&&ORF!=='all'&&o.st!==ORF)return false;
     if(q){
       var dq=q.replace(/\D/g,'');
-      var hay=(String(o.n||'')+' '+orAddr(o)+' '+String(o.svc||'')).toLowerCase();
-      if(hay.indexOf(q)<0&&!(dq&&String(o.ph||'').indexOf(dq)>=0))return false;
+      var hay=(String(o.n||'')+' '+orAddr(o)+' '+String(o.svc||'')+' #'+String(o.no||'')).toLowerCase();
+      if(hay.indexOf(q)<0&&!(dq&&(String(o.ph||'').indexOf(dq)>=0||String(o.no||'')===dq)))return false;
     }
     return true;
   });
@@ -963,7 +964,7 @@ function orCard(o){
   var c=ORCOL[o.st]||ORCOL.new,items=o.items||[];
   var nx=ORNEXT[o.st];
   return '<div class="or'+(o.st==='new'?' new':'')+'">'+
-    '<div class="or-h"><div><div class="or-n">'+(o.quote?'📐 ':o.sub?'🔁 ':'')+esc(o.n||'عميل')+'</div>'+
+    '<div class="or-h"><div><div class="or-n">'+(o.no?'<span class="or-no">#'+esc(o.no)+'</span>':'')+(o.quote?'📐 ':o.sub?'🔁 ':'')+esc(o.n||'عميل')+'</div>'+
       '<div class="or-p">+'+esc(o.ph||'')+'</div></div>'+
       '<span class="or-st" style="background:'+c[0]+';color:'+c[1]+'">'+(ORST[o.st]||o.st)+'</span></div>'+
     '<div class="or-m"><b>'+esc(o.svc||'')+'</b><br>'+esc(orWhen(o))+'<br>'+esc(orAddr(o))+
@@ -986,7 +987,7 @@ function orCard(o){
 }
 function orMsg(o){
   var g=greetAr(),nm=o.n||'يا غالي';
-  if(o.st==='new')return g+' '+nm+' 🌟\nمعك '+BIZ.rep+' من '+BIZ.name+'\n\nوصلنا طلبك: '+(o.svc||'')+
+  if(o.st==='new')return g+' '+nm+' 🌟\nمعك '+BIZ.rep+' من '+BIZ.name+'\n\nوصلنا طلبك'+(o.no?' رقم '+o.no:'')+': '+(o.svc||'')+
     '\nالموعد: '+orWhen(o)+'\n\n'+(o.price?'السعر: '+o.price+' ر.س':'أبي أتأكد من التفاصيل قبل ما أثبّت الموعد')+' ✨';
   if(o.st==='confirmed')return g+' '+nm+' 🌟\nموعدك مثبّت: '+orWhen(o)+'\nنشوفك على خير ✨';
   if(o.st==='on_way')return g+' '+nm+' 🌟\nالفريق في الطريق لك الحين ✨';
