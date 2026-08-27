@@ -728,6 +728,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
+var APP_VER='2026.08.27.0109';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1225,6 +1226,7 @@ function whereReady(){
 }
 /* أسرع طريق: ضغطة وحدة تلتقط الإحداثيات — الفريق يفتحها في الخرائط ويوصل.
    الكتابة اليدوية تبقى موجودة لمن ما يبي يشارك موقعه */
+function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
 function inFrame(){try{return window.self!==window.top;}catch(e){return true;}}
 /* رفض المتصفح لا يعني أن العميل رفض: داخل إطار مضمّن يُرفض الطلب فوراً بحكم سياسة
    الأذونات وبدون أن يُسأل أحد. نفرّق بالزمن — الرفض الفوري ليس قراراً من العميل. */
@@ -1349,7 +1351,10 @@ function stepWhere(){
       '</div>'+
       (MAPS_KEY?'':'<p class="hint" style="margin-top:10px">'+(BK.loc.moved?'ضبطت الموقع ✓ — تقدر تسحبه مرة ثانية':'اسحب الدبوس لو الموقع مو مضبوط بالضبط')+'</p>')+
       (weak?'<div class="note warn" style="margin-top:10px">دقة الموقع ضعيفة (±'+acc+' م). اسحب الدبوس على بيتك، أو '+
-            '<button class="lnkb" onclick="useMyLocation()">أعد المحاولة</button> من مكان مكشوف.</div>'
+            '<button class="lnkb" onclick="useMyLocation()">أعد المحاولة</button> من مكان مكشوف.'+
+            (acc>500?'<br><br><b>ودقة بهذا السوء غالباً معناها أن «الموقع الدقيق» مقفل:</b><br>'+
+              (isIOS()?'إعدادات الآيفون ← الخصوصية والأمان ← خدمات الموقع ← مواقع Safari ← فعّل <b>«الموقع الدقيق»</b>'
+                      :'إعدادات المتصفح ← أذونات الموقع ← فعّل الموقع الدقيق'):'')+'</div>'
            :acc?'<p class="hint" style="margin-top:8px">دقة الموقع ±'+acc+' متر</p>':'')+
       '<div class="locbox-h" style="margin-top:12px"><span class="tick">'+ic('check')+'</span>'+
         '<div><b>'+(MAPS_KEY?'اسحب الدبوس لضبط موقعك':'حدّدنا موقعك')+'</b>'+
@@ -1555,7 +1560,8 @@ function renderMe(){
       '<a class="btn btn-2 btn-sm" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/'+BIZ.wa+'">'+ic('chat','','ic-sm')+'<span>واتساب '+esc(BIZ.rep)+'</span></a>'+
       '<button class="btn btn-2 btn-sm" onclick="openTerms()">'+ic('shield','','ic-sm')+'<span>الشروط وسياسة الخصوصية</span></button>'+
       '<button class="btn btn-x btn-sm" onclick="logout()">'+ic('out','','ic-sm')+'<span>تسجيل الخروج</span></button>'+
-    '</div></div>';
+    '</div>'+
+    '<p class="hint" style="margin-top:14px">الإصدار <span class="mono">'+APP_VER+'</span></p></div>';
 }
 function saveName(from){
   var el=$(from||'meN');if(!el)return;
