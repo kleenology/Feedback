@@ -912,6 +912,16 @@ var API={
 function lgErr(m){var e=$('lgErr');if(!m){e.classList.add('hide');return;}e.textContent=m;e.classList.remove('hide');}
 function recap(){if(window.__rc)return window.__rc;
   window.__rc=new firebase.auth.RecaptchaVerifier('recaptcha',{size:'invisible'});return window.__rc;}
+/* رمز الكابتشا يُستهلك بعد كل إرسال. بدون تصفيره تُجبر المحاولة التالية على تحدٍّ
+   مرئي جديد بلا داعٍ — وهذا يزعج العميل عند «إعادة إرسال الرمز» تحديداً. */
+function resetRecap(){
+  if(!window.__rc)return;
+  try{
+    window.__rc.render().then(function(id){
+      if(window.grecaptcha&&typeof window.grecaptcha.reset==='function')window.grecaptcha.reset(id);
+    }).catch(function(){});
+  }catch(e){}
+}
 function otpVal(){return Array.prototype.map.call(document.querySelectorAll('#otpRow input'),function(i){return i.value;}).join('');}
 function buildOtp(){
   $('otpRow').innerHTML='';
@@ -957,7 +967,8 @@ function sendCode(again){
     var f=document.querySelector('#otpRow input');if(f)f.focus();
   }
   if(DEMO){setTimeout(function(){ok();toast('وضع المعاينة: أي 6 أرقام تمشّي');},450);return;}
-  auth.signInWithPhoneNumber('+'+p,recap()).then(function(c){CONF=c;ok();}).catch(function(e){
+  auth.signInWithPhoneNumber('+'+p,recap()).then(function(c){CONF=c;resetRecap();ok();}).catch(function(e){
+    resetRecap();
     $('btnPh').disabled=false;$('btnPh').textContent='متابعة';tickResend();
     var c=e&&e.code||'';
     lgErr(c==='auth/invalid-phone-number'?'الرقم غير صحيح':
