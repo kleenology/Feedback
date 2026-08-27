@@ -380,6 +380,16 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .locbox-h s{text-decoration:none;font-size:11.5px;color:var(--mut);direction:ltr;display:block}
 .locbox-h > div{flex:1;min-width:0}
 
+.hintcard{width:100%;background:var(--gold-l);border-radius:var(--r);padding:16px;display:flex;
+  align-items:center;gap:13px;text-align:right;box-shadow:var(--sh)}
+.hintcard .il{color:var(--gold-d)}
+.hintcard>span{flex:1;min-width:0}
+.hintcard b{display:block;font-size:14px;font-weight:700;font-family:var(--dsp);color:var(--gold-d)}
+.hintcard s{display:block;text-decoration:none;font-size:12px;color:var(--mut);margin-top:2px;line-height:1.6}
+.hintcard>.ic{color:var(--gold-d);flex:0 0 auto}
+.okpill{display:inline-block;background:var(--okl);color:var(--ok);font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:99px;margin-right:4px}
+
 /* ===== اختيار طريقة التسعير ===== */
 .qopts{display:grid;gap:12px}
 .qopt{background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--sh);
@@ -750,8 +760,10 @@ var PKGS=[
   d:'للفلل والعوائل الكبيرة — فريق يجيك كل أسبوع بموعد ثابت.',
   incl:['كل مزايا باقة كل أسبوعين','تنظيف كنب أو سجاد كل شهر مجاناً','تلميع زجاج ونوافذ مرة في الشهر','خصم 15% على أي خدمة إضافية']}
 ];
-/* سلّم الخصم: كل ما كبرت السلة كبر الخصم. عدّل الحدود والنسب كما تحب */
+/* سلّم الخصم: كل ما كبر مجموع الخدمات المشمولة كبر الخصم. عدّل الحدود والنسب كما تحب */
 var TIERS=[{at:400,off:10},{at:800,off:15},{at:1500,off:20},{at:2500,off:25}];
+/* الخصم يسري على هذي الخدمات وحدها — أضف مفاتيح خدمات ثانية لو وسّعته */
+var DISC_SV=['sofa'];
 
 var KINDS=['شقة','فيلا','دور','مكتب','محل','مستودع'];
 /* مساحات تقريبية لطلب التسعير — العميل يختار بضغطة بدل ما يكتب رقماً */
@@ -823,8 +835,14 @@ function cartCount(){return cartLines().reduce(function(s,l){return s+l.q;},0);}
 function cartSub(){return cartLines().reduce(function(s,l){return s+l.sum;},0);}
 function tierFor(sub){var t=null;TIERS.forEach(function(x){if(sub>=x.at)t=x;});return t;}
 function nextTier(sub){var n=null;TIERS.forEach(function(x){if(!n&&sub<x.at)n=x;});return n;}
-function cartTotals(){var sub=cartSub(),t=tierFor(sub),off=t?t.off:0,cut=Math.round(sub*off/100);
-  return {sub:sub,off:off,cut:cut,tot:sub-cut};}
+/* الخصم يُحسب على المشمول وحده — لا على كل السلة */
+function discOk(sv){return DISC_SV.indexOf(sv)>=0;}
+function discBase(){return cartLines().filter(function(l){return discOk(l.sv);})
+  .reduce(function(s,l){return s+l.sum;},0);}
+function discNames(){return DISC_SV.map(function(k){return svcOf(k).t;}).join(' و');}
+function cartTotals(){
+  var sub=cartSub(),base=discBase(),t=tierFor(base),off=t?t.off:0,cut=Math.round(base*off/100);
+  return {sub:sub,base:base,off:off,cut:cut,tot:sub-cut};}
 </script>
 <script>
 /* ================= طبقة البيانات ================= */
@@ -1201,15 +1219,25 @@ function renderCatalog(){
   syncCartUI();
 }
 function renderLadder(){
-  var sub=cartSub(),cur=tierFor(sub),nx=nextTier(sub),top=TIERS[TIERS.length-1];
-  var fill=Math.min(100,Math.round(sub/top.at*100));
+  var base=discBase(),cur=tierFor(base),nx=nextTier(base),top=TIERS[TIERS.length-1];
+  /* في فئة غير مشمولة نعرض تلميحاً فقط — شريط تقدم هنا يوهم أن الإضافة تقرّبه للخصم */
+  if(!discOk(CTV)){
+    $('ladder').innerHTML='<button class="hintcard" onclick="CTV=\''+DISC_SV[0]+'\';renderCatalog()">'+
+      il(svcOf(DISC_SV[0]).ic,'','il-sm')+
+      '<span><b>خصم يصل إلى '+pct(top.off)+' على '+esc(discNames())+'</b>'+
+      '<s>ما يشمل هذي الفئة — اضغط لتشوف الأصناف المشمولة</s></span>'+
+      ic('back','','ic-sm')+'</button>';
+    return;
+  }
+  var fill=Math.min(100,Math.round(base/top.at*100));
   $('ladder').innerHTML='<div class="ladder">'+
     '<div class="ladder-t">احصل على خصم يصل إلى '+pct(top.off)+'</div>'+
-    '<div class="ladder-s">'+(nx?'أضف <b>'+(nx.at-sub)+' ر.س</b> للوصول إلى خصم '+pct(nx.off)
-      :cur?'وصلت لأعلى خصم — <b>'+pct(cur.off)+'</b> على سلتك':'ابدأ بإضافة الأصناف اللي تبيها')+'</div>'+
+    '<div class="ladder-s">'+(nx?'أضف <b>'+(nx.at-base)+' ر.س</b> من '+esc(discNames())+' للوصول إلى خصم '+pct(nx.off)
+      :cur?'وصلت لأعلى خصم — <b>'+pct(cur.off)+'</b> على '+esc(discNames())
+      :'ابدأ بإضافة الأصناف اللي تبيها')+'</div>'+
     '<div class="rail"><i style="width:'+fill+'%"></i></div>'+
     '<div class="tiers">'+TIERS.map(function(t){
-      return '<div class="tier'+(sub>=t.at?' on':'')+'"><span class="dot"></span>'+
+      return '<div class="tier'+(base>=t.at?' on':'')+'"><span class="dot"></span>'+
         '<b class="mono">'+t.at.toLocaleString('en-US')+'</b><s>خصم '+pct(t.off)+'</s></div>';}).join('')+'</div></div>';
 }
 function setQty(k,q){
@@ -1224,7 +1252,7 @@ function syncCartUI(){
   var bar=$('cartBar');
   if(!n){bar.classList.add('hide');bar.innerHTML='';return;}
   bar.classList.remove('hide');
-  bar.innerHTML='<div class="cartbar-in"><div><s>'+n+' صنف'+(t.off?' · خصم '+pct(t.off):'')+'</s>'+
+  bar.innerHTML='<div class="cartbar-in"><div><s>'+n+' صنف'+(t.cut?' · وفّرت '+t.cut+' ر.س':'')+'</s>'+
     '<b>'+t.tot.toLocaleString('en-US')+' ر.س</b></div>'+
     '<button class="go" onclick="go(\'scCart\');setTab(\'\')">عرض السلة'+ic('back','','ic-sm')+'</button></div>';
 }
@@ -1244,16 +1272,17 @@ function renderCart(){
         return '<div class="box" style="margin-bottom:9px;display:flex;gap:13px;align-items:center">'+
           il(l.ic,'','il-sm')+
           '<div style="flex:1;min-width:0"><b style="font-size:14.5px;font-weight:600;display:block">'+esc(l.t)+'</b>'+
-            '<s style="text-decoration:none;font-size:11.5px;color:var(--mut)">'+esc(l.u)+' · '+sar(l.p)+'</s></div>'+
+            '<s style="text-decoration:none;font-size:11.5px;color:var(--mut)">'+esc(l.u)+' · '+sar(l.p)+
+              (t.off&&discOk(l.sv)?' <span class="okpill">مشمول بالخصم</span>':'')+'</s></div>'+
           '<div style="text-align:left"><div class="qty" style="margin:0 0 6px">'+
             '<button onclick="setQty(\''+l.k+'\','+(l.q-1)+')" aria-label="نقص">'+ic('minus','','ic-sm')+'</button>'+
             '<span>'+l.q+'</span>'+
             '<button onclick="setQty(\''+l.k+'\','+(l.q+1)+')" aria-label="زد">'+ic('plus','','ic-sm')+'</button></div>'+
             '<b style="font-size:14px">'+sar(l.sum)+'</b></div></div>';}).join('')+'</div>'+
-    (nx?'<div class="sec" style="border:none"><div class="note acc">أضف <b>'+(nx.at-t.sub)+' ر.س</b> وتوصل خصم '+pct(nx.off)+' — يعني توفّر أكثر.</div></div>':'')+
+    (nx?'<div class="sec" style="border:none"><div class="note acc">أضف <b>'+(nx.at-t.base)+' ر.س</b> من '+esc(discNames())+' وتوصل خصم '+pct(nx.off)+' — يعني توفّر أكثر.</div></div>':'')+
     '<div class="sec"><div class="box">'+
       '<div class="tot"><span>المجموع</span><b>'+sar(t.sub)+'</b></div>'+
-      (t.off?'<div class="tot"><span>خصم السلة '+pct(t.off)+'</span><b class="cut">− '+sar(t.cut)+'</b></div>':'')+
+      (t.off?'<div class="tot"><span>خصم '+esc(discNames())+' '+pct(t.off)+'</span><b class="cut">− '+sar(t.cut)+'</b></div>':'')+
       '<div class="tot big"><span>الإجمالي التقديري</span><b>'+sar(t.tot)+'</b></div>'+
       '<p class="note" style="margin-top:12px">السعر تقديري — المندوب يعاين ويأكد لك السعر النهائي قبل ما يبدأ الشغل.</p>'+
     '</div></div>'+
@@ -1517,7 +1546,7 @@ function stepConfirm(){
       L.map(function(l){return '<div class="row-i"><span><b>'+esc(l.t)+'</b><s>'+esc(l.u)+' × '+l.q+'</s></span><b>'+sar(l.sum)+'</b></div>';}).join('')+
     '</div>'+
     '<div class="tot" style="margin-top:8px"><span>المجموع</span><b>'+sar(t.sub)+'</b></div>'+
-    (t.off?'<div class="tot"><span>خصم السلة '+pct(t.off)+'</span><b class="cut">− '+sar(t.cut)+'</b></div>':'')+
+    (t.off?'<div class="tot"><span>خصم '+esc(discNames())+' '+pct(t.off)+'</span><b class="cut">− '+sar(t.cut)+'</b></div>':'')+
     '<div class="tot big"><span>الإجمالي التقديري</span><b>'+sar(t.tot)+'</b></div></div>'+
     '<div class="box"><div class="rows">'+
       '<div class="row-i"><s style="text-decoration:none;font-size:13px;color:var(--mut)">الموعد</s><b>'+esc(fmtDate(BK.date))+'</b></div>'+
