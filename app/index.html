@@ -380,6 +380,20 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .locbox-h s{text-decoration:none;font-size:11.5px;color:var(--mut);direction:ltr;display:block}
 .locbox-h > div{flex:1;min-width:0}
 
+/* ===== اختيار طريقة التسعير ===== */
+.qopts{display:grid;gap:12px}
+.qopt{background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--sh);
+  text-align:right;display:block;transition:transform .14s}
+.qopt:active{transform:scale(.985)}
+.qic{width:52px;height:52px;border-radius:16px;background:var(--blue-l);display:grid;
+  place-items:center;margin-bottom:14px}
+.qic .ic{width:24px;height:24px;color:var(--blue-d)}
+.qopt b{display:block;font-size:17px;font-weight:700;font-family:var(--dsp);margin-bottom:5px}
+.qopt s{display:block;text-decoration:none;font-size:13px;color:var(--mut);line-height:1.75}
+.qopt i{font-style:normal;display:inline-flex;align-items:center;gap:5px;margin-top:12px;
+  font-size:12.5px;font-weight:700;font-family:var(--dsp);color:var(--blue)}
+.qopt i .ic{width:14px;height:14px}
+
 /* ===== الباقات ===== */
 .tagline{display:inline-block;background:var(--gold);color:#4A3200;font-size:11.5px;font-weight:700;
   font-family:var(--dsp);padding:5px 13px;border-radius:999px;margin-bottom:12px}
@@ -491,6 +505,24 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
   </div></header>
   <div class="wrap"><div id="pkBody"></div></div>
   <div class="sticky"><div class="sticky-in"><button class="btn" id="pkGo"></button></div></div>
+</section>
+
+<!-- ===== طريقة التسعير ===== -->
+<section class="scr" id="scQuote">
+  <header class="top"><div class="top-in">
+    <button class="bk" onclick="go('scService')" id="qBack"></button>
+    <span class="mark">Kleenology</span>
+  </div></header>
+  <div class="wrap"><div id="qBody"></div></div>
+</section>
+
+<!-- ===== تسعير عبر واتساب ===== -->
+<section class="scr" id="scQuoteWa">
+  <header class="top"><div class="top-in">
+    <button class="bk" onclick="go('scQuote')" id="qwBack"></button>
+    <span class="mark">Kleenology</span>
+  </div></header>
+  <div class="wrap"><div id="qwBody"></div></div>
 </section>
 
 <!-- ===== الكتالوج ===== -->
@@ -672,7 +704,8 @@ var SVCS=[
         'تعقيم أسطح اللمس ومقابض الأبواب',
         'تنظيف الواجهات الزجاجية',
         'جدولة أسبوعية أو شهرية حسب طلبك']},
- {k:'post',  ic:'post',  t:'بعد التشطيب', s:'تنظيف عميق بعد البناء', img:[],
+ /* quote:true = ما تُسعّر من كتالوج، تحتاج معاينة. أضفها لأي خدمة أخرى تبيها كذا */
+ {k:'post',  ic:'post',  t:'بعد التشطيب', s:'تنظيف عميق بعد البناء', img:[], quote:true,
   d:'إزالة مخلفات البناء والغبار العالق والدهان، وتسليم المكان جاهز للسكن.',
   incl:['إزالة بقايا الأسمنت والدهان والجبس',
         'تنظيف الواجهات الزجاجية والإطارات',
@@ -721,6 +754,8 @@ var PKGS=[
 var TIERS=[{at:400,off:10},{at:800,off:15},{at:1500,off:20},{at:2500,off:25}];
 
 var KINDS=['شقة','فيلا','دور','مكتب','محل','مستودع'];
+/* مساحات تقريبية لطلب التسعير — العميل يختار بضغطة بدل ما يكتب رقماً */
+var AREAS=['أقل من 150م','150 – 300م','300 – 500م','500 – 1000م','أكبر من 1000م'];
 /* مدن الخدمة — تظهر كأزرار بدل حقل كتابة. عدّلها حسب تغطيتكم */
 var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','المدينة'];
 /* مفتاح Google Maps — اختياري.
@@ -974,18 +1009,25 @@ function openService(k){CTV=k;go('scService');renderService();}
 function renderService(){
   var s=svcOf(CTV),n=CAT.filter(function(x){return x.sv===CTV;}).length;
   $('svBack').innerHTML=ic('back','','ic-sm')+'<span>الرئيسية</span>';
-  $('svGo').innerHTML=ic('cart','','ic-sm')+'<span>اختر الأصناف ('+n+')</span>';
-  $('svGo').onclick=function(){openCatalog(CTV);};
+  if(s.quote){
+    $('svGo').innerHTML=ic('cal','','ic-sm')+'<span>اطلب تسعير</span>';
+    $('svGo').onclick=function(){openQuote(CTV);};
+  }else{
+    $('svGo').innerHTML=ic('cart','','ic-sm')+'<span>اختر الأصناف ('+n+')</span>';
+    $('svGo').onclick=function(){openCatalog(CTV);};
+  }
   $('svBody').innerHTML=
     '<div class="sec" style="border:none"><div class="sv-hero"><span class="ring">'+il(s.ic,'','il-xl')+'</span>'+
       '<h2>'+esc(s.t)+'</h2><p>'+esc(s.d)+'</p></div></div>'+
     gallery(s)+
     '<div class="sec"><div class="sec-h"><h2>ما الذي تتضمنه الخدمة</h2></div>'+
       '<div class="incl">'+s.incl.map(function(x){return '<div><span class="tick">'+ic('check')+'</span><span>'+esc(x)+'</span></div>';}).join('')+'</div></div>'+
-    '<div class="sec"><div class="sec-h"><h2>الأسعار تبدأ من</h2></div><div class="rows">'+
-      CAT.filter(function(x){return x.sv===CTV;}).slice(0,4).map(function(it){
-        return '<div class="row-i"><span><b>'+esc(it.t)+'</b><s>'+esc(it.u)+'</s></span><b>'+sar(it.p)+'</b></div>';
-      }).join('')+'</div></div><div style="height:70px"></div>';
+    (s.quote
+      ? '<div class="sec"><div class="note acc">سعر هذي الخدمة يتغيّر حسب المساحة وحالة المكان — نعاينها أول، وزيارة التسعير مجانية.</div></div>'
+      : '<div class="sec"><div class="sec-h"><h2>الأسعار تبدأ من</h2></div><div class="rows">'+
+        CAT.filter(function(x){return x.sv===CTV;}).slice(0,4).map(function(it){
+          return '<div class="row-i"><span><b>'+esc(it.t)+'</b><s>'+esc(it.u)+'</s></span><b>'+sar(it.p)+'</b></div>';
+        }).join('')+'</div></div>')+'<div style="height:70px"></div>';
   galInit();
 }
 
@@ -1070,6 +1112,71 @@ function galInit(){
     i=Math.abs(i);
     dots.querySelectorAll('i').forEach(function(d,j){d.classList.toggle('on',j===i);});
   };
+}
+
+/* ================= طلب تسعير ================= */
+/* بعض الخدمات ما تُسعّر من كتالوج — لازم معاينة. نعطي العميل طريقين:
+   زيارة تسعير محجوزة بموعد، أو تفاصيل سريعة على واتساب لمن يستعجل. */
+var QW={kind:'',area:'',nt:''};
+function openQuote(k){CTV=k;go('scQuote');renderQuote();}
+function renderQuote(){
+  var sv=svcOf(CTV);
+  $('qBack').innerHTML=ic('back','','ic-sm')+'<span>'+esc(sv.t)+'</span>';
+  $('qBody').innerHTML=
+    '<div class="sec" style="padding-bottom:8px"><div class="sv-hero">'+
+      '<span class="ring">'+il(sv.ic,'','il-xl')+'</span>'+
+      '<h2>تسعير '+esc(sv.t)+'</h2>'+
+      '<p>هذي الخدمة يتغيّر سعرها حسب المساحة وحالة المكان، فنعاينها قبل ما نعطيك رقماً — ما نبي نعدك بسعر ونغيّره عليك.</p>'+
+    '</div></div>'+
+    '<div class="sec"><div class="sec-h"><h2>اختر كيف تبي السعر</h2></div>'+
+      '<div class="qopts">'+
+        '<button class="qopt" onclick="startQuoteVisit()">'+
+          '<span class="qic">'+ic('cal')+'</span>'+
+          '<b>احجز زيارة للتسعير</b>'+
+          '<s>المندوب يجيك بموعد تختاره، يعاين ويعطيك السعر النهائي في مكانك</s>'+
+          '<i>الأدق'+ic('back','','ic-sm')+'</i></button>'+
+        '<button class="qopt" onclick="go(\'scQuoteWa\');renderQuoteWa()">'+
+          '<span class="qic">'+ic('chat')+'</span>'+
+          '<b>تسعير عبر واتساب</b>'+
+          '<s>أرسل تفاصيل المكان ونرد عليك بعرض سعر مبدئي</s>'+
+          '<i>الأسرع'+ic('back','','ic-sm')+'</i></button>'+
+      '</div></div>'+
+    '<div class="sec" style="padding-top:0"><div class="note">زيارة التسعير مجانية وما تلزمك بشي — تسمع السعر وتقرر.</div></div>';
+}
+/* زيارة التسعير تمر بنفس خطوات الحجز وتحجز فترة فعلية — لأنها موعد حقيقي على فريقك */
+function startQuoteVisit(){
+  loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
+  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,quote:svcOf(CTV),
+      loc:null,base:null,manual:false,city:'',locErr:''};
+  go('scBook');setTab('');renderBook();
+}
+function renderQuoteWa(){
+  var sv=svcOf(CTV);
+  $('qwBack').innerHTML=ic('back','','ic-sm')+'<span>رجوع</span>';
+  $('qwBody').innerHTML=
+    '<h2 class="stp-t" style="margin-top:18px">تفاصيل المكان</h2>'+
+    '<p class="stp-s">كل ما وضّحت أكثر، جاك السعر أدق</p>'+
+    '<div class="fld"><span class="lb">نوع المكان</span><div class="opts">'+
+      KINDS.map(function(k){return '<button class="opt" aria-pressed="'+(QW.kind===k)+'" onclick="QW.kind=\''+k+'\';renderQuoteWa()">'+k+'</button>';}).join('')+
+    '</div></div>'+
+    '<div class="fld"><span class="lb">المساحة تقريباً</span><div class="opts">'+
+      AREAS.map(function(a){return '<button class="opt" aria-pressed="'+(QW.area===a)+'" onclick="QW.area=\''+a+'\';renderQuoteWa()">'+esc(a)+'</button>';}).join('')+
+    '</div></div>'+
+    '<div class="fld"><label class="lb" for="qwNt">تفاصيل تفيدنا (اختياري)</label>'+
+      '<textarea class="in" id="qwNt" maxlength="400" placeholder="متى تبي الخدمة · حالة المكان · أي شي يفرق في السعر">'+esc(QW.nt)+'</textarea></div>'+
+    '<button class="btn" '+(QW.kind&&QW.area?'':'disabled')+' onclick="sendQuoteWa()">'+
+      ic('chat','','ic-sm')+'<span>أرسل على واتساب</span></button>'+
+    '<p class="hint" style="margin-top:12px">تنفتح محادثة '+esc(BIZ.rep)+' والرسالة مكتوبة — تضغط إرسال فقط.</p>';
+}
+function sendQuoteWa(){
+  var sv=svcOf(CTV);
+  QW.nt=String(($('qwNt')||{}).value||'').slice(0,400);
+  var t='السلام عليكم '+BIZ.rep+' 🌟\nأبي عرض سعر لخدمة: '+sv.t+
+    '\n\nنوع المكان: '+QW.kind+'\nالمساحة: '+QW.area+
+    (QW.nt?'\nتفاصيل: '+QW.nt:'')+
+    (ME.n?'\n\nالاسم: '+ME.n:'');
+  window.open('https://wa.me/'+BIZ.wa+'?text='+encodeURIComponent(t),'_blank');
+  toast('فتحنا واتساب — اضغط إرسال');
 }
 
 /* ================= الكتالوج ================= */
@@ -1160,22 +1267,22 @@ var STEPS=['الموعد','العنوان','التأكيد'];
 function startBooking(){
   if(!cartLines().length){toast('سلتك فاضية');return;}
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
-  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
+  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,quote:null,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
 /* الاشتراك يمر بنفس الخطوات — الفرق أن المطلوب باقة متكررة لا سلة أصناف */
 function startPkgBooking(){
   if(!PKG)return;
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
-  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
+  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,quote:null,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
-function bookBack(){if(BK.step===0){if(BK.pkg){go('scPkg');}else{go('scCart');}return;}BK.step--;renderBook();}
+function bookBack(){if(BK.step===0){go(BK.quote?'scQuote':BK.pkg?'scPkg':'scCart');return;}BK.step--;renderBook();}
 function bookNext(){
   if(BK.step===1&&!BK.adr)commitWhere();
   BK.step++;renderBook();
 }
 function renderBook(){
   $('bkProg').innerHTML=STEPS.map(function(_,i){return '<i class="'+(i<=BK.step?'on':'')+'"></i>';}).join('');
-  $('bkBtn').innerHTML=ic('back','','ic-sm')+'<span>'+(BK.step===0?(BK.pkg?'الباقة':'السلة'):STEPS[BK.step-1])+'</span>';
+  $('bkBtn').innerHTML=ic('back','','ic-sm')+'<span>'+(BK.step===0?(BK.quote?'التسعير':BK.pkg?'الباقة':'السلة'):STEPS[BK.step-1])+'</span>';
   $('bkStepN').innerHTML='<span dir="ltr" style="unicode-bidi:isolate">'+(BK.step+1)+' / '+STEPS.length+'</span>';
   $('bkBody').innerHTML=[stepWhen,stepWhere,stepConfirm][BK.step]();
   if(BK.step===1&&BK.loc){initMapPin();pinDrag($('mapPin'));}
@@ -1204,7 +1311,8 @@ function stepWhen(){
       '<b>'+sl.t+'</b><s class="mono">'+sl.s+'</s>'+
       '<i>'+(full?'محجوز':left===1?'باقي موعد واحد':'متاح')+'</i></button>';
   });
-  return head(BK.pkg?'متى نبدأ اشتراكك؟':'متى يناسبك؟',
+  return head(BK.quote?'متى نجيك للمعاينة؟':BK.pkg?'متى نبدأ اشتراكك؟':'متى يناسبك؟',
+      BK.quote?'زيارة قصيرة لأخذ المقاسات — مجانية وما تلزمك بشي':
       BK.pkg?'أول زيارة — وبعدها '+BK.pkg.every+' بنفس الموعد':'اختر اليوم والفترة — المواعيد المحجوزة تظهر مقفلة')+
     '<div class="fld"><span class="lb">اليوم</span><div class="scrollx days">'+days+'</div></div>'+
     '<div class="fld"><span class="lb">الفترة</span><div class="slots">'+slots+'</div></div>'+
@@ -1401,6 +1509,7 @@ function commitWhere(){
    .catch(function(e){console.log('حفظ العنوان:',e&&e.code);});
 }
 function stepConfirm(){
+  if(BK.quote)return stepConfirmQuote();
   if(BK.pkg)return stepConfirmPkg();
   var L=cartLines(),t=cartTotals();
   return head('راجع طلبك','تأكد قبل الإرسال')+
@@ -1419,6 +1528,17 @@ function stepConfirm(){
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="فيه درج ضيق · الباب الجانبي · أي شي يفيد الفريق"></textarea></div>'+
     '<div class="note">بعد الإرسال يعاين '+esc(BIZ.rep)+' طلبك ويأكد السعر النهائي. تقدر تلغيه قبل التأكيد.</div>'+
     '<button class="btn" style="margin-top:20px" id="bkGo" onclick="submitOrder()">أرسل الطلب</button>';
+}
+function stepConfirmQuote(){
+  return head('راجع زيارة التسعير','تأكد قبل الإرسال')+
+    '<div class="card" style="margin-bottom:14px"><div class="rows">'+
+      row('الخدمة',BK.quote.t)+row('الزيارة',fmtDate(BK.date))+row('الفترة',slotOf(BK.slot))+
+      row('العنوان',(BK.adr?BK.adr.t+(BK.adr.d?' — '+BK.adr.d:''):''))+
+    '</div></div>'+
+    '<div class="fld"><label class="lb" for="bkNt">تفاصيل تفيد المندوب (اختياري)</label>'+
+      '<textarea class="in" id="bkNt" maxlength="600" placeholder="المساحة تقريباً · حالة المكان · متى تبي الخدمة"></textarea></div>'+
+    '<div class="note acc">الزيارة مجانية وما تلزمك بشي — تسمع السعر وتقرر.</div>'+
+    '<button class="btn" style="margin-top:20px" id="bkGo" onclick="submitOrder()">اطلب الزيارة</button>';
 }
 function row(l,v){return '<div class="row-i"><s style="text-decoration:none;font-size:13px;color:var(--mut)">'+esc(l)+'</s><b>'+esc(v)+'</b></div>';}
 /* مراجعة الاشتراك: باقة متكررة بدل سلة أصناف */
@@ -1457,6 +1577,16 @@ function onSubmitErr(e){
 function submitOrder(){
   var b=$('bkGo');b.disabled=true;b.textContent='جاري الإرسال…';
   var now=new Date().toISOString();
+  if(BK.quote){
+    var qo={uid:ME.uid,ph:ME.ph,n:ME.n||'',svc:'زيارة تسعير — '+BK.quote.t,quote:true,
+      items:[],off:0,est:0,date:BK.date,slot:BK.slot,
+      adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
+      nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
+    API.addOrder(qo).then(function(){
+      BK.quote=null;renderAll();go('scOrders');setTab('scOrders');toast('وصلنا طلبك — نتواصل معك لتأكيد الزيارة');
+    }).catch(function(e){b.disabled=false;b.textContent='اطلب الزيارة';onSubmitErr(e);});
+    return;
+  }
   if(BK.pkg){
     var p=BK.pkg;
     var po={uid:ME.uid,ph:ME.ph,n:ME.n||'',svc:'اشتراك — '+p.t,sub:true,
@@ -1489,10 +1619,11 @@ function submitOrder(){
 function ordCard(o,live){
   var n=(o.items||[]).reduce(function(s,i){return s+i.q;},0);
   return '<article class="ord'+(live?' live':'')+'">'+
-    '<div class="ord-h"><div class="ord-t">'+(o.sub?ic('repeat'):il('cart'))+'<span>'+esc(o.svc||'طلب')+'</span></div>'+
+    '<div class="ord-h"><div class="ord-t">'+(o.quote?ic('cal'):o.sub?ic('repeat'):il('cart'))+'<span>'+esc(o.svc||'طلب')+'</span></div>'+
       '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>'+
     '<div class="meta">'+
-      (o.sub?'<div>'+ic('repeat','','ic-sm')+'<span>يتكرر '+esc((o.pkg&&o.pkg.every)||'')+'</span></div>':
+      (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — مجانية</span></div>':
+        o.sub?'<div>'+ic('repeat','','ic-sm')+'<span>يتكرر '+esc((o.pkg&&o.pkg.every)||'')+'</span></div>':
         n?'<div>'+ic('list','','ic-sm')+'<span>'+n+' صنف</span></div>':'')+
       '<div>'+ic('cal','','ic-sm')+'<span>'+(o.sub?'أول زيارة: ':'')+esc(fmtDate(o.date))+'</span></div>'+
       '<div>'+ic('clock','','ic-sm')+'<span>'+esc(slotOf(o.slot))+'</span></div>'+
