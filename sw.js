@@ -1,6 +1,6 @@
 /* كاش الأصول الثابتة فقط — بيانات Firestore تُجلب دائماً من الشبكة */
-var CACHE = 'kln-v3';
-var ASSETS = ['./index.html', './reviews.html', './logo.png', './manifest.json'];
+var CACHE = 'kln-v4';
+var ASSETS = ['./index.html', './reviews.html', './app/index.html', './logo.png', './manifest.json'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }).then(function () { return self.skipWaiting(); }));
@@ -18,17 +18,25 @@ self.addEventListener('fetch', function (e) {
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return; /* Firebase وغيره: شبكة مباشرة */
 
-  /* الكاش أولاً ثم تحديث بالخلفية: الصفحة تفتح فوراً بدل ما تنتظر 180KB على شبكة الجوال،
-     والنسخة الجديدة تُنزّل بهدوء وتظهر في الفتحة التالية */
+  var isDoc = req.mode === 'navigate' || /\.html?$/.test(url.pathname) || url.pathname.endsWith('/');
+
   e.respondWith(
     caches.open(CACHE).then(function (c) {
       return c.match(req).then(function (hit) {
         var net = fetch(req).then(function (res) {
           if (res && res.status === 200) c.put(req, res.clone());
           return res;
-        }).catch(function () {
-          return hit || c.match('./index.html');
-        });
+        }).catch(function () { return hit || c.match('./index.html'); });
+
+        /* الصفحات: الشبكة أولاً بمهلة ثانيتين ونصف — نسخة قديمة من التطبيق تعني
+           أخطاءً وهمية يطاردها المستخدم، والكاش يبقى شبكة أمان عند ضعف الشبكة */
+        if (isDoc && hit) {
+          return Promise.race([
+            net,
+            new Promise(function (r) { setTimeout(function () { r(hit); }, 2500); })
+          ]);
+        }
+        /* بقية الأصول (شعار، manifest): الكاش أولاً وتحديث بالخلفية */
         return hit || net;
       });
     })
