@@ -241,8 +241,12 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .ord.live{box-shadow:0 0 0 2px var(--gold), var(--sh)}
 .ord-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
 .ord-t{font-size:15.5px;font-weight:700;font-family:var(--dsp);display:flex;align-items:center;gap:10px}
-.ord-t .il{width:36px;height:36px}
-.ordno{font-size:11.5px;color:var(--mut);margin-top:3px;letter-spacing:.3px}
+/* أيقونة البطاقة داخل مربّع ملوّن هادئ — نفس الحجم لكل أنواع الطلبات */
+.ord-t .ico{width:36px;height:36px;border-radius:12px;flex:0 0 auto;display:grid;place-items:center;
+  background:var(--blue-l);color:var(--blue-d)}
+.ord-t .ico .ic{width:18px;height:18px;stroke-width:2}
+.ord-t .ico .il{width:24px;height:24px;color:inherit}
+.ordno{font-size:11.5px;color:var(--mut);margin-top:4px;letter-spacing:.3px;margin-inline-start:46px}
 .meta{display:grid;gap:8px;font-size:13.5px;color:var(--mut)}
 .meta div{display:flex;align-items:center;gap:9px}
 .meta .ic-sm{color:var(--blue);opacity:.75}
@@ -779,7 +783,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.27.2303';
+var APP_VER='2026.08.27.2326';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1692,7 +1696,7 @@ function submitOrder(){
 function ordCard(o,live){
   var n=(o.items||[]).reduce(function(s,i){return s+i.q;},0);
   return '<article class="ord'+(live?' live':'')+'">'+
-    '<div class="ord-h"><div><div class="ord-t">'+(o.quote?ic('cal'):o.sub?ic('repeat'):il('cart'))+'<span>'+esc(o.svc||'طلب')+'</span></div>'+
+    '<div class="ord-h"><div><div class="ord-t"><span class="ico">'+(o.quote?ic('cal'):o.sub?ic('repeat'):il('cart'))+'</span><span>'+esc(o.svc||'طلب')+'</span></div>'+
       (o.no?'<div class="ordno mono">طلب رقم '+o.no+'</div>':'')+'</div>'+
       '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>'+
     '<div class="meta">'+
