@@ -239,6 +239,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .ord-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
 .ord-t{font-size:15.5px;font-weight:700;font-family:var(--dsp);display:flex;align-items:center;gap:10px}
 .ord-t .il{width:36px;height:36px}
+.ordno{font-size:11.5px;color:var(--mut);margin-top:3px;letter-spacing:.3px}
 .meta{display:grid;gap:8px;font-size:13.5px;color:var(--mut)}
 .meta div{display:flex;align-items:center;gap:9px}
 .meta .ic-sm{color:var(--blue);opacity:.75}
@@ -780,6 +781,8 @@ var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
 var SLOT_CAP=1;
+/* أرقام الطلبات تبدأ من هنا +1 — أول طلب يصير 1001 لا #1 */
+var ORD_BASE=1000;
 var BOOKED={};   /* {'2026-09-10':{am:1,pm:0,ev:0}} — كم محجوز في كل فترة */
 var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
@@ -882,16 +885,24 @@ var API={
       var bk=LS.get('booked',{});bk[o.date]=bk[o.date]||{};
       if((bk[o.date][o.slot]||0)>=SLOT_CAP)return Promise.reject({code:'slot-taken'});
       bk[o.date][o.slot]=(bk[o.date][o.slot]||0)+1;LS.set('booked',bk);BOOKED=bk;
+      var n=(LS.get('ordno',0)||0)+1;LS.set('ordno',n);o.no=ORD_BASE+n;
       o.id='d'+Date.now();ORD.unshift(o);LS.set('orders',ORD);return Promise.resolve(o);
     }
-    var sref=db.collection('slots').doc(o.date),oref=db.collection('orders').doc();
+    var sref=db.collection('slots').doc(o.date),oref=db.collection('orders').doc(),
+        cref=db.collection('counters').doc('orders');
     return db.runTransaction(function(tx){
-      return tx.get(sref).then(function(d){
-        var cur=(d.exists&&d.data()&&d.data()[o.slot])||0;
-        if(cur>=SLOT_CAP)throw {code:'slot-taken'};
-        var patch={};patch[o.slot]=cur+1;
-        if(d.exists)tx.update(sref,patch);else tx.set(sref,patch);
-        tx.set(oref,o);
+      /* القراءات كلها قبل الكتابات — شرط معاملات فايرستور */
+      return tx.get(sref).then(function(sd){
+        return tx.get(cref).then(function(cd){
+          var cur=(sd.exists&&sd.data()&&sd.data()[o.slot])||0;
+          if(cur>=SLOT_CAP)throw {code:'slot-taken'};
+          var n=((cd.exists&&cd.data()&&cd.data().n)||0)+1;
+          o.no=ORD_BASE+n;
+          var patch={};patch[o.slot]=cur+1;
+          if(sd.exists)tx.update(sref,patch);else tx.set(sref,patch);
+          if(cd.exists)tx.update(cref,{n:n});else tx.set(cref,{n:n});
+          tx.set(oref,o);
+        });
       });
     }).then(function(){
       o.id=oref.id;ORD.unshift(o);
@@ -1642,7 +1653,7 @@ function submitOrder(){
       adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
     API.addOrder(qo).then(function(){
-      BK.quote=null;renderAll();go('scOrders');setTab('scOrders');toast('وصلنا طلبك — نتواصل معك لتأكيد الزيارة');
+      BK.quote=null;renderAll();go('scOrders');setTab('scOrders');toast(qo.no?'وصلنا طلبك رقم '+qo.no:'وصلنا طلبك');
     }).catch(function(e){b.disabled=false;b.textContent='اطلب الزيارة';onSubmitErr(e);});
     return;
   }
@@ -1655,7 +1666,7 @@ function submitOrder(){
       adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
     API.addOrder(po).then(function(){
-      BK.pkg=null;renderAll();go('scOrders');setTab('scOrders');toast('وصلنا اشتراكك — نتواصل معك قريب');
+      BK.pkg=null;renderAll();go('scOrders');setTab('scOrders');toast(po.no?'وصلنا اشتراكك رقم '+po.no:'وصلنا اشتراكك');
     }).catch(function(e){b.disabled=false;b.textContent='اشترك الآن';onSubmitErr(e);});
     return;
   }
@@ -1669,7 +1680,7 @@ function submitOrder(){
     nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
   API.addOrder(o).then(function(){
     CART={};LS.set('cart',{});
-    renderAll();go('scOrders');setTab('scOrders');toast('وصلنا طلبك — نتواصل معك قريب');
+    renderAll();go('scOrders');setTab('scOrders');toast(o.no?'وصلنا طلبك رقم '+o.no:'وصلنا طلبك — نتواصل معك قريب');
   }).catch(function(e){b.disabled=false;b.textContent='أرسل الطلب';onSubmitErr(e);});
 }
 </script>
@@ -1678,7 +1689,8 @@ function submitOrder(){
 function ordCard(o,live){
   var n=(o.items||[]).reduce(function(s,i){return s+i.q;},0);
   return '<article class="ord'+(live?' live':'')+'">'+
-    '<div class="ord-h"><div class="ord-t">'+(o.quote?ic('cal'):o.sub?ic('repeat'):il('cart'))+'<span>'+esc(o.svc||'طلب')+'</span></div>'+
+    '<div class="ord-h"><div><div class="ord-t">'+(o.quote?ic('cal'):o.sub?ic('repeat'):il('cart'))+'<span>'+esc(o.svc||'طلب')+'</span></div>'+
+      (o.no?'<div class="ordno mono">طلب رقم '+o.no+'</div>':'')+'</div>'+
       '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>'+
     '<div class="meta">'+
       (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — مجانية</span></div>':
@@ -1717,7 +1729,8 @@ function mapEmbed(lat,lng){
 function waLink(o){
   var m=mapUrl(o.adr);
   return 'https://wa.me/'+BIZ.wa+'?text='+encodeURIComponent(
-    'السلام عليكم، بخصوص طلبي:\n'+(o.svc||'')+' — '+fmtDate(o.date)+(m?'\nموقعي: '+m:''));
+    'السلام عليكم، بخصوص طلبي'+(o.no?' رقم '+o.no:'')+':\n'+(o.svc||'')+' — '+fmtDate(o.date)+
+    (m?'\nموقعي: '+m:''));
 }
 function cancelOrder(id){
   var o=ORD.filter(function(x){return x.id===id;})[0];if(!o)return;

@@ -111,6 +111,20 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    /* عدّاد أرقام الطلبات. الزيادة مقيّدة بواحد بالضبط — لا قفز ولا رجوع،
+       فما يقدر أحد يعيد استخدام رقم صار لطلب غيره. */
+    match /counters/{name} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null &&
+        request.resource.data.keys().hasOnly(['n']) &&
+        request.resource.data.n is int && request.resource.data.n == 1;
+      allow update: if request.auth != null &&
+        request.resource.data.keys().hasOnly(['n']) &&
+        request.resource.data.n is int &&
+        request.resource.data.n == resource.data.n + 1;
+      allow delete: if isAdmin();
+    }
+
     // الطلبات: العميل ينشئ طلبه ويقرأ طلباته ويلغيها قبل التأكيد. الأدمن يدير الكل.
     match /orders/{oid} {
       allow read: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
@@ -122,6 +136,8 @@ service cloud.firestore {
         // السلة: قائمة أصناف بحد معقول، والإجمالي تقديري لا يُلزم الشركة
         request.resource.data.items is list && request.resource.data.items.size() <= 60 &&
         request.resource.data.est is number && request.resource.data.est >= 0 &&
+        // رقم الطلب التسلسلي: يُولَّد داخل نفس معاملة حجز الفترة من counters/orders
+        (!('no' in request.resource.data) || request.resource.data.no is int) &&
         // السعر النهائي بيد الأدمن وحده — العميل ما يكتبه عند الإنشاء
         !('price' in request.resource.data);
       // العميل ما يعدّل إلا الإلغاء، والسعر والحالة بيد الأدمن وحده
