@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap">
 <style>
 /* ألوان مأخوذة من الشعار: أزرق سماوي مشرق + ذهبي دافئ */
 :root{
@@ -25,8 +25,8 @@
   --sh-l:0 4px 14px rgba(21,60,80,.06), 0 14px 40px rgba(21,60,80,.08);
   --sh-blue:0 6px 20px rgba(41,171,226,.28);
   --r:22px; --r2:16px; --r3:12px;
-  --dsp:'Readex Pro','Tajawal',system-ui,sans-serif;
-  --sf:'Tajawal','Readex Pro',system-ui,Tahoma,sans-serif;
+  --dsp:'Tajawal',system-ui,sans-serif;
+  --sf:'Tajawal',system-ui,Tahoma,sans-serif;
   --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -55,7 +55,7 @@
 html{-webkit-text-size-adjust:100%}
 body{font-family:var(--sf);background:var(--paper);color:var(--tx);min-height:100vh;
   font-size:15px;line-height:1.75;font-weight:400;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
-h1,h2,h3,.dsp{font-family:var(--dsp);font-weight:600;line-height:1.4;letter-spacing:-.2px}
+h1,h2,h3,.dsp{font-family:var(--dsp);font-weight:700;line-height:1.45;letter-spacing:normal}
 button,input,textarea{font-family:inherit;font-size:inherit;color:inherit}
 button{cursor:pointer;border:none;background:none}
 :focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:6px}
@@ -88,8 +88,11 @@ button{cursor:pointer;border:none;background:none}
 /* ===== الشريط العلوي ===== */
 .top{padding:calc(var(--st) + 16px) 18px 6px;background:var(--paper)}
 .top-in{max-width:520px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.top h1{font-size:20px}
-.top p{font-size:12.5px;color:var(--mut);margin-top:-2px}
+.top h1{font-size:21px;line-height:1.5}
+.top p{font-size:12.5px;color:var(--mut);margin-top:1px}
+/* العلامة الصغيرة مقابل زر الرجوع — تتراجع للخلف ولا تزاحم العنوان */
+.mark{font-size:12.5px;font-weight:600;color:var(--faint);font-family:var(--dsp)}
+.mark.en{letter-spacing:.7px}
 .who{display:flex;align-items:center;gap:11px}
 .av{width:44px;height:44px;border-radius:15px;background:var(--blue);color:#fff;display:grid;
   place-items:center;font-weight:700;font-size:17px;font-family:var(--dsp);flex:0 0 auto;box-shadow:var(--sh-blue)}
@@ -494,7 +497,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <section class="scr" id="scService">
   <header class="top"><div class="top-in">
     <button class="lnk" style="padding:0" onclick="go('scHome');setTab('scHome')" id="svBack"></button>
-    <span class="mark">Kleenology</span>
+    <span class="mark en">Kleenology</span>
   </div></header>
   <div class="wrap"><div id="svBody"></div></div>
   <div class="sticky"><div class="sticky-in"><button class="btn" id="svGo"></button></div></div>
@@ -512,7 +515,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <section class="scr" id="scPkg">
   <header class="top"><div class="top-in">
     <button class="bk" onclick="go('scPkgs');setTab('scPkgs')" id="pkBack"></button>
-    <span class="mark">Kleenology</span>
+    <span class="mark en">Kleenology</span>
   </div></header>
   <div class="wrap"><div id="pkBody"></div></div>
   <div class="sticky"><div class="sticky-in"><button class="btn" id="pkGo"></button></div></div>
@@ -522,7 +525,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <section class="scr" id="scQuote">
   <header class="top"><div class="top-in">
     <button class="bk" onclick="go('scService')" id="qBack"></button>
-    <span class="mark">Kleenology</span>
+    <span class="mark en">Kleenology</span>
   </div></header>
   <div class="wrap"><div id="qBody"></div></div>
 </section>
@@ -531,7 +534,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <section class="scr" id="scQuoteWa">
   <header class="top"><div class="top-in">
     <button class="bk" onclick="go('scQuote')" id="qwBack"></button>
-    <span class="mark">Kleenology</span>
+    <span class="mark en">Kleenology</span>
   </div></header>
   <div class="wrap"><div id="qwBody"></div></div>
 </section>
@@ -571,7 +574,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <!-- ===== طلباتي ===== -->
 <section class="scr" id="scOrders">
   <header class="top"><div class="top-in">
-    <div><h1>طلباتي</h1><p>تابع حالة كل طلب</p></div><span class="mark" id="ordCount"></span>
+    <div><h1>طلباتي</h1><p>تابع حالة كل طلب</p></div>
   </div></header>
   <div class="wrap"><div class="sec" id="ordList"></div></div>
 </section>
@@ -776,7 +779,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.27.0109';
+var APP_VER='2026.08.27.2303';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1738,7 +1741,6 @@ function cancelOrder(id){
   API.cancelOrder(o).then(function(){renderAll();toast('أُلغي الطلب');}).catch(function(){toast('تعذّر الإلغاء');});
 }
 function renderOrders(){
-  $('ordCount').textContent=ORD.length?ORD.length+' طلب':'';
   if(ORERR){
     $('ordList').innerHTML='<div class="empty">'+il('file')+
       '<p>ما قدرنا نجيب طلباتك</p>'+
