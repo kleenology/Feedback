@@ -511,7 +511,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
         <div class="of-fld"><label class="of-lb" for="ofDays">صالح (أيام)</label><input id="ofDays" class="of-in" inputmode="numeric" maxlength="3" value="5"></div>
       </div>
       <textarea id="ofMsg" class="of-ta" maxlength="900"></textarea>
-      <div class="of-hint">تُستبدل تلقائياً: <b>{الاسم}</b> · <b>{الخصم}</b> · <b>{المدة}</b> · <b>{التحية}</b> · <b>{الشركة}</b> · <b>{المندوب}</b> · <b>{واتساب}</b></div>
+      <div class="of-hint">تُستبدل تلقائياً: <b>{الاسم}</b> · <b>{الخصم}</b> · <b>{المدة}</b> · <b>{التحية}</b> · <b>{الشركة}</b> · <b>{المندوب}</b> · <b>{واتساب}</b> · <b>{التطبيق}</b></div>
       <label class="of-lb" style="margin-top:11px">معاينة الرسالة</label>
       <div class="of-pv" id="ofPv"></div>
     </div>
@@ -630,7 +630,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function friendCode(cp){return cp?'KLNF'+String(cp).slice(3):'';}
 function baseFromFriend(code){return code&&code.indexOf('KLNF')===0?'KLN'+code.slice(4):'';}
 function refCount(r){return r?(r.rcCount||(r.rcUsed?1:0)):0;}
-var BIZ={name:'كلينولوجي',rep:'عبد الهادي',phone:'0537519929',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','تنظيف بعد التشطيب']};
+var BIZ={name:'كلينولوجي',rep:'عبد الهادي',phone:'0537519929',app:'',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','تنظيف بعد التشطيب']};
 var WINBACK={off:'15%',valid:7}; /* عرض دعوة العملاء الغائبين — عدّل النسبة أو المدة من هنا */
 var LASTREV={o:0,n:'',cp:''};
 var LV=[{v:1,t:'ضعيف',c:'#ef4444',e:'😖'},{v:2,t:'مقبول',c:'#f97316',e:'😕'},{v:3,t:'جيد',c:'#eab308',e:'🙂'},{v:4,t:'ممتاز',c:'#29a9e1',e:'😄'},{v:5,t:'رائع',c:'#0f7cb8',e:'🤩'}];
@@ -1739,6 +1739,9 @@ var OFTPL=[
 {t:'🕌 قبل المناسبة',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nقربت المناسبة والمواعيد تنحجز بسرعة — احجز تنظيف بيتك الآن وخذ خصم {الخصم}، والعرض صالح {المدة}.\nاكتب (حجز) ونثبت لك موعدك قبل ما يمتلئ الجدول ✨'},
 {t:'🛋 السجاد والمفروشات',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nغسيل السجاد والكنب بالبخار — يرجع لونه ورائحته زي أول، وبخصم {الخصم} {المدة}.\nاكتب (حجز) ونمر عليك ونستلم ✨'},
 /* لليدز: ما جرّبونا بعد — الرسالة تذكّرهم بالإعلان وتعرض تجربة أولى، وما تتكلم كأنهم عملاء قدامى */
+/* إطلاق التطبيق — الأسرع لإيصاله لقائمتك الحالية */
+{t:'📱 نزّل التطبيق',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nجهزنا لك تطبيق تحجز منه خدمتك بنفسك — تختار اللي تبي تنظّفه، تشوف السعر قبل ما تأكد، وتحدد الموعد اللي يناسبك.\n\n{التطبيق}\n\nافتحه من جوالك واحجز في دقيقة ✨\nولك خصم {الخصم} على أول طلب من التطبيق.'},
+{t:'📱 التطبيق — لليدز',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nوصلنا اهتمامك بخدمة التنظيف 🙏\nتقدر تشوف كل خدماتنا وأسعارها وتحجز بنفسك من هنا:\n\n{التطبيق}\n\nالأسعار واضحة قدامك قبل ما تأكد، ولك خصم {الخصم} على أول طلب ✨'},
 {t:'🎯 ليد من الحملة',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nوصلنا اهتمامك بخدمة التنظيف من إعلاننا، وحبيت أرد عليك بنفسي 🙏\nجهزنا لك خصم {الخصم} على أول طلب، صالح {المدة}.\n\nقل لي وش تبي تنظّف (شقة · فيلا · كنب · سجاد) وأجهز لك السعر والموعد على طول ✨'}
 ];
 /* الأرقام السعودية تُحوّل لصيغة 9665xxxxxxxx، وأي رقم دولي يُقبل كما هو */
@@ -1914,13 +1917,19 @@ function ofCamp(){
   return v||('عرض '+new Date().toISOString().slice(0,10));
 }
 function ofDur(d){return d===1?'اليوم فقط':d===2?'يومين':d<=10?d+' أيام':d+' يوم';}
+/* رابط تطبيق العميل — يُبنى من عنوان اللوحة، وBIZ.app يتجاوزه لو استضفته مكاناً آخر */
+function appUrl(){
+  if(BIZ.app)return BIZ.app;
+  if(location.protocol!=='https:')return 'https://kleenology.github.io/Feedback/app/';
+  return location.origin+location.pathname.replace(/[^/]*$/,'')+'app/';
+}
 function ofFill(m,c){
   var d=parseInt(document.getElementById('ofDays').value,10);if(!isFinite(d)||d<1)d=5;
   var disc=String(document.getElementById('ofDisc').value||'').trim()||'20%';
   var nm=(c&&c.n?String(c.n).trim():'')||'عميلنا العزيز';
   return String(m||'').replace(/\{الاسم\}/g,nm).replace(/\{الخصم\}/g,disc).replace(/\{المدة\}/g,ofDur(d))
     .replace(/\{التحية\}/g,greetAr()).replace(/\{الشركة\}/g,BIZ.name).replace(/\{المندوب\}/g,BIZ.rep)
-    .replace(/\{واتساب\}/g,bizWa());
+    .replace(/\{واتساب\}/g,bizWa()).replace(/\{التطبيق\}/g,appUrl());
 }
 function ofSentIn(c,k){return !!(c.cs&&c.cs.indexOf(k)>=0);}
 /* الدور: كل من لم يُرسل له هذا العرض ضمن الفئة المستهدفة، ما عدا الموقوفين والمتخطّين في هذه الجلسة */
