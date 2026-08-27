@@ -795,7 +795,7 @@ var DAYS_S=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جم
 
 var DEMO=/[?&]demo=1/.test(location.search)||location.protocol==='file:';
 var AUTHED=false,ME={uid:'',ph:'',n:''},ORD=[],ADR=[],CONF=null,PREV='scMe';
-var CART={},CTV='sofa',RT=0,RTM=null;
+var CART={},CTV='sofa',RT=0,RTM=null,ORUN=null,ORERR='';
 var BK={step:0,date:'',slot:'',adr:null,kind:'',locErr:''};
 
 var db=null,auth=null;
@@ -854,11 +854,28 @@ var API={
   loadMe:function(){if(DEMO){var m=LS.get('me',null);if(m)ME.n=m.n||'';return Promise.resolve();}
     return db.collection('customers').doc(ME.uid).get().then(function(d){
       if(d.exists&&d.data())ME.n=d.data().n||'';}).catch(function(){});},
-  orders:function(){if(DEMO){ORD=LS.get('orders',[]);return Promise.resolve();}
-    return db.collection('orders').where('uid','==',ME.uid).limit(60).get().then(function(s){
-      ORD=[];s.forEach(function(d){var o=d.data();o.id=d.id;ORD.push(o);});
-      ORD.sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});
-    }).catch(function(e){console.log('orders:',e&&e.code);ORD=[];});},
+  /* اشتراك حي بدل قراءة واحدة عند الدخول: العميل يشوف تأكيدك وانطلاق الفريق
+     لحظة ما تضغطها، وأي فشل قراءة يظهر له بسببه بدل «ما عندك طلبات» الكاذبة */
+  orders:function(){
+    if(DEMO){ORD=LS.get('orders',[]);ORERR='';return Promise.resolve();}
+    if(ORUN){ORUN();ORUN=null;}
+    return new Promise(function(res){
+      var first=true;
+      function done(){if(first){first=false;res();}}
+      ORUN=db.collection('orders').where('uid','==',ME.uid).limit(60).onSnapshot(function(sn){
+        ORD=[];sn.forEach(function(d){var o=d.data();o.id=d.id;ORD.push(o);});
+        ORD.sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});
+        ORERR='';
+        if(!first){renderOrders();renderHome();}
+        done();
+      },function(e){
+        ORERR=(e&&e.code)||'error';ORD=[];
+        console.log('orders:',ORERR);
+        if(!first)renderOrders();
+        done();
+      });
+    });
+  },
   /* المعاملة تعيد قراءة العدّاد لحظة الحفظ: لو سبقك أحد للفترة يُرفض طلبك بدل ما يُكتب فوق حجزه */
   addOrder:function(o){
     if(DEMO){
@@ -1003,7 +1020,9 @@ function onSignedIn(uid){
 }
 function logout(){
   if(!confirm('تسجيل الخروج؟'))return;
-  function done(){AUTHED=false;ME={uid:'',ph:'',n:''};ORD=[];ADR=[];CART={};LS.set('cart',{});
+  function done(){
+    if(ORUN){ORUN();ORUN=null;}ORERR='';
+    AUTHED=false;ME={uid:'',ph:'',n:''};ORD=[];ADR=[];CART={};LS.set('cart',{});
     $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';go('scLogin');}
   if(DEMO){done();return;}
   auth.signOut().then(done).catch(done);
@@ -1707,9 +1726,24 @@ function cancelOrder(id){
 }
 function renderOrders(){
   $('ordCount').textContent=ORD.length?ORD.length+' طلب':'';
+  if(ORERR){
+    $('ordList').innerHTML='<div class="empty">'+il('file')+
+      '<p>ما قدرنا نجيب طلباتك</p>'+
+      '<div class="note warn" style="margin:16px 0;text-align:right">'+
+        (ORERR==='permission-denied'
+          ? 'صلاحيات القراءة مرفوضة. لو أنت صاحب التطبيق: راجع قاعدة <b>orders</b> في firestore.rules. ولو أنت عميل: سجّل خروج ودخول مرة ثانية.'
+          : 'تعذّر الاتصال بالخادم.')+
+        '<br><span class="mono" style="font-size:11px;opacity:.7">'+esc(ORERR)+'</span></div>'+
+      '<button class="btn" style="max-width:230px;margin-inline:auto" onclick="reloadOrders()">حاول مرة ثانية</button></div>';
+    return;
+  }
   $('ordList').innerHTML=ORD.length?ORD.map(function(o){return ordCard(o,false);}).join(''):
     '<div class="empty">'+il('file')+'<p>ما عندك طلبات بعد</p>'+
     '<button class="btn" style="margin-top:20px;max-width:230px;margin-inline:auto" onclick="openCatalog()">تصفّح الخدمات</button></div>';
+}
+function reloadOrders(){
+  ORERR='';$('ordList').innerHTML='<div class="empty">جاري التحميل…</div>';
+  API.orders().then(function(){renderOrders();renderHome();});
 }
 
 /* ================= حسابي ================= */
