@@ -53,6 +53,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
+button,a,input,textarea,select,label,[onclick]{touch-action:manipulation}
 body{font-family:var(--sf);background:var(--paper);color:var(--tx);min-height:100vh;
   font-size:15px;line-height:1.75;font-weight:400;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 h1,h2,h3,.dsp{font-family:var(--dsp);font-weight:700;line-height:1.45;letter-spacing:normal}
@@ -142,7 +143,7 @@ button{cursor:pointer;border:none;background:none}
 /* ===== سلّم الخصم ===== */
 .ladder{background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--sh)}
 .ladder-t{font-size:17px;font-weight:700;font-family:var(--dsp);margin-bottom:4px}
-.ladder-s{font-size:13px;color:var(--mut);margin-bottom:22px;line-height:1.7}
+.ladder-s{font-size:13px;color:var(--mut);margin-bottom:22px;line-height:1.7;min-height:2.5em}
 .ladder-s b{color:var(--gold-d);font-weight:700}
 .rail{position:relative;height:6px;background:var(--sunk);border-radius:99px;margin-bottom:10px}
 .rail i{position:absolute;top:0;bottom:0;right:0;background:linear-gradient(90deg,var(--gold),#FFD27F);
@@ -177,11 +178,11 @@ button{cursor:pointer;border:none;background:none}
 .item .pr{margin:9px 0 12px;display:flex;align-items:baseline;gap:4px}
 .item .pr span{font-size:20px;font-weight:700;font-family:var(--dsp);color:var(--blue-d);font-variant-numeric:tabular-nums}
 .item .pr small{font-size:11px;color:var(--mut);font-weight:500}
-.add{width:100%;padding:10px;border-radius:999px;background:var(--blue-l);color:var(--blue-d);
+.add{width:100%;height:38px;border-radius:999px;background:var(--blue-l);color:var(--blue-d);
   font-size:13.5px;font-weight:700;font-family:var(--dsp);margin-top:auto}
-.qty{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:auto;
+.qty{display:flex;align-items:center;justify-content:space-between;width:100%;height:38px;margin-top:auto;
   background:var(--blue-l);border-radius:999px;padding:3px}
-.qty button{width:32px;height:32px;border-radius:50%;background:var(--card);display:grid;
+.qty button{width:32px;height:32px;flex:0 0 auto;border-radius:50%;background:var(--card);display:grid;
   place-items:center;color:var(--blue-d);box-shadow:var(--sh)}
 .qty span{font-weight:700;font-size:15px;font-family:var(--dsp);color:var(--blue-d);font-variant-numeric:tabular-nums}
 
@@ -783,7 +784,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.27.2326';
+var APP_VER='2026.08.27.2334';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1256,15 +1257,18 @@ function renderCatalog(){
   renderLadder();
   $('itemGrid').innerHTML=CAT.filter(function(x){return x.sv===CTV;}).map(function(it){
     var q=CART[it.k]||0;
-    return '<article class="item'+(q?' in':'')+'">'+il(it.ic,'','il-sm')+
+    return '<article class="item'+(q?' in':'')+'" data-k="'+it.k+'">'+il(it.ic,'','il-sm')+
       '<b>'+esc(it.t)+'</b><s>'+esc(it.u)+'</s>'+
       '<div class="pr"><span>'+it.p+'</span><small>ر.س</small></div>'+
-      (q?'<div class="qty"><button onclick="setQty(\''+it.k+'\','+(q-1)+')" aria-label="نقص">'+ic('minus','','ic-sm')+'</button>'+
-         '<span>'+q+'</span>'+
-         '<button onclick="setQty(\''+it.k+'\','+(q+1)+')" aria-label="زد">'+ic('plus','','ic-sm')+'</button></div>'
-        :'<button class="add" onclick="setQty(\''+it.k+'\',1)">إضافة</button>')+
+      qtyCtl(it.k,q)+
       '</article>';}).join('');
   syncCartUI();
+}
+function qtyCtl(k,q){
+  return q?'<div class="qty"><button onclick="setQty(\''+k+'\','+(q-1)+')" aria-label="نقص">'+ic('minus','','ic-sm')+'</button>'+
+      '<span>'+q+'</span>'+
+      '<button onclick="setQty(\''+k+'\','+(q+1)+')" aria-label="زد">'+ic('plus','','ic-sm')+'</button></div>'
+    :'<button class="add" onclick="setQty(\''+k+'\',1)">إضافة</button>';
 }
 function renderLadder(){
   var base=discBase(),cur=tierFor(base),nx=nextTier(base),top=TIERS[TIERS.length-1];
@@ -1291,7 +1295,18 @@ function renderLadder(){
 function setQty(k,q){
   if(q<=0)delete CART[k];else CART[k]=q;
   LS.set('cart',CART);
-  renderCatalog();renderCart();
+  /* نبدّل عدّاد هذا الصنف وحده — إعادة بناء الشبكة كلها تسحب الأزرار من تحت الإصبع */
+  var card=document.querySelector('#itemGrid .item[data-k="'+k+'"]');
+  if(card){
+    var ctl=card.querySelector('.qty,.add');
+    if(ctl){
+      var box=document.createElement('div');box.innerHTML=qtyCtl(k,CART[k]||0);
+      card.replaceChild(box.firstChild,ctl);
+    }
+    card.classList.toggle('in',!!CART[k]);
+    renderLadder();
+  }else renderCatalog();
+  renderCart();syncCartUI();
 }
 function syncCartUI(){
   var n=cartCount(),t=cartTotals();
