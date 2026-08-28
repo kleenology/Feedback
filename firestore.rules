@@ -72,9 +72,17 @@ service cloud.firestore {
     // ملف العميل وعناوينه — لصاحبه وحده، والأدمن يقرأ فقط
     match /customers/{uid} {
       allow read: if isUser(uid) || isAdmin();
+      /* يُنشأ من أول دخول ولو بلا اسم — الاسم يُضاف لاحقاً، و ok موافقة العروض */
       allow create, update: if isUser(uid) &&
-        request.resource.data.n is string && request.resource.data.n.size() <= 60 &&
-        request.resource.data.ph is string && request.resource.data.ph.size() <= 20;
+        request.resource.data.keys().hasOnly(['n','ph','at','seen','ok']) &&
+        request.resource.data.ph is string && request.resource.data.ph.size() <= 20 &&
+        (!('n' in request.resource.data) ||
+          (request.resource.data.n is string && request.resource.data.n.size() <= 60)) &&
+        (!('ok' in request.resource.data) || request.resource.data.ok is bool) &&
+        (!('at' in request.resource.data) ||
+          (request.resource.data.at is string && request.resource.data.at.size() <= 40)) &&
+        (!('seen' in request.resource.data) ||
+          (request.resource.data.seen is string && request.resource.data.seen.size() <= 40));
       allow delete: if false;
 
       match /addresses/{aid} {

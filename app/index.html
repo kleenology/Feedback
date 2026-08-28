@@ -905,7 +905,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.0205';
+var APP_VER='2026.08.28.0229';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -928,7 +928,7 @@ var DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','�
 var DAYS_S=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 
 var DEMO=/[?&]demo=1/.test(location.search)||location.protocol==='file:';
-var AUTHED=false,ME={uid:'',ph:'',n:''},ORD=[],ADR=[],CONF=null,PREV='scMe';
+var AUTHED=false,ME={uid:'',ph:'',n:'',ok:false},ORD=[],ADR=[],CONF=null,PREV='scMe';
 var CART={},CTV='sofa',RT=0,RTM=null,ORUN=null,ORERR='';
 var LADX=false;                  /* هل سلّم الخصم مفتوح؟ — تُقرأ من التخزين بعد تعريف LS */
 var ORX={};                      /* أي الطلبات مفتوح مسارها */
@@ -997,10 +997,18 @@ var LS={get:function(k,d){try{var v=localStorage.getItem('kln_'+k);
 LADX=LS.get('ladx',false);
 var API={
   saveMe:function(){if(DEMO){LS.set('me',ME);return Promise.resolve();}
-    return db.collection('customers').doc(ME.uid).set({n:ME.n,ph:ME.ph},{merge:true});},
-  loadMe:function(){if(DEMO){var m=LS.get('me',null);if(m)ME.n=m.n||'';return Promise.resolve();}
-    return db.collection('customers').doc(ME.uid).get().then(function(d){
-      if(d.exists&&d.data())ME.n=d.data().n||'';}).catch(function(){});},
+    return db.collection('customers').doc(ME.uid).set({n:ME.n,ph:ME.ph,ok:!!ME.ok},{merge:true});},
+  /* نسجّل الدخول في ملف العميل حتى لو ما كتب اسمه — عشان تعرف مين فتح التطبيق
+     وما طلب. `at` تُكتب مرة واحدة فقط، و`seen` تتحدّث كل دخول. */
+  loadMe:function(){if(DEMO){var m=LS.get('me',null);if(m){ME.n=m.n||'';ME.ok=!!m.ok;}return Promise.resolve();}
+    var ref=db.collection('customers').doc(ME.uid),now=new Date().toISOString();
+    return ref.get().then(function(d){
+      var v=d.exists?d.data():null;
+      if(v){ME.n=v.n||'';ME.ok=!!v.ok;}
+      var patch={ph:ME.ph,seen:now};
+      if(!v||!v.at)patch.at=now;
+      return ref.set(patch,{merge:true});
+    }).catch(function(){});},
   /* اشتراك حي بدل قراءة واحدة عند الدخول: العميل يشوف تأكيدك وانطلاق الفريق
      لحظة ما تضغطها، وأي فشل قراءة يظهر له بسببه بدل «ما عندك طلبات» الكاذبة */
   orders:function(){
@@ -1183,7 +1191,7 @@ function logout(){
   if(!confirm('تسجيل الخروج؟'))return;
   function done(){
     if(ORUN){ORUN();ORUN=null;}ORERR='';
-    AUTHED=false;ME={uid:'',ph:'',n:''};ORD=[];ADR=[];CART={};LS.set('cart',{});
+    AUTHED=false;ME={uid:'',ph:'',n:'',ok:false};ORD=[];ADR=[];CART={};LS.set('cart',{});
     $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';go('scLogin');}
   if(DEMO){done();return;}
   auth.signOut().then(done).catch(done);
@@ -2040,10 +2048,20 @@ function renderMe(){
     mrow('list','طلباتي',ORD.length?ORD.length+' طلب':'ما عندك طلبات بعد',"ORQF='';go('scOrders');setTab('scOrders');renderOrders()")+
     mrow('tag','عروض الأسعار',quotes?quotes+' طلب تسعير':'اطلب تسعير لخدمة تحتاج معاينة',"openQuotesTab()")+
     mrow('chat','تواصل معنا','واتساب '+BIZ.rep,"window.open('https://wa.me/'+BIZ.wa,'_blank')")+
+    '<div class="mrow" style="cursor:default"><span class="mic">'+ic('chat')+'</span>'+
+      '<span class="mtx"><b>عروض وتخفيضات</b><s>نرسل لك عروضنا على واتساب — تقدر توقفها متى ما تبي</s></span>'+
+      '<button class="sw" id="okSw" aria-pressed="'+(!!ME.ok)+'" aria-label="عروض وتخفيضات" onclick="toggleOk()"><i></i></button></div>'+
     mrow('shield','الشروط وسياسة الخصوصية','','openTerms()')+
     mrow('out','تسجيل الخروج','','logout()','danger')+
     '<p class="hint" style="margin-top:14px;text-align:center">الإصدار <span class="mono">'+APP_VER+'</span>'+
       (ME.uid?'<br>معرّف الحساب <span class="mono" style="user-select:all">'+esc(ME.uid)+'</span>':'')+'</p>';
+}
+function toggleOk(){
+  ME.ok=!ME.ok;
+  var b=$('okSw');if(b)b.setAttribute('aria-pressed',String(ME.ok));
+  if(DEMO)LS.set('me',ME);
+  API.saveMe().then(function(){toast(ME.ok?'بنرسل لك عروضنا 🎁':'أوقفنا العروض');})
+   .catch(function(){ME.ok=!ME.ok;if(b)b.setAttribute('aria-pressed',String(ME.ok));toast('تعذّر الحفظ');});
 }
 function openNameSheet(){
   openSheet('تحديث الاسم',
@@ -2081,7 +2099,8 @@ function renderTerms(){
   $('tmBack').innerHTML=ic('back','','ic-sm')+'<span>رجوع</span>';
   $('termsBody').innerHTML=
     '<h3>وش نجمع عنك؟</h3>رقم جوالك للدخول والتواصل، اسمك، وعناوينك وطلباتك.'+
-    '<h3>وش نسوي فيه؟</h3>ننفّذ طلبك ونتواصل معك بخصوصه فقط. ما نبيع بياناتك ولا نشاركها مع أي طرف ثالث لأغراض تسويقية.'+
+    '<h3>وش نسوي فيه؟</h3>ننفّذ طلبك ونتواصل معك بخصوصه. ما نبيع بياناتك ولا نشاركها مع أي طرف ثالث أبداً.'+
+    '<h3>العروض التسويقية</h3>ما نرسل لك عروضاً إلا إذا فعّلت <b>«عروض وتخفيضات»</b> من شاشة حسابي، وتقدر توقفها في أي وقت من نفس المكان.'+
     '<h3>وين تُحفظ؟</h3>على خوادم Google Firebase، بصلاحيات ما تسمح لأي عميل آخر يشوف بياناتك.'+
     '<h3>حذف حسابك</h3>راسلنا على واتساب '+esc(BIZ.rep)+' ونحذف حسابك وكل بياناتك خلال 7 أيام.'+
     '<h3>الأسعار</h3>الأسعار داخل التطبيق تقديرية وتُحسب حسب الأصناف والكميات. المندوب يعاين ويأكد السعر النهائي قبل بدء العمل.'+

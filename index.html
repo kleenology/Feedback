@@ -835,7 +835,7 @@ function openAdmin(){
 go('pgAdm');
 if(window.Notification&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
 /* التقييمات أولاً — هي أول ما تعرضه اللوحة، فما تنتظر بقية البيانات */
-startLive();startOrders();
+startLive();startOrders();startCust();
 /* البقية مستقلة عن بعضها: تُجلب دفعة وحدة بدل ما تنتظر كل وحدة اللي قبلها */
 Promise.all([loadPub(),loadTargets(),loadContacts(),loadStaff(),loadPayDay(),loadPayrun(pyMonKey(new Date()))])
   .then(function(){if(auth.currentUser)renderAdm();});
@@ -890,6 +890,7 @@ function startLive(){
 
 /* ================= الطلبات ================= */
 var OR=[],ORQ='',ORF='live',ORUN=null,ORFIRST=true;
+var CU=[],CUUN=null;   /* مستخدمو التطبيق — كل من دخل برقم جواله */
 var ORST={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
 var ORCOL={new:['#fff7ed','#b45309'],confirmed:['#eff6ff','#1d4ed8'],on_way:['#f0fdff','#0891b2'],
            done:['#f0fdf4','#16a34a'],cancelled:['#f1f5f9','#64748b']};
@@ -897,6 +898,15 @@ var ORNEXT={new:'confirmed',confirmed:'on_way',on_way:'done'};
 var ORNEXTL={new:'أكّد الطلب',confirmed:'الفريق انطلق',on_way:'تم التنفيذ'};
 var ORSLOT={am:'صباحاً (8–12)',pm:'بعد الظهر (12–4)',ev:'مساءً (4–8)'};
 
+/* من دخل التطبيق يُسجَّل في customers ولو ما طلب — هذي أنظف قائمة أرقام موثّقة عندك */
+function startCust(){
+  if(CUUN){CUUN();CUUN=null;}
+  CUUN=db.collection('customers').limit(500).onSnapshot(function(snap){
+    CU=[];snap.forEach(function(d){var c=d.data()||{};c._id=d.id;CU.push(c);});
+    CU.sort(function(a,b){return String(b.seen||b.at||'').localeCompare(String(a.seen||a.at||''));});
+    if(document.querySelector('.adm-tb.on[data-t="customers"]'))rCu();
+  },function(e){console.log('Customers live:',e&&e.code);});
+}
 function startOrders(){
   if(ORUN){ORUN();ORUN=null;}
   ORFIRST=true;
@@ -1248,9 +1258,51 @@ function leadWaLink(c){
     '\nقل لي وش تحتاج تنظيف (شقة · فيلا · كنب · سجاد) وأعطيك السعر والموعد على طول، ولك خصم على أول طلب ✨';
   return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
 }
+/* كم طلباً لهذا المستخدم؟ الربط بالمعرّف، وبالرقم احتياطاً للطلبات القديمة */
+function cuOrders(c){
+  return OR.filter(function(o){return o.uid===c._id||(c.ph&&o.ph===c.ph);}).length;
+}
+function appUsersHtml(){
+  if(!CU.length)return '<div class="cc"><h3>📱 مستخدمو التطبيق</h3>'+
+    '<div class="empty">ما دخل أحد التطبيق بعد — أو قواعد <b>customers</b> ما انحدّثت</div></div>';
+  var rows=CU.map(function(c){var n=cuOrders(c);return {c:c,n:n};});
+  var noOrd=rows.filter(function(r){return !r.n;});
+  var ok=rows.filter(function(r){return r.c.ok;});
+  var h='<div class="sg"><div class="sc" style="border-top:3px solid #0891b2"><div class="sc-l">دخلوا التطبيق</div><div class="sc-v" style="color:#0891b2">'+CU.length+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">طلبوا فعلاً</div><div class="sc-v" style="color:#16a34a">'+(CU.length-noOrd.length)+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">دخلوا وما طلبوا</div><div class="sc-v" style="color:#b45309">'+noOrd.length+'</div></div>'+
+    '<div class="sc" style="border-top:3px solid #c026d3"><div class="sc-l">وافقوا على العروض</div><div class="sc-v" style="color:#c026d3">'+ok.length+'</div></div></div>';
+  h+='<div class="cc"><h3>📱 دخلوا التطبيق وما طلبوا ('+noOrd.length+')</h3>'+
+    '<div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">أرقام موثّقة برسالة تحقق — فتحوا التطبيق وتصفّحوا وما أكملوا. مكالمة أو رسالة واحدة تكفي</div>';
+  if(!noOrd.length)h+='<div class="empty">كل من دخل طلب 👌</div>';
+  noOrd.slice(0,20).forEach(function(r){
+    var c=r.c;
+    h+='<div class="exp-item" style="border-right-color:#f5a301"><div class="exp-top"><div>'+
+      '<div class="exp-nm">'+esc(c.n||'بلا اسم')+(c.ok?' <span style="color:#c026d3;font-size:10px">✓ عروض</span>':'')+'</div>'+
+      '<div style="font-size:10px;color:#9ab;margin-top:3px;direction:ltr;text-align:right">+'+esc(c.ph||'')+'</div>'+
+      '<div style="font-size:10px;color:#9ab;margin-top:2px">أول دخول '+esc(cuDay(c.at))+' · آخر دخول '+esc(cuDay(c.seen))+'</div>'+
+      '</div></div>'+
+      (c.ph?'<a class="exp-wa" target="_blank" rel="noopener" href="'+appWaLink(c)+'">💬 اسأله وش يحتاج</a>':'')+'</div>';
+  });
+  if(noOrd.length>20)h+='<div style="font-size:10px;color:#9ab;text-align:center;margin-top:8px">… و'+(noOrd.length-20)+' غيرهم</div>';
+  h+='</div>';
+  if(ok.length)h+='<div class="of-note" style="margin-bottom:12px">💡 <b>'+ok.length+'</b> عميلاً فعّلوا «عروض وتخفيضات» في التطبيق — هؤلاء وحدهم من يجوز ترسل لهم عروضاً، والباقي تواصل معهم بخصوص طلباتهم فقط.</div>';
+  return h;
+}
+function cuDay(iso){
+  if(!iso)return '—';
+  var d=new Date(iso);if(isNaN(d))return '—';
+  return d.getDate()+' '+['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][d.getMonth()];
+}
+function appWaLink(c){
+  var t=greetAr()+' '+(c.n||'يا غالي')+' 🌟\nمعك '+BIZ.rep+' من '+BIZ.name+
+    '\n\nشفتك فتحت تطبيقنا 🙏 قل لي وش تحتاج تنظيف وأجهّز لك السعر والموعد على طول ✨';
+  return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
+}
 function rCu(){
   var el=document.getElementById('tcCustomers');
-  if(!D.length&&!CT.length){el.innerHTML='<div class="empty">لا توجد بيانات بعد</div>';return;}
+  var app=appUsersHtml();
+  if(!D.length&&!CT.length){el.innerHTML=app+'<div class="empty">لا توجد تقييمات ولا أرقام في قائمة العروض بعد</div>';return;}
   var cs=custGroups(),rep=cs.filter(function(c){return c.count>1;});
   var rated=cs.filter(function(c){return c.count>0;});
   var noRate=cs.filter(function(c){return c.count===0;});
@@ -1259,7 +1311,7 @@ function rCu(){
   var won=cs.filter(cuWon);
   var away=cs.filter(function(c){return c.days>=45&&c.avg>=4;}).sort(function(a,b){return b.days-a.days;});
   /* الرقمان منفصلان عمداً: عملاء التقييمات شيء، وأرقام قائمة العروض شيء آخر */
-  var h='<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">عملاء قيّمونا</div><div class="sc-v">'+rated.length+'</div></div>'+
+  var h=app+'<div class="sg"><div class="sc" style="border-top:3px solid #3b82f6"><div class="sc-l">عملاء قيّمونا</div><div class="sc-v">'+rated.length+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">عملاء متكررون</div><div class="sc-v" style="color:#16a34a">'+rep.length+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">أرقام في قائمة العروض</div><div class="sc-v" style="color:#b45309">'+CT.length+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #94a3b8"><div class="sc-l">منها ما قيّمونا بعد</div><div class="sc-v" style="color:#64748b">'+noRate.filter(function(c){return cuKind(c)!=='ld';}).length+'</div></div></div>';
