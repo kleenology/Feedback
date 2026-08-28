@@ -970,7 +970,7 @@ function orCard(o){
     '<div class="or-m"><b>'+esc(o.svc||'')+'</b><br>'+esc(orWhen(o))+'<br>'+esc(orAddr(o))+
       (o.nt?'<br>📝 '+esc(o.nt):'')+'</div>'+
     (o.quote?'<div class="or-it" style="background:#fdf3e1;color:#9a6206"><div>'+
-      '<span>زيارة تسعير — '+(o.est?esc(o.est)+' ر.س':'مجانية')+'</span>'+
+      '<span>زيارة تسعير — '+(o.est?esc(o.est)+' ر.س (تُخصم من السعر)':'مجانية')+'</span>'+
       '<b>'+(o.price?esc(o.price)+' ر.س':'حدّد السعر بعد المعاينة')+'</b></div></div>':'')+
     (items.length?'<div class="or-it">'+items.map(function(i){
       return '<div><span>'+esc(i.t)+' <span style="opacity:.7">'+esc(i.u)+' × '+i.q+'</span></span><b>'+(i.p*i.q)+' ر.س</b></div>';
@@ -1008,7 +1008,9 @@ function orAdvance(id){
 }
 function orPrice(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
-  var v=prompt('السعر النهائي للطلب (ر.س)\nالتقديري: '+(o.est||0),o.price||o.est||'');
+  var v=prompt('السعر النهائي للطلب (ر.س)'+
+    (o.quote&&o.est?'\n⚠️ اكتب السعر بعد خصم '+o.est+' ر.س قيمة المعاينة'
+                   :'\nالتقديري: '+(o.est||0)),o.price||o.est||'');
   if(v===null)return;
   var n=parseFloat(String(v).replace(/[^\d.]/g,''));
   if(!isFinite(n)||n<0){alert('أدخل رقماً صحيحاً');return;}
