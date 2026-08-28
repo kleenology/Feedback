@@ -312,7 +312,8 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
 .rv-team-tag button{background:none;border:none;color:#0f7cb8;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px}
 
 /* toast + publish */
-.toast{position:fixed;top:14px;left:14px;right:14px;z-index:200;background:#0c4a6e;color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 6px 24px rgba(0,0,0,0.25);font-size:13px;font-weight:600;animation:fadeUp .3s ease}
+.toast{position:fixed;top:14px;left:14px;right:14px;z-index:200;background:#0c4a6e;color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 6px 24px rgba(0,0,0,0.25);font-size:13px;font-weight:600;animation:fadeUp .3s ease;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.toast-a{flex:0 0 auto;background:#25d366;color:#fff;text-decoration:none;padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:700}
 .pub-btn{margin-top:8px;padding:8px 12px;border-radius:8px;border:1.5px solid #0891b2;background:#fff;color:#0891b2;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s}
 .pub-btn.on{background:#0891b2;color:#fff}
 
@@ -1004,7 +1005,11 @@ function orAdvance(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
   var nx=ORNEXT[o.st];if(!nx)return;
   var h=(o.hist||[]).concat([{s:nx,at:new Date().toISOString()}]);
-  orSet(id,{st:nx,hist:h}).then(function(){showToast(ORST[nx]+' ✓');});
+  orSet(id,{st:nx,hist:h}).then(function(){
+    /* العميل ما يشوف التغيير إلا لو التطبيق مفتوح عنده — فنعرض الإبلاغ في نفس اللحظة */
+    showToast(ORST[nx]+' ✓',o.ph?{t:'أبلغ العميل',
+      href:'https://wa.me/'+o.ph+'?text='+encodeURIComponent(orMsg(o))}:null);
+  });
 }
 function orPrice(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
@@ -1077,9 +1082,19 @@ function loadPub(){
   }).catch(function(e){console.log('Pub load error:',e);});
 }
 
-function showToast(m){
-  var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);
-  setTimeout(function(){t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(function(){t.remove();},400);},3500);
+function showToast(m,act){
+  var t=document.createElement('div');t.className='toast';
+  t.appendChild(document.createTextNode(m));
+  if(act&&act.href){
+    var a=document.createElement('a');
+    a.className='toast-a';a.href=act.href;a.target='_blank';a.rel='noopener';a.textContent=act.t;
+    a.onclick=function(){t.remove();};
+    t.appendChild(a);
+  }
+  document.body.appendChild(t);
+  /* التنبيه اللي فيه إجراء يحتاج وقتاً ليُقرأ ويُضغط */
+  setTimeout(function(){t.style.transition='opacity .4s';t.style.opacity='0';
+    setTimeout(function(){t.remove();},400);},act?9000:3500);
 }
 
 function notifyNew(r){
