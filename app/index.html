@@ -638,7 +638,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
         <label class="lb" for="inPh">رقم الجوال</label>
         <div class="phone-row">
           <span class="cc">+966</span>
-          <input class="in" id="inPh" type="tel" inputmode="numeric" maxlength="10" placeholder="5X XXX XXXX" autocomplete="tel">
+          <input class="in" id="inPh" type="tel" inputmode="numeric" maxlength="20" placeholder="5X XXX XXXX" autocomplete="tel">
         </div>
       </div>
       <button class="btn" id="btnPh" onclick="sendCode()">متابعة</button>
@@ -1021,7 +1021,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.2141';
+var APP_VER='2026.08.28.2237';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1079,7 +1079,18 @@ function go(id){
 function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);
   setTimeout(function(){t.style.transition='opacity .35s';t.style.opacity='0';setTimeout(function(){t.remove();},350);},2600);}
 function greet(){var h=new Date().getHours();return h<12?'صباح الخير':h<17?'هلا وغلا':'مساك الله بالخير';}
-function norm(p){var d=String(p||'').replace(/\D/g,'');if(d.indexOf('966')===0)d=d.slice(3);if(d.indexOf('0')===0)d=d.slice(1);
+/* لوحة المفاتيح العربية على الآيفون تكتب ٠١٢٣٤٥٦٧٨٩ لا 0123456789، و‎\D
+   كانت تمسحها كلها — فأي رقم يكتبه العميل يُرفض قبل ما يوصل فايربيس */
+function digits(v){
+  return String(v==null?'':v).replace(/[\u0660-\u0669]/g,function(c){return c.charCodeAt(0)-0x0660;})
+    .replace(/[\u06F0-\u06F9]/g,function(c){return c.charCodeAt(0)-0x06F0;})
+    .replace(/\D/g,'');
+}
+function norm(p){
+  var d=digits(p);
+  if(d.indexOf('00')===0)d=d.slice(2);        /* بادئة الاتصال الدولي */
+  if(d.indexOf('966')===0)d=d.slice(3);
+  if(d.indexOf('0')===0)d=d.slice(1);
   return d.length===9&&d[0]==='5'?'966'+d:'';}
 function fmtDate(s){var d=new Date(s+'T00:00:00');return DAYS[d.getDay()]+' '+d.getDate()+' '+MO[d.getMonth()];}
 function stamp(iso){var d=new Date(iso);return d.getDate()+' '+MO[d.getMonth()]+' · '+
@@ -1227,13 +1238,13 @@ function buildOtp(){
     var el=document.createElement('input');
     el.type='tel';el.inputMode='numeric';el.maxLength=1;el.autocomplete=i===0?'one-time-code':'off';
     el.oninput=function(e){
-      this.value=this.value.replace(/\D/g,'').slice(0,1);
+      this.value=digits(this.value).slice(0,1);
       if(this.value&&this.nextSibling)this.nextSibling.focus();
       if(otpVal().length===6)verifyCode();
     };
     el.onkeydown=function(e){if(e.key==='Backspace'&&!this.value&&this.previousSibling)this.previousSibling.focus();};
     el.onpaste=function(e){
-      var t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      var t=digits((e.clipboardData||window.clipboardData).getData('text')).slice(0,6);
       if(!t)return;e.preventDefault();
       var ins=document.querySelectorAll('#otpRow input');
       for(var j=0;j<6;j++)ins[j].value=t[j]||'';
@@ -1583,7 +1594,7 @@ function qwFlag(k){
   b.setAttribute('aria-pressed',String(QW[k]));
   qwSync();
 }
-function qwArea(v){QW.area=String(v||'').replace(/\D/g,'').slice(0,5);}
+function qwArea(v){QW.area=digits(v).slice(0,5);}
 function qwReady(){return !!(QW.kind&&QW.area);}
 /* الحقول نفسها تُستخدم في مسار الواتساب وفي مراجعة زيارة المعاينة — مصدر واحد */
 function quoteFields(){
