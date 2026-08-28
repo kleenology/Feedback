@@ -912,7 +912,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.0147';
+var APP_VER='2026.08.28.0156';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -920,7 +920,7 @@ var SLOT_CAP=1;
 /* أرقام الطلبات تبدأ من هنا +1 — أول طلب يصير 1001 لا #1 */
 var ORD_BASE=1000;
 /* قيمة زيارة المعاينة بالريال. صفر = مجانية، ويرجع النص «مجانية» تلقائياً. */
-var QUOTE_FEE=49;
+var QUOTE_FEE=29;
 var BOOKED={};   /* {'2026-09-10':{am:1,pm:0,ev:0}} — كم محجوز في كل فترة */
 var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
@@ -1344,8 +1344,21 @@ function qwRedraw(){
 }
 function qwSetKind(i){QW.kind=KINDS[i];closeSheet();qwRedraw();}
 function qwKindSheet(){openSheet('نوع العقار',sheetPick(KINDS,QW.kind,'qwSetKind'));}
-function qwStep(k,d){QW[k]=Math.max(0,Math.min(30,(QW[k]||0)+d));qwRedraw();}
-function qwFlag(k){QW[k]=!QW[k];qwRedraw();}
+function qwStep(k,d){
+  QW[k]=Math.max(0,Math.min(30,(QW[k]||0)+d));
+  var row=document.querySelector('.qfrow[data-c="'+k+'"]');
+  if(!row){qwRedraw();return;}
+  row.querySelector('.stp b').textContent=QW[k];
+  row.querySelector('.stp button').disabled=!QW[k];   /* أول زر = النقص */
+  qwSync();
+}
+function qwFlag(k){
+  QW[k]=!QW[k];
+  var b=document.querySelector('.sw[data-f="'+k+'"]');
+  if(!b){qwRedraw();return;}
+  b.setAttribute('aria-pressed',String(QW[k]));
+  qwSync();
+}
 function qwArea(v){QW.area=String(v||'').replace(/\D/g,'').slice(0,5);}
 function qwReady(){return !!(QW.kind&&QW.area);}
 /* الحقول نفسها تُستخدم في مسار الواتساب وفي مراجعة زيارة المعاينة — مصدر واحد */
@@ -1358,13 +1371,13 @@ function quoteFields(){
         '<input class="qn" id="qwArea" type="tel" inputmode="numeric" maxlength="5" placeholder="مثال: 120" '+
           'value="'+esc(QW.area)+'" oninput="qwArea(this.value);qwSync()"></div>'+
       QCOUNTS.map(function(c){
-        return '<div class="qfrow"><span>'+esc(c.t)+'</span><span class="stp">'+
+        return '<div class="qfrow" data-c="'+c.k+'"><span>'+esc(c.t)+'</span><span class="stp">'+
           '<button onclick="qwStep(\''+c.k+'\',-1)" aria-label="نقص" '+(QW[c.k]?'':'disabled')+'>'+ic('minus','','ic-sm')+'</button>'+
           '<b>'+QW[c.k]+'</b>'+
           '<button onclick="qwStep(\''+c.k+'\',1)" aria-label="زد">'+ic('plus','','ic-sm')+'</button></span></div>';}).join('')+
       QFLAGS.map(function(f){
         return '<div class="qfrow"><span>'+esc(f.t)+'</span>'+
-          '<button class="sw" aria-pressed="'+(!!QW[f.k])+'" aria-label="'+esc(f.t)+'" onclick="qwFlag(\''+f.k+'\')"><i></i></button></div>';}).join('')+
+          '<button class="sw" data-f="'+f.k+'" aria-pressed="'+(!!QW[f.k])+'" aria-label="'+esc(f.t)+'" onclick="qwFlag(\''+f.k+'\')"><i></i></button></div>';}).join('')+
     '</div></div>';
 }
 /* ملخّص نصّي يُرسل في الواتساب ويُحفظ مع الطلب — نفس الترتيب في الاثنين */
