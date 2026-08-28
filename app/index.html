@@ -934,17 +934,17 @@ var CAT=[
  {sv:'parts',k:'ste4',   ic:'shield',  t:'تعقيم وتطهير',    u:'301 – 500م²', p:500, g:['تعقيم']},
 
  /* ===== النظافة التأهيلية — التنظيف العميق ومكوّناته بعد البناء ===== */
- {sv:'post', k:'dep1',   ic:'post',    t:'استوديو',         u:'حتى 50م²',    p:700, g:['المكان كامل']},
- {sv:'post', k:'dep2',   ic:'post',    t:'استوديو أو شقة',  u:'51 – 100م²',  p:900, g:['المكان كامل']},
- {sv:'post', k:'dep3',   ic:'post',    t:'شقة',             u:'101 – 150م²', p:1200, g:['المكان كامل']},
- {sv:'post', k:'dep4',   ic:'post',    t:'شقة',             u:'151 – 200م²', p:1500, g:['المكان كامل']},
- {sv:'post', k:'dep5',   ic:'post',    t:'دور',             u:'151 – 200م²', p:2000, g:['المكان كامل']},
- {sv:'post', k:'dep6',   ic:'post',    t:'دور',             u:'201 – 300م²', p:2200, g:['المكان كامل']},
- {sv:'post', k:'dep7',   ic:'post',    t:'دور',             u:'301 – 400م²', p:2800, g:['المكان كامل']},
- {sv:'post', k:'dep8',   ic:'post',    t:'فيلا',            u:'201 – 300م²', p:3200, g:['المكان كامل']},
- {sv:'post', k:'dep9',   ic:'post',    t:'فيلا',            u:'301 – 400م²', p:3600, g:['المكان كامل']},
- {sv:'post', k:'dep10',  ic:'post',    t:'فيلا',            u:'401 – 500م²', p:4800, g:['المكان كامل']},
- {sv:'post', k:'dep11',  ic:'post',    t:'فيلا',            u:'501 – 600م²', p:5500, g:['المكان كامل']},
+ {sv:'post', k:'dep1',   ic:'post',    t:'استوديو',         u:'حتى 50م²',    p:700, g:['استوديو']},
+ {sv:'post', k:'dep2',   ic:'post',    t:'استوديو أو شقة',  u:'51 – 100م²',  p:900, g:['استوديو','شقة']},
+ {sv:'post', k:'dep3',   ic:'post',    t:'شقة',             u:'101 – 150م²', p:1200, g:['شقة']},
+ {sv:'post', k:'dep4',   ic:'post',    t:'شقة',             u:'151 – 200م²', p:1500, g:['شقة']},
+ {sv:'post', k:'dep5',   ic:'post',    t:'دور',             u:'151 – 200م²', p:2000, g:['دور']},
+ {sv:'post', k:'dep6',   ic:'post',    t:'دور',             u:'201 – 300م²', p:2200, g:['دور']},
+ {sv:'post', k:'dep7',   ic:'post',    t:'دور',             u:'301 – 400م²', p:2800, g:['دور']},
+ {sv:'post', k:'dep8',   ic:'post',    t:'فيلا',            u:'201 – 300م²', p:3200, g:['فيلا']},
+ {sv:'post', k:'dep9',   ic:'post',    t:'فيلا',            u:'301 – 400م²', p:3600, g:['فيلا']},
+ {sv:'post', k:'dep10',  ic:'post',    t:'فيلا',            u:'401 – 500م²', p:4800, g:['فيلا']},
+ {sv:'post', k:'dep11',  ic:'post',    t:'فيلا',            u:'501 – 600م²', p:5500, g:['فيلا']},
  {sv:'post', k:'nkit1',  ic:'kitchen', t:'مطبخ جديد',       u:'حتى 50م²',    p:500, g:['مطبخ جديد']},
  {sv:'post', k:'nkit2',  ic:'kitchen', t:'مطبخ جديد',       u:'51 – 100م²',  p:800, g:['مطبخ جديد']},
  {sv:'post', k:'nkit3',  ic:'kitchen', t:'مطبخ جديد',       u:'101 – 140م²', p:1200, g:['مطبخ جديد']},
@@ -988,7 +988,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.1748';
+var APP_VER='2026.08.28.1826';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1344,7 +1344,7 @@ function renderService(){
       (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b> و<b>تُخصم من قيمة الخدمة</b> لو أكملت معنا، وتحدّد موقعك وقت الحجز.':'وزيارة التسعير مجانية.')+'</div></div>'
     : '<div class="sec"><div class="sec-h"><h2>'+(s.one?'اختر مقاس مكانك':'الأسعار')+'</h2></div>'+
       (discOk(CTV)?'<div id="ladder" style="margin-bottom:14px"></div>':'')+
-      (gs.length>1?'<div class="cats" id="svTabs" style="padding:0 0 12px;margin:0"></div>':'')+
+      (gs.length>1?'<div class="fade-x"><div class="cats scrollx" id="svTabs" style="padding:0 0 12px;margin:0"></div></div>':'')+
       '<div class="rows-p" id="svRows"></div></div>';
   $('svBody').innerHTML=
     '<div class="sec" style="border:none;padding-bottom:0"><div class="sv-head"><span class="ring">'+il(s.ic,'','il-xl')+'</span>'+
@@ -1371,8 +1371,14 @@ function svRows(){
   if(tabs)tabs.innerHTML=svcGroups(CTV).map(function(x){
     return '<button class="cat" aria-pressed="'+(x===g)+'" onclick="svPickGroup(\''+esc(x)+'\')">'+esc(x)+'</button>';}).join('');
   var one=svcOf(CTV).one;
-  host.innerHTML=svcItems(CTV).filter(function(it){return !g||(it.g||[]).indexOf(g)>=0;}).map(function(it){
-    var body='<span class="rp-t"><b>'+esc(it.t)+'</b><s>'+esc(it.u)+'</s></span>'+
+  var rows=svcItems(CTV).filter(function(it){return !g||(it.g||[]).indexOf(g)>=0;});
+  /* داخل شريحة كل صفوفها بنفس الاسم، تكراره على كل صف حشو: الشريحة قالته أصلاً.
+     الفرق الحقيقي هو المقاس، فيتقدّم — والاسم يظهر وحده حين يختلف داخل الشريحة */
+  var same=g&&rows.length>1&&rows.every(function(x){return x.t===rows[0].t;});
+  var lead=g?'u':'t', sub=g?'t':'u';
+  host.innerHTML=rows.map(function(it){
+    var body='<span class="rp-t"><b>'+esc(it[lead])+'</b>'+
+             (same||it.t===g?'':'<s>'+esc(it[sub])+'</s>')+'</span>'+
              '<b class="rp-p">'+sar(it.p)+'</b>';
     /* خدمة المقاس الواحد: الصف كله زر اختيار. غيرها: عدّاد، لأن الكمية تعني شيئاً
        (أربعة مقاعد كنب، ثلاث نوافذ) — بينما بيتين بمقاسين ما لها معنى */
