@@ -11,9 +11,10 @@ const www  = join(here, 'www');
 await rm(www, { recursive: true, force: true });
 await mkdir(www, { recursive: true });
 
-/* الشعار ينتقل جنب الصفحة، فالمسار «‎../logo.png» يصير «logo.png» */
+/* الصور تنتقل جنب الصفحة، فالمسار «‎../اسم.png» يصير «اسم.png» */
+const IMGS = ['logo.png', 'icon.png', 'icon-192.png', 'icon-512.png'];
 let html = await readFile(join(here, 'index.html'), 'utf8');
-html = html.replaceAll('../logo.png', 'logo.png');
+for (const f of IMGS) html = html.replaceAll('../' + f, f);
 
 /* الـService Worker للويب فقط — داخل التطبيق الأصلي يخدّم نسخة قديمة بلا فائدة */
 html = html.replace(
@@ -22,7 +23,9 @@ html = html.replace(
 );
 
 await writeFile(join(www, 'index.html'), html);
-await copyFile(join(here, 'manifest.json'), join(www, 'manifest.json'));
-await copyFile(join(root, 'logo.png'), join(www, 'logo.png'));
+let man = await readFile(join(here, 'manifest.json'), 'utf8');
+for (const f of IMGS) man = man.replaceAll('../' + f, f);
+await writeFile(join(www, 'manifest.json'), man);
+for (const f of IMGS) await copyFile(join(root, f), join(www, f));
 
 console.log('✓ www/ جاهز — شغّل: npx cap sync ios');
