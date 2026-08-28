@@ -2,9 +2,14 @@
   "appId": "sa.kleenology.app",
   "appName": "كلينولوجي",
   "webDir": "www",
-  "ios": { "contentInset": "always", "backgroundColor": "#083b66" },
-  "server": { "iosScheme": "https" },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#F1F8FC"
+  },
   "plugins": {
-    "SplashScreen": { "launchShowDuration": 1200, "backgroundColor": "#083b66", "showSpinner": false }
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": ["phone"]
+    }
   }
 }

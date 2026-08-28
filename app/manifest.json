@@ -1,0 +1,19 @@
+{
+  "name": "كلينولوجي — طلب خدمات التنظيف",
+  "short_name": "كلينولوجي",
+  "description": "اطلب تنظيف بيتك أو مكتبك، تابع حالة طلبك، واحجز موعدك.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F1F8FC",
+  "theme_color": "#29ABE2",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["lifestyle", "business"],
+  "icons": [
+    { "src": "../logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../logo.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
