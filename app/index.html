@@ -115,6 +115,10 @@ button{cursor:pointer;border:none;background:none}
 .btn-g{background:var(--gold);color:#4A3200;box-shadow:0 6px 20px rgba(242,179,61,.3)}
 .btn-x{background:var(--stopl);color:var(--stop);box-shadow:none}
 .btn-sm{padding:12px 18px;font-size:14px}
+/* حقل وزر في صف واحد */
+.row-in{display:flex;gap:9px;align-items:stretch}
+.row-in .in{flex:1;min-width:0}
+.row-in .btn{width:auto;flex:0 0 auto}
 .stack{display:flex;flex-direction:column;gap:10px}
 
 /* ===== بطاقة العرض ===== */
@@ -141,6 +145,20 @@ button{cursor:pointer;border:none;background:none}
 .svc s{display:block;text-decoration:none;font-size:11.5px;color:var(--mut);margin-top:2px}
 
 /* ===== سلّم الخصم ===== */
+/* مطوي افتراضياً: الكرت الكامل كان يأكل أول شاشة قبل ما يشوف العميل صنفاً واحداً */
+.ladbar{width:100%;display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:var(--r2);
+  background:var(--card);box-shadow:var(--sh);text-align:right}
+.ladbar-b{flex:0 0 auto;min-width:46px;padding:5px 9px;border-radius:999px;background:var(--gold-l);
+  color:var(--gold-d);font-size:13px;font-weight:700;font-family:var(--dsp);text-align:center;
+  font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.ladbar-x{flex:1;min-width:0}
+.ladbar-l{display:block;font-size:12.5px;font-weight:600;color:var(--tx);margin-bottom:8px;line-height:1.7;
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ladbar-l b{color:var(--gold-d);font-weight:700}
+.ladbar-x .rail{display:block;margin-bottom:0;height:5px}
+.ladbar .chev{flex:0 0 auto;color:var(--faint);transition:transform .2s}
+[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.ladder-t .chev{color:var(--faint);transition:transform .2s;flex:0 0 auto}
 .ladder{background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--sh)}
 .ladder-t{font-size:17px;font-weight:700;font-family:var(--dsp);margin-bottom:4px}
 .ladder-s{font-size:13px;color:var(--mut);margin-bottom:22px;line-height:1.7;min-height:1.7em;
@@ -228,7 +246,17 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .opt[aria-pressed="true"]{background:var(--blue);color:#fff;box-shadow:var(--sh-blue)}
 .opt-w{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:70px;padding:11px 12px;border-radius:var(--r3)}
 .opt-w s{text-decoration:none;font-size:11px;opacity:.8}
-.scrollx{display:flex;gap:9px;overflow-x:auto;padding:4px 0 6px;scrollbar-width:none}
+.scrollx{display:flex;gap:9px;overflow-x:auto;padding:4px 0 6px;scrollbar-width:none;
+  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.scrollx>*{scroll-snap-align:end}
+/* تلاشٍ عند الطرف: يوضّح أن بقية الأيام تُسحب، بدل بطاقة مقطوعة نصفها */
+.chips{padding:2px 0 6px}
+.chip{flex:0 0 auto;display:flex;align-items:center;gap:7px;background:var(--card);box-shadow:var(--sh);
+  padding:9px 14px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--tx);white-space:nowrap}
+.chip .ic{color:var(--blue)}
+.fade-x{position:relative}
+.fade-x .scrollx{-webkit-mask-image:linear-gradient(to left,#000 86%,transparent);
+  mask-image:linear-gradient(to left,#000 86%,transparent)}
 .scrollx::-webkit-scrollbar{display:none}
 
 /* ===== الحجز ===== */
@@ -241,6 +269,16 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 /* ===== الطلبات ===== */
 .ord{background:var(--card);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:var(--sh)}
 .ord.live{box-shadow:0 0 0 2px var(--gold), var(--sh)}
+/* حالة الطلب في سطر واحد، وتنفتح كاملة بالضغط */
+.tlbar{width:100%;display:flex;align-items:center;gap:13px;text-align:right}
+.tlbar .tl-d{background:var(--gold)}
+.tlbar .tl-d .ic{width:11px;height:11px;color:#4A3200;stroke-width:3.4}
+.tlbar .tl-x{flex:1;min-width:0}
+.tlbar .tl-n{flex:0 0 auto;font-size:11.5px;font-weight:700;color:var(--faint);
+  direction:ltr;unicode-bidi:isolate}
+.tlbar .chev,.tlhead .chev{flex:0 0 auto;color:var(--faint);transition:transform .2s}
+.tlhead{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:12.5px;font-weight:700;color:var(--mut);margin-bottom:14px;text-align:right}
 .ord-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
 .ord-t{font-size:15.5px;font-weight:700;font-family:var(--dsp);display:flex;align-items:center;gap:10px}
 /* أيقونة البطاقة داخل مربّع ملوّن هادئ — نفس الحجم لكل أنواع الطلبات */
@@ -283,7 +321,8 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .lg .in{text-align:right;font-size:16px;letter-spacing:.5px;direction:ltr}
 .phone-row{display:flex;gap:10px}
 .cc{display:flex;align-items:center;gap:5px;padding:15px 15px;border-radius:var(--r3);background:var(--card);
-  font-size:15px;font-weight:600;flex:0 0 auto;box-shadow:var(--sh);font-family:var(--dsp)}
+  font-size:15px;font-weight:600;flex:0 0 auto;box-shadow:var(--sh);font-family:var(--dsp);
+  direction:ltr;unicode-bidi:isolate}
 .lg small{display:block;margin-top:20px;font-size:12px;color:var(--mut);line-height:1.9;text-align:center}
 .lg small a{color:var(--blue);text-decoration:none;font-weight:700}
 .sent{font-size:15.5px;font-weight:700;font-family:var(--dsp);direction:ltr;text-align:center;
@@ -397,6 +436,8 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .hintcard b{display:block;font-size:14px;font-weight:700;font-family:var(--dsp);color:var(--gold-d)}
 .hintcard s{display:block;text-decoration:none;font-size:12px;color:var(--mut);margin-top:2px;line-height:1.6}
 .hintcard>.ic{color:var(--gold-d);flex:0 0 auto}
+.okline{display:flex;align-items:center;gap:7px;margin:-4px 0 12px;font-size:12.5px;font-weight:600;
+  color:var(--ok);background:var(--okl);padding:9px 12px;border-radius:var(--r3)}
 .okpill{display:inline-block;background:var(--okl);color:var(--ok);font-size:10px;font-weight:700;
   padding:2px 7px;border-radius:99px;margin-right:4px}
 
@@ -487,14 +528,11 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
         <button class="btn" onclick="openCatalog('sofa')" id="heroBtn"></button>
       </div>
     </div>
+    <div class="sec" style="border:none;padding:14px 0 0"><div class="fade-x"><div class="scrollx chips" id="featList"></div></div></div>
     <div id="activeOrder"></div>
     <div class="sec">
       <div class="sec-h"><h2>الخدمات</h2></div>
       <div class="svcs" id="svcGrid"></div>
-    </div>
-    <div class="sec">
-      <div class="sec-h"><h2>ليش كلينولوجي</h2></div>
-      <div class="incl" id="featList"></div>
     </div>
   </div>
 </section>
@@ -503,7 +541,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <section class="scr" id="scService">
   <header class="top"><div class="top-in">
     <button class="lnk" style="padding:0" onclick="go('scHome');setTab('scHome')" id="svBack"></button>
-    <span class="mark en">Kleenology</span>
+    <span class="mark">كلينولوجي</span>
   </div></header>
   <div class="wrap"><div id="svBody"></div></div>
   <div class="sticky"><div class="sticky-in"><button class="btn" id="svGo"></button></div></div>
@@ -521,7 +559,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <section class="scr" id="scPkg">
   <header class="top"><div class="top-in">
     <button class="bk" onclick="go('scPkgs');setTab('scPkgs')" id="pkBack"></button>
-    <span class="mark en">Kleenology</span>
+    <span class="mark">كلينولوجي</span>
   </div></header>
   <div class="wrap"><div id="pkBody"></div></div>
   <div class="sticky"><div class="sticky-in"><button class="btn" id="pkGo"></button></div></div>
@@ -531,7 +569,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <section class="scr" id="scQuote">
   <header class="top"><div class="top-in">
     <button class="bk" onclick="go('scService')" id="qBack"></button>
-    <span class="mark en">Kleenology</span>
+    <span class="mark">كلينولوجي</span>
   </div></header>
   <div class="wrap"><div id="qBody"></div></div>
 </section>
@@ -540,7 +578,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <section class="scr" id="scQuoteWa">
   <header class="top"><div class="top-in">
     <button class="bk" onclick="go('scQuote')" id="qwBack"></button>
-    <span class="mark en">Kleenology</span>
+    <span class="mark">كلينولوجي</span>
   </div></header>
   <div class="wrap"><div id="qwBody"></div></div>
 </section>
@@ -588,7 +626,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <!-- ===== حسابي ===== -->
 <section class="scr" id="scMe">
   <header class="top"><div class="top-in">
-    <div><h1>حسابي</h1><p class="mono" id="meePh"></p></div>
+    <div><h1>حسابي</h1><p class="mono" id="meePh" dir="ltr" style="unicode-bidi:isolate"></p></div>
   </div></header>
   <div class="wrap"><div id="meBody"></div></div>
 </section>
@@ -683,6 +721,7 @@ var IC={
  cart:'<path d="M2.6 3.4h2.2l2.4 12a1.4 1.4 0 0 0 1.4 1.1h9.2a1.4 1.4 0 0 0 1.4-1.1l1.6-8.2H5.6M9.4 20.6h.02M17.6 20.6h.02"/>',
  check:'<path d="M20 6.5 9.2 17.3 4 12.1"/>',
  back:'<path d="M14.5 19 8 12l6.5-7"/>',
+ down:'<path d="M5 9.5 12 16l7-6.5"/>',
  cal:'<path d="M8 2.6v3.6M16 2.6v3.6M3.2 10h17.6M5.2 4.4h13.6a2 2 0 0 1 2 2v12.4a2 2 0 0 1-2 2H5.2a2 2 0 0 1-2-2V6.4a2 2 0 0 1 2-2"/>',
  clock:'<path d="M12 21.4a9.4 9.4 0 1 0 0-18.8 9.4 9.4 0 0 0 0 18.8M12 6.8V12l3.6 1.9"/>',
  pin:'<path d="M19.6 10.2c0 5.6-7.6 11.4-7.6 11.4s-7.6-5.8-7.6-11.4a7.6 7.6 0 0 1 15.2 0M12 12.6a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8"/>',
@@ -785,7 +824,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.0002';
+var APP_VER='2026.08.28.0053';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -797,10 +836,10 @@ var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
 var FLOW=['new','confirmed','on_way','done'];
 var FLOWL={new:{t:'استلمنا طلبك'},confirmed:{t:'أكدنا الموعد'},on_way:{t:'الفريق في الطريق'},done:{t:'اكتملت الخدمة'}};
-var FEATS=['فريق مدرّب يوصل في وقته — وإذا تأخر نخبرك قبل.',
-           'مواد تنظيف آمنة على الأطفال وأصحاب الحساسية.',
-           'سعر واضح قبل ما يبدأ الشغل — بدون مفاجآت.',
-           'تقييمك بعد كل خدمة يوصل لصاحب الشركة مباشرة.'];
+var FEATS=[{t:'يوصل في وقته',ic:'clock'},
+           {t:'مواد آمنة على الأطفال',ic:'shield'},
+           {t:'سعر واضح قبل الشغل',ic:'check'},
+           {t:'تقييمك يوصل للمالك',ic:'chat'}];
 var MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var DAYS_S=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
@@ -808,6 +847,8 @@ var DAYS_S=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جم
 var DEMO=/[?&]demo=1/.test(location.search)||location.protocol==='file:';
 var AUTHED=false,ME={uid:'',ph:'',n:''},ORD=[],ADR=[],CONF=null,PREV='scMe';
 var CART={},CTV='sofa',RT=0,RTM=null,ORUN=null,ORERR='';
+var LADX=false;                  /* هل سلّم الخصم مفتوح؟ — تُقرأ من التخزين بعد تعريف LS */
+var ORX={};                      /* أي الطلبات مفتوح مسارها */
 var BK={step:0,date:'',slot:'',adr:null,kind:'',locErr:''};
 
 var db=null,auth=null;
@@ -860,8 +901,10 @@ function cartTotals(){
 </script>
 <script>
 /* ================= طبقة البيانات ================= */
-var LS={get:function(k,d){try{return JSON.parse(localStorage.getItem('kln_'+k))||d;}catch(e){return d;}},
+var LS={get:function(k,d){try{var v=localStorage.getItem('kln_'+k);
+          if(v===null)return d;v=JSON.parse(v);return v===null?d:v;}catch(e){return d;}},
         set:function(k,v){try{localStorage.setItem('kln_'+k,JSON.stringify(v));}catch(e){}}};
+LADX=LS.get('ladx',false);
 var API={
   saveMe:function(){if(DEMO){LS.set('me',ME);return Promise.resolve();}
     return db.collection('customers').doc(ME.uid).set({n:ME.n,ph:ME.ph},{merge:true});},
@@ -1071,7 +1114,8 @@ function renderHome(){
       '</div>'+
       '<p style="font-size:12.5px;color:var(--mut);margin-top:10px">عشان نناديك باسمك في الرسائل وعند وصول الفريق.</p>'+
     '</div></div>';
-  $('featList').innerHTML=FEATS.map(function(f){return '<div><span class="tick">'+ic('check')+'</span><span>'+esc(f)+'</span></div>';}).join('');
+  $('featList').innerHTML=FEATS.map(function(f){
+    return '<span class="chip">'+ic(f.ic,'','ic-sm')+'<span>'+esc(f.t)+'</span></span>';}).join('');
 }
 
 /* ================= تفاصيل الخدمة ================= */
@@ -1285,16 +1329,32 @@ function renderLadder(){
     return;
   }
   var fill=Math.min(100,Math.round(base/top.at*100));
+  var line=nx?'أضف <b>'+(nx.at-base)+' ر.س</b> للوصول إلى خصم '+pct(nx.off)
+    :cur?'وصلت لأعلى خصم — <b>'+pct(cur.off)+'</b>'
+    :'ابدأ بإضافة الأصناف اللي تبيها';
+  /* الشريط المطوي أضيق: جملة أقصر حتى لا تُقصّ بثلاث نقاط */
+  var brief=nx?'أضف <b>'+(nx.at-base)+' ر.س</b> لخصم '+pct(nx.off)
+    :cur?'وصلت لأعلى خصم'
+    :'ابدأ وخصمك يكبر معك';
+  if(!LADX){
+    $('ladder').innerHTML='<button class="ladbar" aria-expanded="false" onclick="toggleLadder()">'+
+      '<span class="ladbar-b">'+(cur?cur.off+'%':'0%')+'</span>'+
+      '<span class="ladbar-x"><span class="ladbar-l">'+brief+'</span>'+
+      '<span class="rail"><i style="width:'+fill+'%"></i></span></span>'+
+      ic('down','chev','ic-sm')+'</button>';
+    return;
+  }
   $('ladder').innerHTML='<div class="ladder">'+
-    '<div class="ladder-t">خصم يصل إلى '+pct(top.off)+' على '+esc(discNames())+'</div>'+
-    '<div class="ladder-s">'+(nx?'أضف <b>'+(nx.at-base)+' ر.س</b> للوصول إلى خصم '+pct(nx.off)
-      :cur?'وصلت لأعلى خصم — <b>'+pct(cur.off)+'</b>'
-      :'ابدأ بإضافة الأصناف اللي تبيها')+'</div>'+
+    '<button class="ladder-t" onclick="toggleLadder()" aria-expanded="true" style="width:100%;text-align:right;'+
+      'display:flex;align-items:center;justify-content:space-between;gap:10px">'+
+      '<span>خصم يصل إلى '+pct(top.off)+' على '+esc(discNames())+'</span>'+ic('down','chev','ic-sm')+'</button>'+
+    '<div class="ladder-s">'+line+'</div>'+
     '<div class="rail"><i style="width:'+fill+'%"></i></div>'+
     '<div class="tiers">'+TIERS.map(function(t){
       return '<div class="tier'+(base>=t.at?' on':'')+'"><span class="dot"></span>'+
         '<b class="mono">'+t.at.toLocaleString('en-US')+'</b><s>خصم '+pct(t.off)+'</s></div>';}).join('')+'</div></div>';
 }
+function toggleLadder(){LADX=!LADX;LS.set('ladx',LADX);renderLadder();}
 function setQty(k,q){
   if(q<=0)delete CART[k];else CART[k]=q;
   LS.set('cart',CART);
@@ -1334,12 +1394,13 @@ function renderCart(){
   }
   $('cartBody').innerHTML=
     '<div class="sec"><div class="sec-h"><h2>الأصناف</h2><span class="mark mono">'+cartCount()+'</span></div>'+
+      (t.off?'<p class="okline">'+ic('check','','ic-sm')+'<span>خصم '+pct(t.off)+' مطبّق على '+esc(discNames())+'</span></p>':'')+
       L.map(function(l){
         return '<div class="box" style="margin-bottom:9px;display:flex;gap:13px;align-items:center">'+
           il(l.ic,'','il-sm')+
           '<div style="flex:1;min-width:0"><b style="font-size:14.5px;font-weight:600;display:block">'+esc(l.t)+'</b>'+
             '<s style="text-decoration:none;font-size:11.5px;color:var(--mut)">'+esc(l.u)+' · '+sar(l.p)+
-              (t.off&&discOk(l.sv)?' <span class="okpill">مشمول بالخصم</span>':'')+'</s></div>'+
+'</s></div>'+
           '<div style="text-align:left"><div class="qty" style="margin:0 0 6px">'+
             '<button onclick="setQty(\''+l.k+'\','+(l.q-1)+')" aria-label="نقص">'+ic('minus','','ic-sm')+'</button>'+
             '<span>'+l.q+'</span>'+
@@ -1409,7 +1470,7 @@ function stepWhen(){
   return head(BK.quote?'متى نجيك للمعاينة؟':BK.pkg?'متى نبدأ اشتراكك؟':'متى يناسبك؟',
       BK.quote?'زيارة قصيرة لأخذ المقاسات — مجانية وما تلزمك بشي':
       BK.pkg?'أول زيارة — وبعدها '+BK.pkg.every+' بنفس الموعد':'اختر اليوم والفترة — المواعيد المحجوزة تظهر مقفلة')+
-    '<div class="fld"><span class="lb">اليوم</span><div class="scrollx days">'+days+'</div></div>'+
+    '<div class="fld"><span class="lb">اليوم</span><div class="fade-x"><div class="scrollx days">'+days+'</div></div></div>'+
     '<div class="fld"><span class="lb">الفترة</span><div class="slots">'+slots+'</div></div>'+
     '<div class="note">'+(BK.date&&BK.slot
       ? 'موعدك يُحجز لك أول ما ترسل الطلب — ما أحد يقدر ياخذه بعدها.'
@@ -1737,10 +1798,19 @@ function ordCard(o,live){
     (o.st==='done'?'<a class="btn btn-2 btn-sm" style="margin-top:15px;text-decoration:none" target="_blank" rel="noopener" href="'+waLink(o)+'">'+ic('chat','','ic-sm')+'<span>تواصل معنا</span></a>':'')+
     '</article>';
 }
+function toggleTl(id){if(ORX[id])delete ORX[id];else ORX[id]=1;renderOrders();renderHome();}
 function timeline(o){
   if(o.st==='cancelled')return '';
   var at=FLOW.indexOf(o.st);
-  return '<div class="tl">'+FLOW.map(function(s,i){
+  if(!ORX[o.id]){
+    var h=(o.hist||[]).filter(function(x){return x.s===o.st;})[0];
+    return '<button class="tl tlbar" aria-expanded="false" onclick="toggleTl(\''+o.id+'\')">'+
+      '<span class="tl-d dn">'+ic('check')+'</span>'+
+      '<span class="tl-x"><b>'+FLOWL[o.st].t+'</b>'+(h?'<s>'+esc(stamp(h.at))+'</s>':'')+'</span>'+
+      '<span class="tl-n mono">'+(at+1)+' / '+FLOW.length+'</span>'+ic('down','chev','ic-sm')+'</button>';
+  }
+  return '<div class="tl"><button class="tlhead" aria-expanded="true" onclick="toggleTl(\''+o.id+'\')">'+
+    '<span>مسار الطلب</span>'+ic('down','chev','ic-sm')+'</button>'+FLOW.map(function(s,i){
     var h=(o.hist||[]).filter(function(x){return x.s===s;})[0];
     return '<div class="tl-i'+(i<=at?' dn':'')+(i===at?' at':'')+'"><span class="tl-d">'+(i<=at?ic('check'):'')+'</span>'+
       '<span class="tl-x"><b>'+FLOWL[s].t+'</b>'+(h?'<s>'+esc(stamp(h.at))+'</s>':'')+'</span></div>';}).join('')+'</div>';
@@ -1789,8 +1859,9 @@ function renderMe(){
   var done=ORD.filter(function(o){return o.st==='done';}).length;
   $('meBody').innerHTML=
     '<div class="sec"><div class="sec-h"><h2>الاسم</h2></div>'+
-      '<div class="fld" style="margin:0"><input class="in" id="meN" maxlength="60" value="'+esc(ME.n)+'" placeholder="وش نناديك؟"></div>'+
-      '<button class="btn btn-2 btn-sm" style="margin-top:11px" onclick="saveName()">حفظ</button></div>'+
+      '<div class="row-in"><input class="in" id="meN" maxlength="60" value="'+esc(ME.n)+'" placeholder="وش نناديك؟" '+
+        'onblur="saveName(0,1)" onkeydown="if(event.key===\'Enter\')this.blur()">'+
+        '<button class="btn btn-2 btn-sm" onclick="saveName()">حفظ</button></div></div>'+
     (done?'<div class="sec"><div class="sec-h"><h2>عميل مميز</h2></div>'+
       '<div class="note acc">خدمناك <b>'+done+'</b> '+(done===1?'مرة':'مرات') +' — وكل ما كبرت سلتك كبر خصمك، يوصل إلى <b>'+pct(TIERS[TIERS.length-1].off)+'</b>.</div></div>':'')+
     '<div class="sec"><div class="sec-h"><h2>عناويني</h2><span class="mark mono">'+ADR.length+'</span></div>'+
@@ -1806,12 +1877,13 @@ function renderMe(){
     '<p class="hint" style="margin-top:14px">الإصدار <span class="mono">'+APP_VER+'</span>'+
       (ME.uid?' · معرّف الحساب <span class="mono" style="user-select:all">'+esc(ME.uid)+'</span>':'')+'</p></div>';
 }
-function saveName(from){
+function saveName(from,quiet){
   var el=$(from||'meN');if(!el)return;
   var n=String(el.value||'').trim().slice(0,60);
-  if(!n){toast('اكتب اسمك');return;}
+  if(!n){if(!quiet)toast('اكتب اسمك');return;}
+  if(quiet&&n===ME.n)return;            /* ما تغيّر شي — لا حفظ ولا تنبيه */
   ME.n=n;
-  API.saveMe().then(function(){toast('أهلاً '+n);renderHome();renderMe();})
+  API.saveMe().then(function(){if(!quiet)toast('أهلاً '+n);renderHome();renderMe();})
    .catch(function(){toast('تعذّر الحفظ');});
 }
 function rmAddr(i){var a=ADR[i];if(!a||!confirm('حذف «'+a.t+'»؟'))return;
