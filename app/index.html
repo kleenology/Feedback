@@ -90,6 +90,8 @@ button{cursor:pointer;border:none;background:none}
 .sec-h h2{font-size:16px;font-weight:600;font-family:var(--dsp)}
 .sec-h .more{font-size:12.5px;color:var(--blue);font-weight:500}
 .card{background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--sh)}
+/* بطاقة أصغر لسطور السلة والمراجعة — كانت بلا أي CSS فتطفو على الخلفية */
+.box{background:var(--card);border-radius:var(--r2);padding:15px 16px;box-shadow:var(--sh)}
 
 /* ===== الشريط العلوي ===== */
 .top{padding:calc(var(--st) + 16px) 18px 6px;background:var(--paper)}
@@ -99,6 +101,11 @@ button{cursor:pointer;border:none;background:none}
 /* العلامة الصغيرة مقابل زر الرجوع — تتراجع للخلف ولا تزاحم العنوان */
 .mark{font-size:12.5px;font-weight:600;color:var(--faint);font-family:var(--dsp)}
 .mark.en{letter-spacing:.7px}
+/* عدّاد: كان يستعير ‎.mark المخصص لاسم العلامة في الرأس، فيطلع رقماً
+   باهتاً صغيراً معلّقاً في حافة الشاشة بلا ما يبين أنه عدد */
+.count{display:inline-grid;place-items:center;min-width:27px;height:27px;padding:0 10px;
+  border-radius:999px;background:var(--blue-l);color:var(--blue-d);flex:0 0 auto;
+  font-size:12.5px;font-weight:700;font-family:var(--dsp);font-variant-numeric:tabular-nums}
 .who{display:flex;align-items:center;gap:11px}
 .av{width:44px;height:44px;border-radius:15px;background:var(--blue);color:#fff;display:grid;
   place-items:center;font-weight:700;font-size:17px;font-family:var(--dsp);flex:0 0 auto;box-shadow:var(--sh-blue)}
@@ -269,7 +276,8 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .prog{display:flex;gap:5px;padding:8px 0 0}
 .prog i{flex:1;height:5px;border-radius:99px;background:var(--sunk)}
 .prog i.on{background:var(--blue)}
-.stp-t{font-size:24px;font-weight:700;font-family:var(--dsp);line-height:1.4;margin-top:22px;text-wrap:balance}
+.stp-n{font-size:12.5px;font-weight:700;font-family:var(--dsp);color:var(--blue);letter-spacing:.2px}
+.stp-t{font-size:24px;font-weight:700;font-family:var(--dsp);line-height:1.4;margin-top:6px;text-wrap:balance}
 .stp-s{font-size:14px;color:var(--mut);margin:4px 0 22px}
 
 /* ===== ورقة سفلية ===== */
@@ -633,7 +641,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
   <div class="wrap">
     <div id="nameCard"></div>
     <div class="sec" style="border:none;padding-bottom:0">
-      <div class="hero"><span class="hero-w"></span><span class="hero-w2"></span>
+      <div class="hero"><span class="bub b1"></span><span class="bub b2"></span>
         <h2>خدمات بيتك كلها<br><em>في سلة وحدة</em></h2>
         <p>اختر اللي تبي تنظّفه، والخصم يكبر كل ما كبرت سلتك.</p>
         <button class="btn" onclick="openService('sofa')" id="heroBtn"></button>
@@ -700,7 +708,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <section class="scr" id="scBook">
   <header class="top"><div class="top-in">
     <button class="bk" onclick="bookBack()" id="bkBtn"></button>
-    <span class="mark mono" id="bkStepN"></span>
+    <span class="count" id="bkStepN"></span>
   </div></header>
   <div class="wrap"><div class="prog" id="bkProg"></div><div id="bkBody"></div></div>
 </section>
@@ -989,7 +997,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.2001';
+var APP_VER='2026.08.28.2044';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1713,7 +1721,7 @@ function renderCart(){
     return;
   }
   $('cartBody').innerHTML=
-    '<div class="sec"><div class="sec-h"><h2>الأصناف</h2><span class="mark mono">'+cartCount()+'</span></div>'+
+    '<div class="sec"><div class="sec-h"><h2>الأصناف</h2><span class="count">'+cartCount()+'</span></div>'+
       (t.off?'<p class="okline">'+ic('check','','ic-sm')+'<span>خصم '+pct(t.off)+' مطبّق على '+esc(discNames())+'</span></p>':'')+
       L.map(function(l){
         return '<div class="box" style="margin-bottom:9px;display:flex;gap:13px;align-items:center">'+
@@ -1765,7 +1773,7 @@ function renderBook(){
   if(BK.step===1&&BK.loc){initMapPin();pinDrag($('mapPin'));}
   window.scrollTo(0,0);
 }
-function head(t,s){return '<div class="stp-n">'+esc(STEPS[BK.step])+'</div><h2 class="stp-t">'+esc(t)+'</h2><p class="stp-s">'+esc(s)+'</p>';}
+function head(t,s){return '<div class="stp-n" style="margin-top:22px">'+esc(STEPS[BK.step])+'</div><h2 class="stp-t">'+esc(t)+'</h2><p class="stp-s">'+esc(s)+'</p>';}
 function nextBtn(ok,l){return '<button class="btn" style="margin-top:24px" '+(ok?'':'disabled')+' onclick="bookNext()">'+(l||'التالي')+'</button>';}
 function stepWhen(){
   var now=new Date(),days='',lastMo=-1;
@@ -1778,7 +1786,7 @@ function stepWhen(){
     days+='<button class="day'+(sel?' on':'')+(full?' full':'')+'" '+(full?'disabled':'')+
       ' aria-pressed="'+sel+'" onclick="pickDay(\''+iso+'\')">'+
       '<s>'+label+'</s><b class="mono">'+d.getDate()+'</b>'+
-      '<i'+(full?'':' class="q"')+'>'+(full?'مكتمل':newMo?MO[mo].slice(0,4):'')+'</i></button>';
+      '<i>'+(full?'مكتمل':newMo?MO[mo].slice(0,4):'')+'</i></button>';
   }
   var slots='';
   SLOTS.forEach(function(sl){
