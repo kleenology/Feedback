@@ -266,6 +266,74 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .stp-t{font-size:24px;font-weight:700;font-family:var(--dsp);line-height:1.4;margin-top:22px;text-wrap:balance}
 .stp-s{font-size:14px;color:var(--mut);margin:4px 0 22px}
 
+/* ===== ورقة سفلية ===== */
+.shx{position:fixed;inset:0;z-index:60;background:rgba(21,60,80,.42);opacity:0;pointer-events:none;
+  transition:opacity .22s}
+.shx.on{opacity:1;pointer-events:auto}
+.sh{position:fixed;right:0;left:0;bottom:0;z-index:61;background:var(--paper);
+  border-radius:26px 26px 0 0;padding:10px 18px calc(22px + var(--sb));max-height:82vh;overflow-y:auto;
+  transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.3,1);box-shadow:0 -8px 40px rgba(21,60,80,.16)}
+.sh.on{transform:translateY(0)}
+.sh-grip{width:42px;height:4px;border-radius:99px;background:var(--faint);opacity:.5;margin:0 auto 14px}
+.sh-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.sh-h h3{font-size:16.5px;font-weight:700;font-family:var(--dsp);flex:1;text-align:center}
+.sh-x{width:38px;height:38px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;
+  color:var(--tx);flex:0 0 auto}
+.sh-x .ic{width:17px;height:17px}
+.shopt{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--card);border-radius:var(--r2);padding:16px 18px;margin-bottom:9px;box-shadow:var(--sh);
+  font-size:14.5px;font-weight:600;text-align:right}
+.shopt .dot{width:21px;height:21px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto;
+  display:grid;place-items:center;transition:all .18s}
+.shopt[aria-pressed="true"]{box-shadow:0 0 0 2px var(--blue), var(--sh)}
+.shopt[aria-pressed="true"] .dot{border-color:var(--blue);background:var(--blue)}
+.shopt[aria-pressed="true"] .dot::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+
+/* ===== حقول التسعير ===== */
+.selrow{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--card);border-radius:var(--r3);padding:16px 16px;box-shadow:var(--sh);
+  font-size:14.5px;font-weight:600;text-align:right}
+.selrow.empty{color:var(--faint);font-weight:500}
+.selrow .ic{color:var(--faint);flex:0 0 auto}
+.qfcard{background:var(--card);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden}
+.qfrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;
+  border-bottom:1px solid var(--line)}
+.qfrow:last-child{border-bottom:none}
+.qfrow>span{font-size:14px;font-weight:600}
+.qfrow .req{color:var(--stop);font-weight:700}
+.qfrow input.qn{width:112px;text-align:left;direction:ltr;border:none;background:transparent;
+  font-size:15px;font-weight:700;font-family:var(--dsp);color:var(--tx);outline:none;
+  font-variant-numeric:tabular-nums}
+.stp{display:flex;align-items:center;gap:14px;flex:0 0 auto}
+.stp button{width:34px;height:34px;border-radius:50%;border:1.6px solid var(--blue-l);background:var(--card);
+  display:grid;place-items:center;color:var(--blue);transition:all .15s}
+.stp button:disabled{opacity:.35}
+.stp b{min-width:20px;text-align:center;font-size:15px;font-weight:700;font-family:var(--dsp);
+  font-variant-numeric:tabular-nums}
+.sw{width:50px;height:29px;border-radius:99px;background:var(--sunk);flex:0 0 auto;position:relative;
+  transition:background .2s}
+.sw i{position:absolute;top:3px;right:3px;width:23px;height:23px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 4px rgba(21,60,80,.25);transition:transform .2s}
+.sw[aria-pressed="true"]{background:var(--blue)}
+.sw[aria-pressed="true"] i{transform:translateX(-21px)}
+
+/* ===== صفوف حسابي ===== */
+.mrow{width:100%;display:flex;align-items:center;gap:14px;background:var(--card);border-radius:var(--r2);
+  padding:15px 16px;margin-bottom:10px;box-shadow:var(--sh);text-align:right}
+.mrow .mic{width:42px;height:42px;border-radius:14px;background:var(--blue-l);color:var(--blue-d);
+  display:grid;place-items:center;flex:0 0 auto}
+.mrow .mtx{flex:1;min-width:0}
+.mrow .mtx b{display:block;font-size:14.5px;font-weight:700;font-family:var(--dsp)}
+.mrow .mtx s{display:block;text-decoration:none;font-size:12px;color:var(--mut);margin-top:2px}
+.mrow .ic-sm{color:var(--faint);flex:0 0 auto}
+.mrow.danger .mic{background:var(--stopl);color:var(--stop)}
+.mrow.danger .mtx b{color:var(--stop)}
+.mhead{text-align:center;padding:10px 0 22px}
+.mhead .av{margin:0 auto 12px;width:66px;height:66px;border-radius:22px;font-size:26px}
+.mhead h2{font-size:19px;font-weight:700;font-family:var(--dsp)}
+.mhead s{display:block;text-decoration:none;font-size:13px;color:var(--mut);margin-top:4px;
+  direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+
 /* ===== الطلبات ===== */
 .ord{background:var(--card);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:var(--sh)}
 .ord.live{box-shadow:0 0 0 2px var(--gold), var(--sh)}
@@ -628,7 +696,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <!-- ===== حسابي ===== -->
 <section class="scr" id="scMe">
   <header class="top"><div class="top-in">
-    <div><h1>حسابي</h1><p class="mono" id="meePh" dir="ltr" style="unicode-bidi:isolate"></p></div>
+    <div><h1>حسابي</h1><p>بياناتك وإعداداتك</p></div>
   </div></header>
   <div class="wrap"><div id="meBody"></div></div>
 </section>
@@ -640,6 +708,14 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
   </div></header>
   <div class="wrap"><div class="sec"><div class="prose" id="termsBody"></div></div></div>
 </section>
+
+<div class="shx" id="shX" onclick="closeSheet()"></div>
+<div class="sh" id="sh" role="dialog" aria-modal="true" aria-labelledby="shT">
+  <div class="sh-grip"></div>
+  <div class="sh-h"><button class="sh-x" onclick="closeSheet()" aria-label="إغلاق" id="shClose"></button>
+    <h3 id="shT"></h3><span style="width:38px"></span></div>
+  <div id="shB"></div>
+</div>
 
 <nav class="tabs hide" id="tabBar" role="tablist">
   <button class="tab" role="tab" aria-selected="true" data-s="scHome" data-i="home">الرئيسية</button>
@@ -724,6 +800,10 @@ var IC={
  check:'<path d="M20 6.5 9.2 17.3 4 12.1"/>',
  back:'<path d="M14.5 19 8 12l6.5-7"/>',
  down:'<path d="M5 9.5 12 16l7-6.5"/>',
+ close:'<path d="M6 6l12 12M18 6L6 18"/>',
+ doc:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+ tag:'<path d="M20.6 13.4 12 4.8H4.8V12l8.6 8.6a2 2 0 0 0 2.8 0l4.4-4.4a2 2 0 0 0 0-2.8z"/><circle cx="8.5" cy="8.5" r="1.2"/>',
+ edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
  cal:'<path d="M8 2.6v3.6M16 2.6v3.6M3.2 10h17.6M5.2 4.4h13.6a2 2 0 0 1 2 2v12.4a2 2 0 0 1-2 2H5.2a2 2 0 0 1-2-2V6.4a2 2 0 0 1 2-2"/>',
  clock:'<path d="M12 21.4a9.4 9.4 0 1 0 0-18.8 9.4 9.4 0 0 0 0 18.8M12 6.8V12l3.6 1.9"/>',
  pin:'<path d="M19.6 10.2c0 5.6-7.6 11.4-7.6 11.4s-7.6-5.8-7.6-11.4a7.6 7.6 0 0 1 15.2 0M12 12.6a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8"/>',
@@ -816,7 +896,11 @@ var TIERS=[{at:400,off:10},{at:800,off:15},{at:1500,off:20},{at:2500,off:25}];
 /* الخصم يسري على هذي الخدمات وحدها — أضف مفاتيح خدمات ثانية لو وسّعته */
 var DISC_SV=['sofa'];
 
-var KINDS=['شقة','فيلا','دور','مكتب','محل','مستودع'];
+var KINDS=['شقة','فيلا','دور','مكتب','محل تجاري','مستودع','مسجد'];
+/* عدّادات وخيارات نموذج التسعير — احذف أو أضف صفاً وتتحدّث الشاشة والرسالة معاً */
+var QCOUNTS=[{k:'rooms',t:'الغرف'},{k:'halls',t:'الصالات'},
+             {k:'baths',t:'دورات المياه'},{k:'kitchens',t:'المطابخ'}];
+var QFLAGS=[{k:'cab',t:'يوجد خزائن'},{k:'cement',t:'يوجد إسمنت'},{k:'paint',t:'يوجد دهانات'}];
 /* مساحات تقريبية لطلب التسعير — العميل يختار بضغطة بدل ما يكتب رقماً */
 var AREAS=['أقل من 150م','150 – 300م','300 – 500م','500 – 1000م','أكبر من 1000م'];
 /* مدن الخدمة — تظهر كأزرار بدل حقل كتابة. عدّلها حسب تغطيتكم */
@@ -826,7 +910,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.0121';
+var APP_VER='2026.08.28.0138';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -853,6 +937,7 @@ var AUTHED=false,ME={uid:'',ph:'',n:''},ORD=[],ADR=[],CONF=null,PREV='scMe';
 var CART={},CTV='sofa',RT=0,RTM=null,ORUN=null,ORERR='';
 var LADX=false;                  /* هل سلّم الخصم مفتوح؟ — تُقرأ من التخزين بعد تعريف LS */
 var ORX={};                      /* أي الطلبات مفتوح مسارها */
+var ORQF='';                     /* فلتر قائمة الطلبات: '' الكل، 'quote' عروض الأسعار */
 var BK={step:0,date:'',slot:'',adr:null,kind:'',locErr:''};
 
 var db=null,auth=null,FAPP=null;
@@ -1248,7 +1333,50 @@ function galInit(){
 /* ================= طلب تسعير ================= */
 /* بعض الخدمات ما تُسعّر من كتالوج — لازم معاينة. نعطي العميل طريقين:
    زيارة تسعير محجوزة بموعد، أو تفاصيل سريعة على واتساب لمن يستعجل. */
-var QW={kind:'',area:'',nt:'',loc:null,locErr:''};
+var QW={kind:'',area:'',nt:'',loc:null,locErr:'',
+        rooms:0,halls:0,baths:0,kitchens:0,cab:false,cement:false,paint:false};
+/* الحقول مشتركة، فنُعيد رسم الشاشة اللي المستخدم فيها فعلاً */
+function qwRedraw(){
+  if($('scBook').classList.contains('on'))renderBook();
+  else renderQuoteWa();
+}
+function qwSetKind(i){QW.kind=KINDS[i];closeSheet();qwRedraw();}
+function qwKindSheet(){openSheet('نوع العقار',sheetPick(KINDS,QW.kind,'qwSetKind'));}
+function qwStep(k,d){QW[k]=Math.max(0,Math.min(30,(QW[k]||0)+d));qwRedraw();}
+function qwFlag(k){QW[k]=!QW[k];qwRedraw();}
+function qwArea(v){QW.area=String(v||'').replace(/\D/g,'').slice(0,5);}
+function qwReady(){return !!(QW.kind&&QW.area);}
+/* الحقول نفسها تُستخدم في مسار الواتساب وفي مراجعة زيارة المعاينة — مصدر واحد */
+function quoteFields(){
+  return '<div class="fld"><span class="lb">نوع العقار <span class="req">*</span></span>'+
+      '<button class="selrow'+(QW.kind?'':' empty')+'" onclick="qwKindSheet()">'+
+        '<span>'+(QW.kind?esc(QW.kind):'اختر نوع العقار')+'</span>'+ic('back','','ic-sm')+'</button></div>'+
+    '<div class="fld"><span class="lb">التفاصيل</span><div class="qfcard">'+
+      '<div class="qfrow"><span>المساحة التقريبية (م²) <span class="req">*</span></span>'+
+        '<input class="qn" id="qwArea" type="tel" inputmode="numeric" maxlength="5" placeholder="مثال: 120" '+
+          'value="'+esc(QW.area)+'" oninput="qwArea(this.value);qwSync()"></div>'+
+      QCOUNTS.map(function(c){
+        return '<div class="qfrow"><span>'+esc(c.t)+'</span><span class="stp">'+
+          '<button onclick="qwStep(\''+c.k+'\',-1)" aria-label="نقص" '+(QW[c.k]?'':'disabled')+'>'+ic('minus','','ic-sm')+'</button>'+
+          '<b>'+QW[c.k]+'</b>'+
+          '<button onclick="qwStep(\''+c.k+'\',1)" aria-label="زد">'+ic('plus','','ic-sm')+'</button></span></div>';}).join('')+
+      QFLAGS.map(function(f){
+        return '<div class="qfrow"><span>'+esc(f.t)+'</span>'+
+          '<button class="sw" aria-pressed="'+(!!QW[f.k])+'" aria-label="'+esc(f.t)+'" onclick="qwFlag(\''+f.k+'\')"><i></i></button></div>';}).join('')+
+    '</div></div>';
+}
+/* ملخّص نصّي يُرسل في الواتساب ويُحفظ مع الطلب — نفس الترتيب في الاثنين */
+function quoteSummary(){
+  var L=[];
+  if(QW.kind)L.push('نوع العقار: '+QW.kind);
+  if(QW.area)L.push('المساحة: '+QW.area+' م²');
+  var c=QCOUNTS.filter(function(x){return QW[x.k];})
+    .map(function(x){return x.t+': '+QW[x.k];});
+  if(c.length)L.push(c.join(' · '));
+  var f=QFLAGS.filter(function(x){return QW[x.k];}).map(function(x){return x.t;});
+  if(f.length)L.push(f.join(' · '));
+  return L.join('\n');
+}
 function openQuote(k){CTV=k;go('scQuote');renderQuote();}
 function renderQuote(){
   var sv=svcOf(CTV);
@@ -1279,22 +1407,20 @@ function renderQuote(){
 /* زيارة التسعير تمر بنفس خطوات الحجز وتحجز فترة فعلية — لأنها موعد حقيقي على فريقك */
 function startQuoteVisit(){
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
+  QW={kind:'',area:'',nt:'',loc:null,locErr:'',rooms:0,halls:0,baths:0,kitchens:0,
+      cab:false,cement:false,paint:false};
   BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,quote:svcOf(CTV),
       loc:null,base:null,manual:false,city:'',locErr:''};
   go('scBook');setTab('');renderBook();
 }
+function qwSync(){var b=$('qwGo')||$('bkGo');if(b)b.disabled=!qwReady();}
 function renderQuoteWa(){
   var sv=svcOf(CTV);
   $('qwBack').innerHTML=ic('back','','ic-sm')+'<span>رجوع</span>';
   $('qwBody').innerHTML=
-    '<h2 class="stp-t" style="margin-top:18px">تفاصيل المكان</h2>'+
+    '<h2 class="stp-t" style="margin-top:18px">تسعير '+esc(sv.t)+'</h2>'+
     '<p class="stp-s">كل ما وضّحت أكثر، جاك السعر أدق</p>'+
-    '<div class="fld"><span class="lb">نوع المكان</span><div class="opts">'+
-      KINDS.map(function(k){return '<button class="opt" aria-pressed="'+(QW.kind===k)+'" onclick="QW.kind=\''+k+'\';renderQuoteWa()">'+k+'</button>';}).join('')+
-    '</div></div>'+
-    '<div class="fld"><span class="lb">المساحة تقريباً</span><div class="opts">'+
-      AREAS.map(function(a){return '<button class="opt" aria-pressed="'+(QW.area===a)+'" onclick="QW.area=\''+a+'\';renderQuoteWa()">'+esc(a)+'</button>';}).join('')+
-    '</div></div>'+
+    quoteFields()+
     '<div class="fld"><span class="lb">موقعك (اختياري — يساعدنا نحسب الوصول)</span>'+
       (QW.loc
         ? '<div class="locbox-h"><span class="tick">'+ic('check')+'</span>'+
@@ -1306,9 +1432,10 @@ function renderQuoteWa(){
     '</div>'+
     '<div class="fld"><label class="lb" for="qwNt">تفاصيل تفيدنا (اختياري)</label>'+
       '<textarea class="in" id="qwNt" maxlength="400" placeholder="متى تبي الخدمة · حالة المكان · أي شي يفرق في السعر">'+esc(QW.nt)+'</textarea></div>'+
-    '<button class="btn" '+(QW.kind&&QW.area?'':'disabled')+' onclick="sendQuoteWa()">'+
-      ic('chat','','ic-sm')+'<span>أرسل على واتساب</span></button>'+
-    '<p class="hint" style="margin-top:12px">تنفتح محادثة '+esc(BIZ.rep)+' والرسالة مكتوبة — تضغط إرسال فقط.</p>';
+    '<button class="btn" id="qwGo" '+(qwReady()?'':'disabled')+' onclick="sendQuoteWa()">'+
+      ic('chat','','ic-sm')+'<span>احصل على عرض سعر</span></button>'+
+    '<p class="hint" style="margin-top:12px">تنفتح محادثة '+esc(BIZ.rep)+' والرسالة مكتوبة — تضغط إرسال فقط. '+
+      'وتقدر ترفق صوراً أو فيديو للمكان داخل المحادثة.</p>';
 }
 function qwLocate(){
   captureLocation($('qwLocBtn'),function(loc,err){
@@ -1319,8 +1446,8 @@ function sendQuoteWa(){
   var sv=svcOf(CTV);
   QW.nt=String(($('qwNt')||{}).value||'').slice(0,400);
   var t='السلام عليكم '+BIZ.rep+' 🌟\nأبي عرض سعر لخدمة: '+sv.t+
-    '\n\nنوع المكان: '+QW.kind+'\nالمساحة: '+QW.area+
-    (QW.nt?'\nتفاصيل: '+QW.nt:'')+
+    '\n\n'+quoteSummary()+
+    (QW.nt?'\nملاحظات: '+QW.nt:'')+
     (QW.loc?'\nموقعي: '+mapUrl(QW.loc):'')+
     (ME.n?'\n\nالاسم: '+ME.n:'');
   window.open('https://wa.me/'+BIZ.wa+'?text='+encodeURIComponent(t),'_blank');
@@ -1387,6 +1514,28 @@ function renderLadder(){
     '<div class="tiers">'+TIERS.map(function(t){
       return '<div class="tier'+(base>=t.at?' on':'')+'"><span class="dot"></span>'+
         '<b class="mono">'+t.at.toLocaleString('en-US')+'</b><s>خصم '+pct(t.off)+'</s></div>';}).join('')+'</div></div>';
+}
+/* ورقة سفلية عامة — تُستخدم لاختيار نوع العقار، وجاهزة لأي قائمة ثانية */
+var SHBACK=null;
+function openSheet(title,html){
+  $('shClose').innerHTML=ic('close');
+  $('shT').textContent=title;$('shB').innerHTML=html;
+  $('sh').classList.add('on');$('shX').classList.add('on');
+  document.body.style.overflow='hidden';
+  /* زر الرجوع في الجوال يغلق الورقة بدل ما يخرج من الشاشة */
+  SHBACK=function(){closeSheet();};
+  window.addEventListener('popstate',SHBACK);
+  try{history.pushState({sh:1},'');}catch(e){}
+}
+function closeSheet(){
+  $('sh').classList.remove('on');$('shX').classList.remove('on');
+  document.body.style.overflow='';
+  if(SHBACK){window.removeEventListener('popstate',SHBACK);SHBACK=null;}
+}
+function sheetPick(list,cur,cb){
+  return list.map(function(v,i){
+    return '<button class="shopt" aria-pressed="'+(cur===v)+'" onclick="'+cb+'('+i+')">'+
+      '<span>'+esc(v)+'</span><span class="dot"></span></button>';}).join('');
 }
 function toggleLadder(){LADX=!LADX;LS.set('ladx',LADX);renderLadder();}
 function setQty(k,q){
@@ -1732,11 +1881,13 @@ function stepConfirmQuote(){
     '</div>'+
     (QUOTE_FEE?'<div class="tot big" style="margin-top:4px"><span>قيمة المعاينة</span><b>'+sar(QUOTE_FEE)+'</b></div>':'')+
     '</div>'+
-    '<div class="fld"><label class="lb" for="bkNt">تفاصيل تفيد المندوب (اختياري)</label>'+
-      '<textarea class="in" id="bkNt" maxlength="600" placeholder="المساحة تقريباً · حالة المكان · متى تبي الخدمة"></textarea></div>'+
+    quoteFields()+
+    '<div class="fld"><label class="lb" for="bkNt">ملاحظات إضافية (اختياري)</label>'+
+      '<textarea class="in" id="bkNt" maxlength="600" placeholder="حالة المكان · متى تبي الخدمة · أي شي يفيد المندوب">'+esc(QW.nt||'')+'</textarea></div>'+
     '<div class="note acc">'+(QUOTE_FEE?'تدفع <b>'+QUOTE_FEE+' ر.س</b> للمعاينة، وبعدها تسمع السعر وتقرر — ما تلزمك بشي.'
                                       :'الزيارة مجانية وما تلزمك بشي — تسمع السعر وتقرر.')+'</div>'+
-    '<button class="btn" style="margin-top:20px" id="bkGo" onclick="submitOrder()">اطلب الزيارة</button>';
+    '<button class="btn" style="margin-top:20px" id="bkGo" '+(qwReady()?'':'disabled')+
+      ' onclick="submitOrder()">اطلب الزيارة</button>';
 }
 function row(l,v){return '<div class="row-i"><s style="text-decoration:none;font-size:13px;color:var(--mut)">'+esc(l)+'</s><b>'+esc(v)+'</b></div>';}
 /* مراجعة الاشتراك: باقة متكررة بدل سلة أصناف */
@@ -1779,9 +1930,10 @@ function submitOrder(){
     var qo={uid:ME.uid,ph:ME.ph,n:ME.n||'',svc:'زيارة تسعير — '+BK.quote.t,quote:true,
       items:[],off:0,est:QUOTE_FEE,date:BK.date,slot:BK.slot,
       adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
-      nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
+      nt:(quoteSummary()+(String($('bkNt').value||'').trim()?'\nملاحظات: '+String($('bkNt').value||'').trim():'')).slice(0,600),
+      st:'new',at:now,hist:[{s:'new',at:now}]};
     API.addOrder(qo).then(function(){
-      BK.quote=null;renderAll();go('scOrders');setTab('scOrders');toast(qo.no?'وصلنا طلبك رقم '+qo.no:'وصلنا طلبك');
+      BK.quote=null;renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(qo.no?'وصلنا طلبك رقم '+qo.no:'وصلنا طلبك');
     }).catch(function(e){b.disabled=false;b.textContent='اطلب الزيارة';onSubmitErr(e);});
     return;
   }
@@ -1794,7 +1946,7 @@ function submitOrder(){
       adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
     API.addOrder(po).then(function(){
-      BK.pkg=null;renderAll();go('scOrders');setTab('scOrders');toast(po.no?'وصلنا اشتراكك رقم '+po.no:'وصلنا اشتراكك');
+      BK.pkg=null;renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(po.no?'وصلنا اشتراكك رقم '+po.no:'وصلنا اشتراكك');
     }).catch(function(e){b.disabled=false;b.textContent='اشترك الآن';onSubmitErr(e);});
     return;
   }
@@ -1808,7 +1960,7 @@ function submitOrder(){
     nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
   API.addOrder(o).then(function(){
     CART={};LS.set('cart',{});
-    renderAll();go('scOrders');setTab('scOrders');toast(o.no?'وصلنا طلبك رقم '+o.no:'وصلنا طلبك — نتواصل معك قريب');
+    renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(o.no?'وصلنا طلبك رقم '+o.no:'وصلنا طلبك — نتواصل معك قريب');
   }).catch(function(e){b.disabled=false;b.textContent='أرسل الطلب';onSubmitErr(e);});
 }
 </script>
@@ -1886,9 +2038,14 @@ function renderOrders(){
       '<button class="btn" style="max-width:230px;margin-inline:auto" onclick="reloadOrders()">حاول مرة ثانية</button></div>';
     return;
   }
-  $('ordList').innerHTML=ORD.length?ORD.map(function(o){return ordCard(o,false);}).join(''):
-    '<div class="empty">'+il('file')+'<p>ما عندك طلبات بعد</p>'+
-    '<button class="btn" style="margin-top:20px;max-width:230px;margin-inline:auto" onclick="openCatalog()">تصفّح الخدمات</button></div>';
+  var L=ORQF==='quote'?ORD.filter(function(o){return o.quote;}):ORD;
+  $('ordList').innerHTML=
+    (ORQF?'<button class="okline" style="width:100%;justify-content:center;background:var(--blue-l);color:var(--blue-d)" '+
+      'onclick="ORQF=\'\';renderOrders()"><span>تعرض عروض الأسعار فقط — اعرض كل الطلبات</span></button>':'')+
+    (L.length?L.map(function(o){return ordCard(o,false);}).join(''):
+    '<div class="empty">'+il('file')+'<p>'+(ORQF?'ما عندك عروض أسعار':'ما عندك طلبات بعد')+'</p>'+
+    '<button class="btn" style="margin-top:20px;max-width:230px;margin-inline:auto" onclick="'+
+      (ORQF?'ORQF=\'\';renderOrders()':'openCatalog()')+'">'+(ORQF?'اعرض كل الطلبات':'تصفّح الخدمات')+'</button></div>');
 }
 function reloadOrders(){
   ORERR='';$('ordList').innerHTML='<div class="empty">جاري التحميل…</div>';
@@ -1896,29 +2053,49 @@ function reloadOrders(){
 }
 
 /* ================= حسابي ================= */
-function renderMe(){
-  $('meePh').textContent=ME.ph?'+'+ME.ph:'';
-  var done=ORD.filter(function(o){return o.st==='done';}).length;
-  $('meBody').innerHTML=
-    '<div class="sec"><div class="sec-h"><h2>الاسم</h2></div>'+
-      '<div class="row-in"><input class="in" id="meN" maxlength="60" value="'+esc(ME.n)+'" placeholder="وش نناديك؟" '+
-        'onblur="saveName(0,1)" onkeydown="if(event.key===\'Enter\')this.blur()">'+
-        '<button class="btn btn-2 btn-sm" onclick="saveName()">حفظ</button></div></div>'+
-    (done?'<div class="sec"><div class="sec-h"><h2>عميل مميز</h2></div>'+
-      '<div class="note acc">خدمناك <b>'+done+'</b> '+(done===1?'مرة':'مرات') +' — وكل ما كبرت سلتك كبر خصمك، يوصل إلى <b>'+pct(TIERS[TIERS.length-1].off)+'</b>.</div></div>':'')+
-    '<div class="sec"><div class="sec-h"><h2>عناويني</h2><span class="mark mono">'+ADR.length+'</span></div>'+
-      (ADR.length?'<div class="rows">'+ADR.map(function(a,i){
-        return '<div class="row-i"><span><b>'+esc(a.t)+'</b><s>'+esc(a.c+' · '+a.d+' · '+a.s)+'</s></span>'+
-          '<button class="lnk" style="color:var(--stop);padding:0" onclick="rmAddr('+i+')" aria-label="حذف">'+ic('trash','','ic-sm')+'</button></div>';
-      }).join('')+'</div>':'<p class="note">ما فيه عناوين — ينحفظ العنوان تلقائياً أول ما تحجز.</p>')+'</div>'+
-    '<div class="sec"><div class="sec-h"><h2>تواصل ومساعدة</h2></div><div class="stack">'+
-      '<a class="btn btn-2 btn-sm" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/'+BIZ.wa+'">'+ic('chat','','ic-sm')+'<span>واتساب '+esc(BIZ.rep)+'</span></a>'+
-      '<button class="btn btn-2 btn-sm" onclick="openTerms()">'+ic('shield','','ic-sm')+'<span>الشروط وسياسة الخصوصية</span></button>'+
-      '<button class="btn btn-x btn-sm" onclick="logout()">'+ic('out','','ic-sm')+'<span>تسجيل الخروج</span></button>'+
-    '</div>'+
-    '<p class="hint" style="margin-top:14px">الإصدار <span class="mono">'+APP_VER+'</span>'+
-      (ME.uid?' · معرّف الحساب <span class="mono" style="user-select:all">'+esc(ME.uid)+'</span>':'')+'</p></div>';
+function mrow(icn,t,sub,act,cls){
+  return '<button class="mrow'+(cls?' '+cls:'')+'" onclick="'+act+'">'+
+    '<span class="mic">'+ic(icn)+'</span>'+
+    '<span class="mtx"><b>'+esc(t)+'</b>'+(sub?'<s>'+esc(sub)+'</s>':'')+'</span>'+
+    ic('back','','ic-sm')+'</button>';
 }
+function renderMe(){
+  var done=ORD.filter(function(o){return o.st==='done';}).length;
+  var quotes=ORD.filter(function(o){return o.quote;}).length;
+  $('meBody').innerHTML=
+    '<div class="mhead"><div class="av">'+esc((ME.n||'؟').trim().charAt(0))+'</div>'+
+      '<h2>'+esc(ME.n||'أهلاً بك')+'</h2>'+
+      (ME.ph?'<s>+'+esc(ME.ph)+'</s>':'')+'</div>'+
+    (done?'<div class="note acc" style="margin-bottom:16px">خدمناك <b>'+done+'</b> '+(done===1?'مرة':'مرات')+
+      ' — وكل ما كبرت سلتك كبر خصمك، يوصل إلى <b>'+pct(TIERS[TIERS.length-1].off)+'</b>.</div>':'')+
+    '<div class="sec-h" style="margin-bottom:12px"><h2>الإعدادات والخصوصية</h2></div>'+
+    mrow('edit','تحديث الاسم',ME.n?'مسجّل باسم '+ME.n:'عرّفنا باسمك','openNameSheet()')+
+    mrow('pin','العناوين',ADR.length?ADR.length+' عنوان محفوظ':'ينحفظ تلقائياً أول ما تحجز','openAddrSheet()')+
+    mrow('list','طلباتي',ORD.length?ORD.length+' طلب':'ما عندك طلبات بعد',"ORQF='';go('scOrders');setTab('scOrders');renderOrders()")+
+    mrow('tag','عروض الأسعار',quotes?quotes+' طلب تسعير':'اطلب تسعير لخدمة تحتاج معاينة',"openQuotesTab()")+
+    mrow('chat','تواصل معنا','واتساب '+BIZ.rep,"window.open('https://wa.me/'+BIZ.wa,'_blank')")+
+    mrow('shield','الشروط وسياسة الخصوصية','','openTerms()')+
+    mrow('out','تسجيل الخروج','','logout()','danger')+
+    '<p class="hint" style="margin-top:14px;text-align:center">الإصدار <span class="mono">'+APP_VER+'</span>'+
+      (ME.uid?'<br>معرّف الحساب <span class="mono" style="user-select:all">'+esc(ME.uid)+'</span>':'')+'</p>';
+}
+function openNameSheet(){
+  openSheet('تحديث الاسم',
+    '<div class="fld"><label class="lb" for="meN">وش نناديك؟</label>'+
+      '<input class="in" id="meN" maxlength="60" value="'+esc(ME.n)+'" placeholder="اسمك" autocomplete="name"></div>'+
+    '<button class="btn" onclick="saveName();closeSheet()">حفظ</button>');
+  var el=$('meN');if(el)el.focus();
+}
+function openAddrSheet(){
+  openSheet('العناوين', ADR.length
+    ? '<div class="rows">'+ADR.map(function(a,i){
+        return '<div class="row-i"><span><b>'+esc(a.t)+'</b><s>'+esc([a.c,a.d,a.s].filter(Boolean).join(' · '))+'</s></span>'+
+          '<button class="lnk" style="color:var(--stop);padding:0" onclick="rmAddr('+i+')" aria-label="حذف">'+ic('trash','','ic-sm')+'</button></div>';
+      }).join('')+'</div>'
+    : '<p class="note">ما فيه عناوين محفوظة — ينحفظ العنوان تلقائياً أول ما تحجز.</p>');
+}
+/* «عروض الأسعار» = طلبات المعاينة. نفتح طلباتي مفلترة عليها بدل شاشة ثالثة. */
+function openQuotesTab(){ORQF='quote';go('scOrders');setTab('scOrders');renderOrders();}
 function saveName(from,quiet){
   var el=$(from||'meN');if(!el)return;
   var n=String(el.value||'').trim().slice(0,60);
