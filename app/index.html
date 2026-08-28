@@ -107,7 +107,18 @@ button{cursor:pointer;border:none;background:none}
 .badge{position:absolute;top:-4px;left:-4px;min-width:19px;height:19px;border-radius:10px;background:var(--gold);
   color:#4A3200;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px;
   border:2px solid var(--paper);font-family:var(--dsp)}
-.bk{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--mut);padding:6px 0}
+/* زر الرجوع: أيقونة في مربّع مثل بقية أزرار الرأس. السهم مقلوب لأن الواجهة
+   عربية — في RTL الرجوع يتّجه يميناً، وسهم يسار يقرأه العميل «التالي» */
+.bk{display:inline-flex;align-items:center;gap:10px;font-size:14.5px;font-weight:600;
+  font-family:var(--dsp);color:var(--tx);padding:0}
+.bk .bk-i{width:38px;height:38px;border-radius:13px;background:var(--card);box-shadow:var(--sh);
+  display:grid;place-items:center;color:var(--blue-d);flex:0 0 auto;transition:transform .12s}
+.bk:active .bk-i{transform:scale(.93)}
+.bk .ic{width:18px;height:18px;stroke-width:2.4;vertical-align:0;transform:scaleX(-1)}
+/* زر نصّي — كان مستعملاً في سبعة مواضع بلا CSS، فيرث شكل الزر الخام */
+.lnk{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;
+  font-family:var(--dsp);color:var(--blue-d);padding:8px 0}
+.lnk:active{opacity:.6}
 
 /* ===== الأزرار ===== */
 .btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:16px 20px;
@@ -633,7 +644,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <!-- ===== تفاصيل الخدمة ===== -->
 <section class="scr" id="scService">
   <header class="top"><div class="top-in">
-    <button class="lnk" style="padding:0" id="svBack"></button>
+    <button class="bk" id="svBack"></button>
     <span class="mark">كلينولوجي</span>
   </div></header>
   <div class="wrap"><div id="svBody"></div></div>
@@ -672,7 +683,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <!-- ===== السلة ===== -->
 <section class="scr" id="scCart">
   <header class="top"><div class="top-in">
-    <button class="lnk" style="padding:0" onclick="go('scHome');setTab('scHome')" id="caBack"></button>
+    <button class="bk" onclick="go('scHome');setTab('scHome')" id="caBack"></button>
     <h1 style="font-size:17px">سلتك</h1>
   </div></header>
   <div class="wrap"><div id="cartBody"></div></div>
@@ -681,7 +692,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <!-- ===== إتمام الحجز ===== -->
 <section class="scr" id="scBook">
   <header class="top"><div class="top-in">
-    <button class="lnk" style="padding:0" onclick="bookBack()" id="bkBtn"></button>
+    <button class="bk" onclick="bookBack()" id="bkBtn"></button>
     <span class="mark mono" id="bkStepN"></span>
   </div></header>
   <div class="wrap"><div class="prog" id="bkProg"></div><div id="bkBody"></div></div>
@@ -706,7 +717,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <!-- ===== الشروط ===== -->
 <section class="scr" id="scTerms">
   <header class="top"><div class="top-in">
-    <button class="lnk" style="padding:0" onclick="closeTerms()" id="tmBack"></button>
+    <button class="bk" onclick="closeTerms()" id="tmBack"></button>
   </div></header>
   <div class="wrap"><div class="sec"><div class="prose" id="termsBody"></div></div></div>
 </section>
@@ -970,7 +981,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.1622';
+var APP_VER='2026.08.28.1704';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1015,6 +1026,7 @@ if(!DEMO){
 function $(id){return document.getElementById(id);}
 /* العميل يدخل برقم جواله. حساب بلا رقم = حساب لوحة الإدارة، ما يُعامل كعميل. */
 function isCustomer(u){return !!(u&&u.phoneNumber);}
+function backTo(t){return '<span class="bk-i">'+ic('back')+'</span><span>'+esc(t)+'</span>';}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function go(id){
   document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
@@ -1316,7 +1328,7 @@ function svcPicked(k){return svcItems(k).filter(function(it){return CART[it.k];}
 
 function renderService(){
   var s=svcOf(CTV);
-  $('svBack').innerHTML=ic('back','','ic-sm')+'<span>الرئيسية</span>';
+  $('svBack').innerHTML=backTo('الرئيسية');
   $('svBack').onclick=function(){go('scHome');setTab('scHome');};
   var gs=svcGroups(CTV);
   /* الاختيار قبل الشرح: مهمة العميل هنا أن يختار مقاسه، والتفاصيل تجي بعدها تسنده */
@@ -1448,7 +1460,7 @@ function renderPkgs(){
 function openPkg(k){PKG=pkgOf(k);if(!PKG)return;go('scPkg');renderPkg();}
 function renderPkg(){
   var p=PKG;
-  $('pkBack').innerHTML=ic('back','','ic-sm')+'<span>الباقات</span>';
+  $('pkBack').innerHTML=backTo('الباقات');
   $('pkGo').innerHTML=ic('repeat','','ic-sm')+'<span>اشترك — '+p.p+' ر.س شهرياً</span>';
   $('pkGo').onclick=startPkgBooking;
   $('pkBody').innerHTML=
@@ -1546,7 +1558,7 @@ function quoteSummary(){
 function openQuote(k){CTV=k;go('scQuote');renderQuote();}
 function renderQuote(){
   var sv=svcOf(CTV);
-  $('qBack').innerHTML=ic('back','','ic-sm')+'<span>'+esc(sv.t)+'</span>';
+  $('qBack').innerHTML=backTo(sv.t);
   $('qBody').innerHTML=
     '<div class="sec" style="padding-bottom:8px"><div class="sv-hero">'+
       '<span class="ring">'+il(sv.ic,'','il-xl')+'</span>'+
@@ -1673,7 +1685,7 @@ function syncCartUI(){
 
 /* ================= السلة ================= */
 function renderCart(){
-  $('caBack').innerHTML=ic('back','','ic-sm')+'<span>أكمل التسوق</span>';
+  $('caBack').innerHTML=backTo('أكمل التسوق');
   var L=cartLines(),t=cartTotals(),nx=nextTier(t.sub);
   if(!L.length){
     $('cartBody').innerHTML='<div class="empty">'+il('cart')+'<p>سلتك فاضية</p>'+
@@ -1727,7 +1739,7 @@ function bookNext(){
 }
 function renderBook(){
   $('bkProg').innerHTML=STEPS.map(function(_,i){return '<i class="'+(i<=BK.step?'on':'')+'"></i>';}).join('');
-  $('bkBtn').innerHTML=ic('back','','ic-sm')+'<span>'+(BK.step===0?(BK.quote?'التسعير':BK.pkg?'الباقة':'السلة'):STEPS[BK.step-1])+'</span>';
+  $('bkBtn').innerHTML=backTo(BK.step===0?(BK.quote?'التسعير':BK.pkg?'الباقة':'السلة'):STEPS[BK.step-1]);
   $('bkStepN').innerHTML='<span dir="ltr" style="unicode-bidi:isolate">'+(BK.step+1)+' / '+STEPS.length+'</span>';
   $('bkBody').innerHTML=[stepWhen,stepWhere,stepConfirm][BK.step]();
   if(BK.step===1&&BK.loc){initMapPin();pinDrag($('mapPin'));}
@@ -2228,7 +2240,7 @@ function rmAddr(i){var a=ADR[i];if(!a||!confirm('حذف «'+a.t+'»؟'))return;
 function openTerms(){PREV=AUTHED?'scMe':'scLogin';go('scTerms');}
 function closeTerms(){go(PREV);}
 function renderTerms(){
-  $('tmBack').innerHTML=ic('back','','ic-sm')+'<span>رجوع</span>';
+  $('tmBack').innerHTML=backTo('رجوع');
   $('termsBody').innerHTML=
     '<h3>وش نجمع عنك؟</h3>رقم جوالك للدخول والتواصل، اسمك، وعناوينك وطلباتك.'+
     '<h3>وش نسوي فيه؟</h3>ننفّذ طلبك ونتواصل معك بخصوصه. ما نبيع بياناتك ولا نشاركها مع أي طرف ثالث أبداً.'+
