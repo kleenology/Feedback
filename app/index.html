@@ -454,6 +454,8 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .qopt i{font-style:normal;display:inline-flex;align-items:center;gap:5px;margin-top:12px;
   font-size:12.5px;font-weight:700;font-family:var(--dsp);color:var(--blue)}
 .qopt i .ic{width:14px;height:14px}
+.qopt i .fee{background:var(--gold-l);color:var(--gold-d);padding:4px 10px;border-radius:999px;
+  font-size:12.5px;font-variant-numeric:tabular-nums}
 
 /* ===== الباقات ===== */
 .tagline{display:inline-block;background:var(--gold);color:#4A3200;font-size:11.5px;font-weight:700;
@@ -824,13 +826,15 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.0107';
+var APP_VER='2026.08.28.0121';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
 var SLOT_CAP=1;
 /* أرقام الطلبات تبدأ من هنا +1 — أول طلب يصير 1001 لا #1 */
 var ORD_BASE=1000;
+/* قيمة زيارة المعاينة بالريال. صفر = مجانية، ويرجع النص «مجانية» تلقائياً. */
+var QUOTE_FEE=49;
 var BOOKED={};   /* {'2026-09-10':{am:1,pm:0,ev:0}} — كم محجوز في كل فترة */
 var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
@@ -885,6 +889,7 @@ function stamp(iso){var d=new Date(iso);return d.getDate()+' '+MO[d.getMonth()]+
 function slotOf(k){var s=SLOTS.filter(function(x){return x.k===k;})[0];return s?s.t+' ('+s.s+')':'';}
 function svcOf(k){return SVCS.filter(function(x){return x.k===k;})[0]||SVCS[0];}
 function itemOf(k){return CAT.filter(function(x){return x.k===k;})[0];}
+function feeTxt(){return QUOTE_FEE?QUOTE_FEE+' ر.س':'مجانية';}
 function pct(n){return '<span dir="ltr" style="unicode-bidi:isolate">'+n+'%</span>';}
 function sar(n){return '<span class="mono">'+Number(n).toLocaleString('en-US')+'</span> <small style="font-size:.72em;color:var(--mut);font-weight:500">ر.س</small>';}
 
@@ -1148,7 +1153,8 @@ function renderService(){
     '<div class="sec"><div class="sec-h"><h2>ما الذي تتضمنه الخدمة</h2></div>'+
       '<div class="incl">'+s.incl.map(function(x){return '<div><span class="tick">'+ic('check')+'</span><span>'+esc(x)+'</span></div>';}).join('')+'</div></div>'+
     (s.quote
-      ? '<div class="sec"><div class="note acc">سعر هذي الخدمة يتغيّر حسب المساحة وحالة المكان — نعاينها أول، وزيارة التسعير مجانية.</div></div>'
+      ? '<div class="sec"><div class="note acc">سعر هذي الخدمة يتغيّر حسب المساحة وحالة المكان — نعاينها أول. '+
+        (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b>، وتحدّد موقعك وقت الحجز.':'وزيارة التسعير مجانية.')+'</div></div>'
       : '<div class="sec"><div class="sec-h"><h2>الأسعار تبدأ من</h2></div><div class="rows">'+
         CAT.filter(function(x){return x.sv===CTV;}).slice(0,4).map(function(it){
           return '<div class="row-i"><span><b>'+esc(it.t)+'</b><s>'+esc(it.u)+'</s></span><b>'+sar(it.p)+'</b></div>';
@@ -1242,7 +1248,7 @@ function galInit(){
 /* ================= طلب تسعير ================= */
 /* بعض الخدمات ما تُسعّر من كتالوج — لازم معاينة. نعطي العميل طريقين:
    زيارة تسعير محجوزة بموعد، أو تفاصيل سريعة على واتساب لمن يستعجل. */
-var QW={kind:'',area:'',nt:''};
+var QW={kind:'',area:'',nt:'',loc:null,locErr:''};
 function openQuote(k){CTV=k;go('scQuote');renderQuote();}
 function renderQuote(){
   var sv=svcOf(CTV);
@@ -1258,15 +1264,17 @@ function renderQuote(){
         '<button class="qopt" onclick="startQuoteVisit()">'+
           '<span class="qic">'+ic('cal')+'</span>'+
           '<b>احجز زيارة للتسعير</b>'+
-          '<s>المندوب يجيك بموعد تختاره، يعاين ويعطيك السعر النهائي في مكانك</s>'+
-          '<i>الأدق'+ic('back','','ic-sm')+'</i></button>'+
+          '<s>تحدّد موقعك وموعدك، والمندوب يجيك ويعاين ويعطيك السعر النهائي في مكانك</s>'+
+          '<i>'+(QUOTE_FEE?'<b class="fee">'+QUOTE_FEE+' ر.س</b>':'الأدق')+ic('back','','ic-sm')+'</i></button>'+
         '<button class="qopt" onclick="go(\'scQuoteWa\');renderQuoteWa()">'+
           '<span class="qic">'+ic('chat')+'</span>'+
           '<b>تسعير عبر واتساب</b>'+
           '<s>أرسل تفاصيل المكان ونرد عليك بعرض سعر مبدئي</s>'+
           '<i>الأسرع'+ic('back','','ic-sm')+'</i></button>'+
       '</div></div>'+
-    '<div class="sec" style="padding-top:0"><div class="note">زيارة التسعير مجانية وما تلزمك بشي — تسمع السعر وتقرر.</div></div>';
+    '<div class="sec" style="padding-top:0"><div class="note">'+
+      (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b> وما تلزمك بشي بعدها — تسمع السعر وتقرر. والتسعير عبر واتساب مجاني.'
+                :'زيارة التسعير مجانية وما تلزمك بشي — تسمع السعر وتقرر.')+'</div></div>';
 }
 /* زيارة التسعير تمر بنفس خطوات الحجز وتحجز فترة فعلية — لأنها موعد حقيقي على فريقك */
 function startQuoteVisit(){
@@ -1287,11 +1295,25 @@ function renderQuoteWa(){
     '<div class="fld"><span class="lb">المساحة تقريباً</span><div class="opts">'+
       AREAS.map(function(a){return '<button class="opt" aria-pressed="'+(QW.area===a)+'" onclick="QW.area=\''+a+'\';renderQuoteWa()">'+esc(a)+'</button>';}).join('')+
     '</div></div>'+
+    '<div class="fld"><span class="lb">موقعك (اختياري — يساعدنا نحسب الوصول)</span>'+
+      (QW.loc
+        ? '<div class="locbox-h"><span class="tick">'+ic('check')+'</span>'+
+            '<div><b>موقعك محدَّد</b><s class="mono" dir="ltr">'+QW.loc.lat+', '+QW.loc.lng+'</s></div>'+
+            '<button class="lnk" style="padding:0" onclick="QW.loc=null;renderQuoteWa()">تغيير</button></div>'
+        : '<button class="btn btn-2 btn-sm" id="qwLocBtn" onclick="qwLocate()">'+ic('pin','','ic-sm')+
+            '<span>حدّد موقعي</span></button>'+
+          (QW.locErr?'<div class="note warn" style="margin-top:10px">'+esc(QW.locErr)+'</div>':''))+
+    '</div>'+
     '<div class="fld"><label class="lb" for="qwNt">تفاصيل تفيدنا (اختياري)</label>'+
       '<textarea class="in" id="qwNt" maxlength="400" placeholder="متى تبي الخدمة · حالة المكان · أي شي يفرق في السعر">'+esc(QW.nt)+'</textarea></div>'+
     '<button class="btn" '+(QW.kind&&QW.area?'':'disabled')+' onclick="sendQuoteWa()">'+
       ic('chat','','ic-sm')+'<span>أرسل على واتساب</span></button>'+
     '<p class="hint" style="margin-top:12px">تنفتح محادثة '+esc(BIZ.rep)+' والرسالة مكتوبة — تضغط إرسال فقط.</p>';
+}
+function qwLocate(){
+  captureLocation($('qwLocBtn'),function(loc,err){
+    QW.loc=loc;QW.locErr=loc?'':err;renderQuoteWa();
+  });
 }
 function sendQuoteWa(){
   var sv=svcOf(CTV);
@@ -1299,6 +1321,7 @@ function sendQuoteWa(){
   var t='السلام عليكم '+BIZ.rep+' 🌟\nأبي عرض سعر لخدمة: '+sv.t+
     '\n\nنوع المكان: '+QW.kind+'\nالمساحة: '+QW.area+
     (QW.nt?'\nتفاصيل: '+QW.nt:'')+
+    (QW.loc?'\nموقعي: '+mapUrl(QW.loc):'')+
     (ME.n?'\n\nالاسم: '+ME.n:'');
   window.open('https://wa.me/'+BIZ.wa+'?text='+encodeURIComponent(t),'_blank');
   toast('فتحنا واتساب — اضغط إرسال');
@@ -1517,19 +1540,16 @@ function locErrMsg(err,ms){
 }
 /* أول قراءة تجي من أبراج الشبكة والواي-فاي ودقتها ضعيفة، والـGPS يوصل بعدها بثوانٍ.
    فبدل أخذ أول قراءة، نراقب لثوانٍ ونحتفظ بالأدق، ونتوقف مبكراً إذا وصلت دقة ممتازة. */
-function useMyLocation(){
-  var b=$('locBtn');
-  if(!navigator.geolocation){BK.manual=true;BK.locErr='جهازك ما يدعم تحديد الموقع — اكتب عنوانك يدوياً.';renderBook();return;}
-  b.disabled=true;b.innerHTML=ic('pin','','ic-sm')+'<span>نلتقط أدق موقع…</span>';
+function captureLocation(b,cb){
+  if(!navigator.geolocation){cb(null,'جهازك ما يدعم تحديد الموقع — اكتب عنوانك يدوياً.');return;}
+  if(b){b.disabled=true;b.innerHTML=ic('pin','','ic-sm')+'<span>نلتقط أدق موقع…</span>';}
   var best=null,t0=Date.now(),wid=null,done=false;
   function stop(){if(wid!==null){navigator.geolocation.clearWatch(wid);wid=null;}}
   function finish(){
     if(done)return;done=true;stop();
-    if(!best){BK.manual=true;BK.locErr=locErrMsg({code:2},Date.now()-t0);renderBook();return;}
-    BK.loc={lat:+best.coords.latitude.toFixed(6),lng:+best.coords.longitude.toFixed(6),
-            acc:Math.round(best.coords.accuracy||0)};
-    BK.base={lat:BK.loc.lat,lng:BK.loc.lng};  /* مركز الخريطة الثابت — منه نحسب إزاحة الدبوس */
-    BK.adr=null;BK.locErr='';renderBook();
+    if(!best){cb(null,locErrMsg({code:2},Date.now()-t0));return;}
+    cb({lat:+best.coords.latitude.toFixed(6),lng:+best.coords.longitude.toFixed(6),
+        acc:Math.round(best.coords.accuracy||0)},'');
   }
   wid=navigator.geolocation.watchPosition(function(pos){
     if(!best||pos.coords.accuracy<best.coords.accuracy)best=pos;
@@ -1537,9 +1557,17 @@ function useMyLocation(){
   },function(err){
     if(best){finish();return;}
     if(done)return;done=true;stop();
-    BK.manual=true;BK.locErr=locErrMsg(err,Date.now()-t0);renderBook();
+    cb(null,locErrMsg(err,Date.now()-t0));
   },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
   setTimeout(finish,9000);
+}
+function useMyLocation(){
+  captureLocation($('locBtn'),function(loc,err){
+    if(!loc){BK.manual=true;BK.locErr=err;renderBook();return;}
+    BK.loc=loc;
+    BK.base={lat:loc.lat,lng:loc.lng};  /* مركز الخريطة الثابت — منه نحسب إزاحة الدبوس */
+    BK.adr=null;BK.locErr='';renderBook();
+  });
 }
 /* تصحيح الدبوس بدون مفتاح: الخريطة تبقى ثابتة على نقطة الـGPS، والعميل يسحب الدبوس فوقها.
    نحوّل إزاحة البكسل إلى إحداثيات بمقياس مركاتور — يكفي لتصحيح عشرات الأمتار، وهو المطلوب. */
@@ -1701,10 +1729,13 @@ function stepConfirmQuote(){
     '<div class="card" style="margin-bottom:14px"><div class="rows">'+
       row('الخدمة',BK.quote.t)+row('الزيارة',fmtDate(BK.date))+row('الفترة',slotOf(BK.slot))+
       row('العنوان',(BK.adr?BK.adr.t+(BK.adr.d?' — '+BK.adr.d:''):''))+
-    '</div></div>'+
+    '</div>'+
+    (QUOTE_FEE?'<div class="tot big" style="margin-top:4px"><span>قيمة المعاينة</span><b>'+sar(QUOTE_FEE)+'</b></div>':'')+
+    '</div>'+
     '<div class="fld"><label class="lb" for="bkNt">تفاصيل تفيد المندوب (اختياري)</label>'+
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="المساحة تقريباً · حالة المكان · متى تبي الخدمة"></textarea></div>'+
-    '<div class="note acc">الزيارة مجانية وما تلزمك بشي — تسمع السعر وتقرر.</div>'+
+    '<div class="note acc">'+(QUOTE_FEE?'تدفع <b>'+QUOTE_FEE+' ر.س</b> للمعاينة، وبعدها تسمع السعر وتقرر — ما تلزمك بشي.'
+                                      :'الزيارة مجانية وما تلزمك بشي — تسمع السعر وتقرر.')+'</div>'+
     '<button class="btn" style="margin-top:20px" id="bkGo" onclick="submitOrder()">اطلب الزيارة</button>';
 }
 function row(l,v){return '<div class="row-i"><s style="text-decoration:none;font-size:13px;color:var(--mut)">'+esc(l)+'</s><b>'+esc(v)+'</b></div>';}
@@ -1746,7 +1777,7 @@ function submitOrder(){
   var now=new Date().toISOString();
   if(BK.quote){
     var qo={uid:ME.uid,ph:ME.ph,n:ME.n||'',svc:'زيارة تسعير — '+BK.quote.t,quote:true,
-      items:[],off:0,est:0,date:BK.date,slot:BK.slot,
+      items:[],off:0,est:QUOTE_FEE,date:BK.date,slot:BK.slot,
       adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
     API.addOrder(qo).then(function(){
@@ -1790,7 +1821,7 @@ function ordCard(o,live){
       (o.no?'<div class="ordno mono">طلب رقم '+o.no+'</div>':'')+'</div>'+
       '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>'+
     '<div class="meta">'+
-      (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — مجانية</span></div>':
+      (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — '+(o.est?o.est+' ر.س':'مجانية')+'</span></div>':
         o.sub?'<div>'+ic('repeat','','ic-sm')+'<span>يتكرر '+esc((o.pkg&&o.pkg.every)||'')+'</span></div>':
         n?'<div>'+ic('list','','ic-sm')+'<span>'+n+' صنف</span></div>':'')+
       '<div>'+ic('cal','','ic-sm')+'<span>'+(o.sub?'أول زيارة: ':'')+esc(fmtDate(o.date))+'</span></div>'+
