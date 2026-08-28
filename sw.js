@@ -1,5 +1,5 @@
 /* كاش الأصول الثابتة فقط — بيانات Firestore تُجلب دائماً من الشبكة */
-var CACHE = 'kln-v27';
+var CACHE = 'kln-v28';
 var ASSETS = ['./index.html', './reviews.html', './app/index.html', './app/manifest.json', './logo.png', './icon.png', './icon-192.png', './icon-512.png', './manifest.json'];
 
 self.addEventListener('install', function (e) {
@@ -17,6 +17,8 @@ self.addEventListener('fetch', function (e) {
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return; /* Firebase وغيره: شبكة مباشرة */
+  /* ملف الإصدار هو أداة كشف القديم — لو انكيّش صار هو نفسه قديماً */
+  if (/version\.json$/.test(url.pathname)) return;
 
   var isDoc = req.mode === 'navigate' || /\.html?$/.test(url.pathname) || url.pathname.endsWith('/');
 
