@@ -667,19 +667,12 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
   <div class="wrap"><div id="qBody"></div></div>
 </section>
 
-<!-- ===== الخدمات ===== -->
-<section class="scr" id="scServices">
-  <header class="top"><div class="top-in">
-    <div><h1>الخدمات</h1><p>اختر خدمة وشوف أسعارها كاملة</p></div>
-  </div></header>
-  <div class="wrap"><div class="sec" style="border:none"><div class="svcs" id="svcGrid2"></div></div></div>
-</section>
 <div class="cartbar hide" id="cartBar"></div>
 
 <!-- ===== السلة ===== -->
 <section class="scr" id="scCart">
   <header class="top"><div class="top-in">
-    <button class="lnk" style="padding:0" onclick="go('scServices');setTab('scServices')" id="caBack"></button>
+    <button class="lnk" style="padding:0" onclick="go('scHome');setTab('scHome')" id="caBack"></button>
     <h1 style="font-size:17px">سلتك</h1>
   </div></header>
   <div class="wrap"><div id="cartBody"></div></div>
@@ -728,7 +721,6 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 
 <nav class="tabs hide" id="tabBar" role="tablist">
   <button class="tab" role="tab" aria-selected="true" data-s="scHome" data-i="home">الرئيسية</button>
-  <button class="tab" role="tab" aria-selected="false" data-s="scServices" data-i="grid">الخدمات</button>
   <button class="tab" role="tab" aria-selected="false" data-s="scPkgs" data-i="repeat">الباقات</button>
   <button class="tab" role="tab" aria-selected="false" data-s="scOrders" data-i="list">طلباتي</button>
   <button class="tab" role="tab" aria-selected="false" data-s="scMe" data-i="user">حسابي</button>
@@ -978,7 +970,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.1544';
+var APP_VER='2026.08.28.1622';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1273,7 +1265,7 @@ function logout(){
 </script>
 <script>
 /* ================= الرئيسية ================= */
-function renderAll(){renderHome();renderServices();renderCart();renderOrders();renderMe();renderPkgs();syncCartUI();}
+function renderAll(){renderHome();renderCart();renderOrders();renderMe();renderPkgs();syncCartUI();}
 function renderHome(){
   $('avatar').textContent=(ME.n||'؟').trim().charAt(0);
   $('hiName').textContent=ME.n||greet();
@@ -1301,14 +1293,8 @@ function svcCards(){
     return '<button class="svc" onclick="openService(\''+s.k+'\')">'+il(s.ic)+
       '<b>'+esc(s.t)+'</b><s>'+esc(s.s)+'</s></button>';}).join('');
 }
-function renderServices(){$('svcGrid2').innerHTML=svcCards();}
-
 /* ================= تفاصيل الخدمة ================= */
-var SVFROM='scHome';   /* الرجوع يودّي للشاشة اللي جاء منها، لا للرئيسية دائماً */
-function openService(k){
-  SVFROM=$('scServices').classList.contains('on')?'scServices':'scHome';
-  CTV=k;go('scService');renderService();
-}
+function openService(k){CTV=k;go('scService');renderService();}
 
 /* مجموعات التسعير داخل الخدمة — شرائح فوق الجدول. صنف واحد يقدر ينتمي لمجموعتين */
 var SVG={};
@@ -1330,8 +1316,8 @@ function svcPicked(k){return svcItems(k).filter(function(it){return CART[it.k];}
 
 function renderService(){
   var s=svcOf(CTV);
-  $('svBack').innerHTML=ic('back','','ic-sm')+'<span>'+(SVFROM==='scServices'?'الخدمات':'الرئيسية')+'</span>';
-  $('svBack').onclick=function(){go(SVFROM);setTab(SVFROM);};
+  $('svBack').innerHTML=ic('back','','ic-sm')+'<span>الرئيسية</span>';
+  $('svBack').onclick=function(){go('scHome');setTab('scHome');};
   var gs=svcGroups(CTV);
   /* الاختيار قبل الشرح: مهمة العميل هنا أن يختار مقاسه، والتفاصيل تجي بعدها تسنده */
   var price = s.quote
@@ -1691,7 +1677,7 @@ function renderCart(){
   var L=cartLines(),t=cartTotals(),nx=nextTier(t.sub);
   if(!L.length){
     $('cartBody').innerHTML='<div class="empty">'+il('cart')+'<p>سلتك فاضية</p>'+
-      '<button class="btn" style="margin-top:20px;max-width:240px;margin-inline:auto" onclick="go(\'scServices\');setTab(\'scServices\')">تصفّح الخدمات</button></div>';
+      '<button class="btn" style="margin-top:20px;max-width:240px;margin-inline:auto" onclick="go(\'scHome\');setTab(\'scHome\')">تصفّح الخدمات</button></div>';
     return;
   }
   $('cartBody').innerHTML=
@@ -2165,7 +2151,7 @@ function renderOrders(){
     (L.length?L.map(function(o){return ordCard(o,false);}).join(''):
     '<div class="empty">'+il('file')+'<p>'+(ORQF?'ما عندك عروض أسعار':'ما عندك طلبات بعد')+'</p>'+
     '<button class="btn" style="margin-top:20px;max-width:230px;margin-inline:auto" onclick="'+
-      (ORQF?'ORQF=\'\';renderOrders()':'go(\'scServices\');setTab(\'scServices\')')+'">'+(ORQF?'اعرض كل الطلبات':'تصفّح الخدمات')+'</button></div>');
+      (ORQF?'ORQF=\'\';renderOrders()':'go(\'scHome\');setTab(\'scHome\')')+'">'+(ORQF?'اعرض كل الطلبات':'تصفّح الخدمات')+'</button></div>');
 }
 function reloadOrders(){
   ORERR='';$('ordList').innerHTML='<div class="empty">جاري التحميل…</div>';
@@ -2263,7 +2249,6 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.s==='scMe')renderMe();
     if(t.dataset.s==='scPkgs')renderPkgs();
     if(t.dataset.s==='scHome')renderHome();
-    if(t.dataset.s==='scServices')renderServices();
   };
 });
 $('bkPh').innerHTML=ic('back','','ic-sm')+'<span>تغيير الرقم</span>';
