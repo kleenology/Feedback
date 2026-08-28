@@ -969,8 +969,9 @@ function orCard(o){
       '<span class="or-st" style="background:'+c[0]+';color:'+c[1]+'">'+(ORST[o.st]||o.st)+'</span></div>'+
     '<div class="or-m"><b>'+esc(o.svc||'')+'</b><br>'+esc(orWhen(o))+'<br>'+esc(orAddr(o))+
       (o.nt?'<br>📝 '+esc(o.nt):'')+'</div>'+
-    (o.quote?'<div class="or-it" style="background:#fdf3e1;color:#9a6206"><div><span>زيارة تسعير مجانية</span>'+
-      '<b>'+(o.price?o.price+' ر.س':'حدّد السعر بعد المعاينة')+'</b></div></div>':'')+
+    (o.quote?'<div class="or-it" style="background:#fdf3e1;color:#9a6206"><div>'+
+      '<span>زيارة تسعير — '+(o.est?esc(o.est)+' ر.س':'مجانية')+'</span>'+
+      '<b>'+(o.price?esc(o.price)+' ر.س':'حدّد السعر بعد المعاينة')+'</b></div></div>':'')+
     (items.length?'<div class="or-it">'+items.map(function(i){
       return '<div><span>'+esc(i.t)+' <span style="opacity:.7">'+esc(i.u)+' × '+i.q+'</span></span><b>'+(i.p*i.q)+' ر.س</b></div>';
     }).join('')+'<div style="border-top:1px dashed #dde8ee;margin-top:5px;padding-top:6px"><span>'+
