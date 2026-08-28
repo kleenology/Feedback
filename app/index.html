@@ -824,7 +824,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.0053';
+var APP_VER='2026.08.28.0107';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -851,9 +851,14 @@ var LADX=false;                  /* هل سلّم الخصم مفتوح؟ — ت
 var ORX={};                      /* أي الطلبات مفتوح مسارها */
 var BK={step:0,date:'',slot:'',adr:null,kind:'',locErr:''};
 
-var db=null,auth=null;
+var db=null,auth=null,FAPP=null;
 if(!DEMO){
-  var FAPP=firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"},'kln-app');
+  var CFG={apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"};
+  /* التطبيق باسمه الخاص: جلسة دخول مستقلة عن لوحة الإدارة على نفس النطاق */
+  FAPP=firebase.initializeApp(CFG,'kln-app');
+  /* وتطبيق افتراضي كذلك: بعض أدوات الـSDK تفترض وجوده وتنفجر بدونه.
+     ما نسجّل به دخولاً أبداً، فما يمس عزل الجلسة. */
+  try{firebase.app();}catch(e){firebase.initializeApp(CFG);}
   db=FAPP.firestore();auth=FAPP.auth();
 }else{document.getElementById('demoBar').classList.remove('hide');}
 
@@ -993,7 +998,7 @@ var API={
    لأن reCAPTCHA ما تشتغل داخل WebView الأصلي — الدالتان معزولتان هنا لهذا السبب */
 function lgErr(m){var e=$('lgErr');if(!m){e.classList.add('hide');return;}e.textContent=m;e.classList.remove('hide');}
 function recap(){if(window.__rc)return window.__rc;
-  window.__rc=new firebase.auth.RecaptchaVerifier('recaptcha',{size:'invisible'});return window.__rc;}
+  window.__rc=new firebase.auth.RecaptchaVerifier('recaptcha',{size:'invisible'},FAPP);return window.__rc;}
 /* رمز الكابتشا يُستهلك بعد كل إرسال. بدون تصفيره تُجبر المحاولة التالية على تحدٍّ
    مرئي جديد بلا داعٍ — وهذا يزعج العميل عند «إعادة إرسال الرمز» تحديداً. */
 function resetRecap(){
@@ -1049,14 +1054,20 @@ function sendCode(again){
     var f=document.querySelector('#otpRow input');if(f)f.focus();
   }
   if(DEMO){setTimeout(function(){ok();toast('وضع المعاينة: أي 6 أرقام تمشّي');},450);return;}
-  auth.signInWithPhoneNumber('+'+p,recap()).then(function(c){CONF=c;resetRecap();ok();}).catch(function(e){
+  function sendFail(e){
     resetRecap();
     $('btnPh').disabled=false;$('btnPh').textContent='متابعة';tickResend();
-    var c=e&&e.code||'';
+    var c=(e&&e.code)||'';
     lgErr(c==='auth/invalid-phone-number'?'الرقم غير صحيح':
       c==='auth/too-many-requests'?'محاولات كثيرة — انتظر شوي وحاول':
       c==='auth/operation-not-allowed'?'تسجيل الدخول بالجوال غير مفعّل في Firebase (راجع app/README.md)':
-      'تعذّر إرسال الرمز'+(c?' ('+c+')':''));});
+      'تعذّر إرسال الرمز'+(c?' ('+c+')':' — '+((e&&e.message)||'خطأ غير معروف')));
+  }
+  /* try/catch لازم: خطأ متزامن هنا (مثل كابتشا بلا تطبيق) يقع قبل أي catch
+     على الوعد، فيبقى الزر معلّقاً على «جاري الإرسال…» بلا سبب ظاهر للعميل. */
+  try{
+    auth.signInWithPhoneNumber('+'+p,recap()).then(function(c){CONF=c;resetRecap();ok();}).catch(sendFail);
+  }catch(e){sendFail(e);}
 }
 var VERIFYING=false;
 function verifyCode(){
