@@ -890,7 +890,7 @@ function startLive(){
 
 /* ================= الطلبات ================= */
 var OR=[],ORQ='',ORF='live',ORUN=null,ORFIRST=true;
-var CU=[],CUUN=null;   /* مستخدمو التطبيق — كل من دخل برقم جواله */
+var CU=[],CUUN=null,CUF='',CUQ='';   /* مستخدمو التطبيق — كل من دخل برقم جواله */
 var ORST={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
 var ORCOL={new:['#fff7ed','#b45309'],confirmed:['#eff6ff','#1d4ed8'],on_way:['#f0fdff','#0891b2'],
            done:['#f0fdf4','#16a34a'],cancelled:['#f1f5f9','#64748b']};
@@ -1272,19 +1272,35 @@ function appUsersHtml(){
     '<div class="sc" style="border-top:3px solid #16a34a"><div class="sc-l">طلبوا فعلاً</div><div class="sc-v" style="color:#16a34a">'+(CU.length-noOrd.length)+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #f5a301"><div class="sc-l">دخلوا وما طلبوا</div><div class="sc-v" style="color:#b45309">'+noOrd.length+'</div></div>'+
     '<div class="sc" style="border-top:3px solid #c026d3"><div class="sc-l">وافقوا على العروض</div><div class="sc-v" style="color:#c026d3">'+ok.length+'</div></div></div>';
-  h+='<div class="cc"><h3>📱 دخلوا التطبيق وما طلبوا ('+noOrd.length+')</h3>'+
-    '<div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">أرقام موثّقة برسالة تحقق — فتحوا التطبيق وتصفّحوا وما أكملوا. مكالمة أو رسالة واحدة تكفي</div>';
-  if(!noOrd.length)h+='<div class="empty">كل من دخل طلب 👌</div>';
-  noOrd.slice(0,20).forEach(function(r){
+  /* قائمة واحدة لكل من دخل، مع فلاتر — عشان تلقى أي رقم بعينه لا المستهدفين فقط */
+  var L=CUF==='no'?noOrd:CUF==='ok'?ok:rows;
+  if(CUQ){
+    var dq=CUQ.replace(/\D/g,'');
+    L=L.filter(function(r){
+      var hay=String(r.c.n||'')+' '+String(r.c.ph||'');
+      return hay.indexOf(CUQ)>=0||(dq&&String(r.c.ph||'').indexOf(dq)>=0);});
+  }
+  h+='<div class="cc"><h3>📱 مستخدمو التطبيق ('+L.length+')</h3>'+
+    '<div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">أرقام موثّقة برسالة تحقق وصلت فعلاً — أنظف من أي قائمة حملة</div>'+
+    '<div class="of-row" style="margin-bottom:9px">'+
+      [['','الكل',rows.length],['no','ما طلبوا',noOrd.length],['ok','وافقوا على العروض',ok.length]]
+      .map(function(f){return '<button type="button" class="of-tp'+(CUF===f[0]?' on':'')+
+        '" onclick="CUF=\''+f[0]+'\';rCu()">'+f[1]+' ('+f[2]+')</button>';}).join('')+
+    '</div>'+
+    '<input class="of-in" id="cuQ" style="margin-bottom:9px" placeholder="ابحث باسم أو رقم" value="'+esc(CUQ)+'">';
+  if(!L.length)h+='<div class="empty">'+(CUQ?'ما فيه نتيجة':'ما فيه أحد في هذا الفلتر')+'</div>';
+  L.slice(0,40).forEach(function(r){
     var c=r.c;
-    h+='<div class="exp-item" style="border-right-color:#f5a301"><div class="exp-top"><div>'+
+    h+='<div class="exp-item" style="border-right-color:'+(r.n?'#16a34a':'#f5a301')+'"><div class="exp-top"><div>'+
       '<div class="exp-nm">'+esc(c.n||'بلا اسم')+(c.ok?' <span style="color:#c026d3;font-size:10px">✓ عروض</span>':'')+'</div>'+
       '<div style="font-size:10px;color:#9ab;margin-top:3px;direction:ltr;text-align:right">+'+esc(c.ph||'')+'</div>'+
-      '<div style="font-size:10px;color:#9ab;margin-top:2px">أول دخول '+esc(cuDay(c.at))+' · آخر دخول '+esc(cuDay(c.seen))+'</div>'+
+      '<div style="font-size:10px;color:#9ab;margin-top:2px">'+
+        (r.n?'<b style="color:#16a34a">'+r.n+' طلب</b>':'<b style="color:#b45309">ما طلب بعد</b>')+
+        ' · أول دخول '+esc(cuDay(c.at))+' · آخر دخول '+esc(cuDay(c.seen))+'</div>'+
       '</div></div>'+
-      (c.ph?'<a class="exp-wa" target="_blank" rel="noopener" href="'+appWaLink(c)+'">💬 اسأله وش يحتاج</a>':'')+'</div>';
+      (c.ph?'<a class="exp-wa" target="_blank" rel="noopener" href="'+appWaLink(c)+'">💬 '+(r.n?'راسله':'اسأله وش يحتاج')+'</a>':'')+'</div>';
   });
-  if(noOrd.length>20)h+='<div style="font-size:10px;color:#9ab;text-align:center;margin-top:8px">… و'+(noOrd.length-20)+' غيرهم</div>';
+  if(L.length>40)h+='<div style="font-size:10px;color:#9ab;text-align:center;margin-top:8px">… و'+(L.length-40)+' غيرهم — استخدم البحث</div>';
   h+='</div>';
   if(ok.length)h+='<div class="of-note" style="margin-bottom:12px">💡 <b>'+ok.length+'</b> عميلاً فعّلوا «عروض وتخفيضات» في التطبيق — هؤلاء وحدهم من يجوز ترسل لهم عروضاً، والباقي تواصل معهم بخصوص طلباتهم فقط.</div>';
   return h;
@@ -1298,6 +1314,15 @@ function appWaLink(c){
   var t=greetAr()+' '+(c.n||'يا غالي')+' 🌟\nمعك '+BIZ.rep+' من '+BIZ.name+
     '\n\nشفتك فتحت تطبيقنا 🙏 قل لي وش تحتاج تنظيف وأجهّز لك السعر والموعد على طول ✨';
   return 'https://wa.me/'+waNum(c.ph)+'?text='+encodeURIComponent(t);
+}
+var CUT=null;
+function cuSearch(v){
+  CUQ=v;clearTimeout(CUT);
+  CUT=setTimeout(function(){
+    rCu();
+    var i=document.getElementById('cuQ');
+    if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}
+  },260);
 }
 function rCu(){
   var el=document.getElementById('tcCustomers');
