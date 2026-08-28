@@ -145,27 +145,54 @@ button{cursor:pointer;border:none;background:none}
 .stack{display:flex;flex-direction:column;gap:10px}
 
 /* ===== بطاقة العرض ===== */
-.hero{background:linear-gradient(140deg,var(--blue) 0%,#4FC0EE 100%);border-radius:var(--r);
-  padding:24px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--sh-blue)}
-.hero h2{font-size:22px;line-height:1.38;color:#fff;margin-bottom:6px;position:relative}
-.hero h2 em{font-style:normal;color:#FFE6B4}
-.hero p{font-size:13.5px;opacity:.92;margin-bottom:18px;position:relative;line-height:1.7}
-.hero .btn{background:#fff;color:var(--blue-d);box-shadow:0 6px 18px rgba(0,0,0,.13);position:relative}
+/* شريط العرض: البطاقة الطويلة كانت ٢٥١ بكسل من أول شاشة لسطرين ونصف —
+   نفس الرسالة ونفس الوجهة في ٧٢، فتدخل الخدمات كلها بلا تمرير */
+.promo{width:100%;display:flex;align-items:center;gap:12px;text-align:right;padding:15px 17px;
+  border-radius:var(--r2);color:#fff;position:relative;overflow:hidden;box-shadow:var(--sh-blue);
+  background:linear-gradient(140deg,var(--blue) 0%,#4FC0EE 100%);transition:transform .14s}
+.promo:active{transform:scale(.985)}
+.promo .pm{flex:1;min-width:0;position:relative}
+.promo b{display:block;font-size:15px;font-weight:700;font-family:var(--dsp);line-height:1.5}
+.promo s{display:block;text-decoration:none;font-size:12.5px;opacity:.92;margin-top:1px}
+.promo .ic{position:relative;flex:0 0 auto;transform:scaleX(-1)}
 .bub{position:absolute;border-radius:50%;background:rgba(255,255,255,.13)}
-.b1{width:120px;height:120px;left:-34px;top:-40px}
-.b2{width:64px;height:64px;left:34px;top:56px;background:rgba(255,255,255,.09)}
+.b1{width:96px;height:96px;left:-30px;top:-38px}
+.b2{width:46px;height:46px;left:44px;top:34px;background:rgba(255,255,255,.09)}
 .b3{width:26px;height:26px;left:-6px;bottom:24px;background:rgba(255,255,255,.11)}
 .hero-art{position:absolute;left:-18px;top:2px;width:134px;height:134px;pointer-events:none}
 .hero>h2,.hero>p,.hero>.btn{position:relative;z-index:1}
 .hero h2,.hero p{max-width:72%}
 
 /* ===== الخدمات ===== */
+/* سطر الطلب الحالي في الرئيسية — البطاقة الكاملة مكانها «طلباتي» */
+.live-s{width:100%;display:flex;align-items:center;gap:11px;text-align:right;padding:14px 16px;
+  border-radius:var(--r2);background:var(--card);box-shadow:var(--sh);transition:transform .14s}
+.live-s:active{transform:scale(.985)}
+.live-s .ls-t{flex:1;min-width:0}
+.live-s b{display:block;font-size:14.5px;font-weight:700;font-family:var(--dsp)}
+.live-s s{display:block;text-decoration:none;font-size:12px;color:var(--mut);margin-top:2px}
+.live-s .ic{flex:0 0 auto;color:var(--faint);transform:scaleX(-1)}
 .svcs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .svc{background:var(--card);border-radius:var(--r2);padding:20px 16px;text-align:center;
   box-shadow:var(--sh);transition:transform .14s}
 .svc:active{transform:scale(.975)}
+/* شاشات قصيرة (SE وما شابه): نضغط الحشو بدل ما نحذف خدمة من الشبكة */
+@media (max-height:760px){
+  .sec{padding:16px 0}
+  .promo{padding:12px 15px}
+  .svc{padding:14px 12px}
+  .svc b{margin-top:7px;font-size:14px}
+  .svcs{gap:10px}
+  .chip{padding:8px 12px}
+}
 .svc b{display:block;font-size:14.5px;font-weight:700;margin-top:10px;font-family:var(--dsp)}
 .svc s{display:block;text-decoration:none;font-size:11.5px;color:var(--mut);margin-top:2px}
+/* عدد فردي من الخدمات يترك نصف صف فاضياً — الأخيرة تاخذ العرض كاملاً أفقية */
+.svcs .svc:last-child:nth-child(odd){grid-column:1 / -1;display:flex;align-items:center;
+  gap:14px;text-align:right;padding:14px 17px}
+.svcs .svc:last-child:nth-child(odd) .il{width:40px;height:40px;flex:0 0 auto}
+.svcs .svc:last-child:nth-child(odd) .svc-t{flex:1;min-width:0}
+.svcs .svc:last-child:nth-child(odd) b{margin-top:0}
 
 /* ===== سلّم الخصم ===== */
 /* مطوي افتراضياً: الكرت الكامل كان يأكل أول شاشة قبل ما يشوف العميل صنفاً واحداً */
@@ -641,15 +668,12 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
   <div class="wrap">
     <div id="nameCard"></div>
     <div class="sec" style="border:none;padding-bottom:0">
-      <div class="hero"><span class="bub b1"></span><span class="bub b2"></span>
-        <h2>خدمات بيتك كلها<br><em>في سلة وحدة</em></h2>
-        <p>اختر اللي تبي تنظّفه، والخصم يكبر كل ما كبرت سلتك.</p>
-        <button class="btn" onclick="openService('sofa')" id="heroBtn"></button>
-      </div>
+      <button class="promo" id="heroBtn" onclick="openService('sofa')">
+        <span class="bub b1"></span><span class="bub b2"></span></button>
     </div>
     <div class="sec" style="border:none;padding:14px 0 0"><div class="fade-x"><div class="scrollx chips" id="featList"></div></div></div>
     <div id="activeOrder"></div>
-    <div class="sec">
+    <div class="sec" style="padding-bottom:0">
       <div class="sec-h"><h2>الخدمات</h2></div>
       <div class="svcs" id="svcGrid"></div>
     </div>
@@ -997,7 +1021,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.2044';
+var APP_VER='2026.08.28.2141';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1297,18 +1321,27 @@ function renderAll(){renderHome();renderCart();renderOrders();renderMe();renderP
 function renderHome(){
   $('avatar').textContent=(ME.n||'؟').trim().charAt(0);
   $('hiName').textContent=ME.n||greet();
-  $('heroBtn').innerHTML=ic('cart','','ic-sm')+'<span>صمّم سلتك الآن</span>';
+  var top=TIERS[TIERS.length-1];
+  $('heroBtn').innerHTML='<span class="bub b1"></span><span class="bub b2"></span>'+
+    '<span class="pm"><b>الخصم يكبر كل ما كبرت سلتك</b>'+
+    '<s>'+esc(discNames())+' — يصل إلى '+pct(top.off)+'</s></span>'+ic('back');
   $('svcGrid').innerHTML=svcCards();
   var live=ORD.filter(function(o){return o.st!=='done'&&o.st!=='cancelled';})[0];
-  $('activeOrder').innerHTML=live?'<div class="sec"><div class="sec-h"><h2>طلبك الحالي</h2></div>'+ordCard(live,true)+'</div>':'';
+  $('activeOrder').innerHTML=live
+    ? '<div class="sec" style="padding-bottom:0"><button class="live-s" '+
+      'onclick="ORQF=\'\';go(\'scOrders\');setTab(\'scOrders\');renderOrders()">'+
+      '<span class="ls-t"><b>'+(live.no?'طلبك رقم <span class="mono">'+live.no+'</span>':'طلبك الحالي')+'</b>'+
+      '<s>'+esc(fmtDate(live.date))+' · '+esc(slotOf(live.slot))+'</s></span>'+
+      '<span class="st st-'+live.st+'">'+STS[live.st]+'</span>'+ic('back','','ic-sm')+'</button></div>'
+    : '';
   $('nameCard').innerHTML=ME.n?'':
-    '<div class="sec" style="padding-bottom:0"><div class="card">'+
+    '<div class="sec" style="padding-bottom:0"><div class="card" style="padding:16px">'+
       '<label class="lb" for="hmN">وش نناديك؟</label>'+
       '<div style="display:flex;gap:9px;align-items:stretch">'+
         '<input class="in" id="hmN" maxlength="60" placeholder="اسمك" autocomplete="name">'+
         '<button class="btn" style="width:auto;flex:0 0 auto;padding:15px 24px" onclick="saveName(\'hmN\')">حفظ</button>'+
       '</div>'+
-      '<p style="font-size:12.5px;color:var(--mut);margin-top:10px">عشان نناديك باسمك في الرسائل وعند وصول الفريق.</p>'+
+      '<p style="font-size:12.5px;color:var(--mut);margin-top:8px">عشان نناديك باسمك عند وصول الفريق.</p>'+
     '</div></div>';
   $('featList').innerHTML=FEATS.map(function(f){
     return '<span class="chip">'+ic(f.ic,'','ic-sm')+'<span>'+esc(f.t)+'</span></span>';}).join('');
@@ -1319,7 +1352,7 @@ function renderHome(){
 function svcCards(){
   return SVCS.map(function(s){
     return '<button class="svc" onclick="openService(\''+s.k+'\')">'+il(s.ic)+
-      '<b>'+esc(s.t)+'</b><s>'+esc(s.s)+'</s></button>';}).join('');
+      '<span class="svc-t"><b>'+esc(s.t)+'</b><s>'+esc(s.s)+'</s></span></button>';}).join('');
 }
 /* ================= تفاصيل الخدمة ================= */
 function openService(k){CTV=k;go('scService');renderService();}
