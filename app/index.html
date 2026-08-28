@@ -1021,7 +1021,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.2312';
+var APP_VER='2026.08.29.0018';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1030,6 +1030,8 @@ var SLOT_CAP=1;
 var ORD_BASE=1000;
 /* قيمة زيارة المعاينة بالريال. صفر = مجانية، ويرجع النص «مجانية» تلقائياً. */
 var QUOTE_FEE=29;
+/* خادم رموز التحقق (مجلد server/). فاضي = نرجع لرموز فايربيس */
+var OTP_API='';
 var BOOKED={};   /* {'2026-09-10':{am:1,pm:0,ev:0}} — كم محجوز في كل فترة */
 var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
@@ -1051,21 +1053,27 @@ var ORX={};                      /* أي الطلبات مفتوح مسارها 
 var ORQF='';                     /* فلتر قائمة الطلبات: '' الكل، 'quote' عروض الأسعار */
 var BK={step:0,date:'',slot:'',adr:null,kind:'',locErr:''};
 
-var db=null,auth=null,FAPP=null;
+var db=null,auth=null,FAPP=null,FBERR='';
 if(!DEMO){
   var CFG={apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"};
-  /* التطبيق باسمه الخاص: جلسة دخول مستقلة عن لوحة الإدارة على نفس النطاق */
-  FAPP=firebase.initializeApp(CFG,'kln-app');
-  /* وتطبيق افتراضي كذلك: بعض أدوات الـSDK تفترض وجوده وتنفجر بدونه.
-     ما نسجّل به دخولاً أبداً، فما يمس عزل الجلسة. */
-  try{firebase.app();}catch(e){firebase.initializeApp(CFG);}
-  db=FAPP.firestore();auth=FAPP.auth();
+  /* لو تعذّر تحميل SDK فايربيس (شبكة ضعيفة أو حجب) نمسك الخطأ ونعرض رسالة —
+     بدونه ينفجر السطر ويقف التطبيق على شاشة بيضاء بلا سبب ظاهر للعميل */
+  try{
+    /* التطبيق باسمه الخاص: جلسة دخول مستقلة عن لوحة الإدارة على نفس النطاق */
+    FAPP=firebase.initializeApp(CFG,'kln-app');
+    /* وتطبيق افتراضي كذلك: بعض أدوات الـSDK تفترض وجوده وتنفجر بدونه.
+       ما نسجّل به دخولاً أبداً، فما يمس عزل الجلسة. */
+    try{firebase.app();}catch(e){firebase.initializeApp(CFG);}
+    db=FAPP.firestore();auth=FAPP.auth();
+  }catch(e){FBERR=(e&&e.message)||'firebase';}
 }else{document.getElementById('demoBar').classList.remove('hide');}
 
 /* ================= أدوات ================= */
 function $(id){return document.getElementById(id);}
 /* العميل يدخل برقم جواله. حساب بلا رقم = حساب لوحة الإدارة، ما يُعامل كعميل. */
-function isCustomer(u){return !!(u&&u.phoneNumber);}
+/* دخول فايربيس يعطي phoneNumber، وخادمنا يعطي معرّفاً يبدأ بـ ph_ — كلاهما عميل.
+   والأدمن يدخل بالبريد فما ينطبق عليه أيٌّ منهما */
+function isCustomer(u){return !!(u&&(u.phoneNumber||String(u.uid||'').indexOf('ph_')===0));}
 function backTo(t){return '<span class="bk-i">'+ic('back')+'</span><span>'+esc(t)+'</span>';}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function go(id){
@@ -1284,7 +1292,25 @@ function sendCode(again){
       c==='auth/too-many-requests'?'محاولات كثيرة — انتظر شوي وحاول':
       c==='auth/operation-not-allowed'?'تسجيل الدخول بالجوال غير مفعّل في Firebase (راجع app/README.md)':
       c==='auth/billing-not-enabled'?'إرسال الرموز يحتاج ترقية مشروع Firebase إلى خطة Blaze (راجع app/README.md)':
+      c==='otp/cooldown'?'انتظر '+(e.wait||60)+' ثانية قبل طلب رمز جديد':
+      c==='otp/too-many'?'محاولات كثيرة — جرّب بعد ساعة':
+      c==='otp/daily-cap'?'وصلنا حد الرسائل اليومي — تواصل معنا على واتساب':
+      c==='otp/network'?'تعذّر الاتصال — تأكد من الإنترنت وحاول':
       'تعذّر إرسال الرمز'+(c?' ('+c+')':' — '+((e&&e.message)||'خطأ غير معروف')));
+  }
+  if(OTP_API){
+    /* خادمنا: الرسالة تصل باسم المرسل المعتمد، والرمز يُتحقق منه هناك */
+    fetch(OTP_API+'/api/otp/send',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone:p})})
+      .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+      .then(function(x){
+        if(x.s===200){ok();return;}
+        var e=x.j&&x.j.error;
+        sendFail({code:e==='cooldown'?'otp/cooldown':e==='too_many'?'otp/too-many':
+          e==='daily_cap'?'otp/daily-cap':e==='bad_phone'?'auth/invalid-phone-number':'otp/failed',
+          wait:x.j&&x.j.wait});
+      }).catch(function(){sendFail({code:'otp/network'});});
+    return;
   }
   /* try/catch لازم: خطأ متزامن هنا (مثل كابتشا بلا تطبيق) يقع قبل أي catch
      على الوعد، فيبقى الزر معلّقاً على «جاري الإرسال…» بلا سبب ظاهر للعميل. */
@@ -1303,6 +1329,26 @@ function verifyCode(){
     var f=document.querySelector('#otpRow input');if(f)f.focus();}
   if(DEMO){setTimeout(function(){VERIFYING=false;b.disabled=false;b.textContent='تحقق الآن';
     clearInterval(RTM);onSignedIn('demo-uid');},400);return;}
+  if(OTP_API){
+    fetch(OTP_API+'/api/otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone:ME.ph,code:code})})
+      .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+      .then(function(x){
+        if(x.s!==200||!x.j.token){
+          var e=x.j&&x.j.error;
+          fail(e==='expired'?'انتهت صلاحية الرمز — اطلب رمزاً جديداً':
+               e==='too_many'?'محاولات كثيرة — اطلب رمزاً جديداً':'الرمز غير صحيح');
+          return;
+        }
+        /* رمز الدخول المخصّص يعطي العميل هوية ثابتة في فايربيس،
+           فقواعد Firestore وسجل الطلبات تشتغل كما هي بلا تغيير */
+        return auth.signInWithCustomToken(x.j.token).then(function(r){
+          VERIFYING=false;b.disabled=false;b.textContent='تحقق الآن';
+          clearInterval(RTM);onSignedIn(r.user.uid);
+        });
+      }).catch(function(){fail('تعذّر التحقق، حاول مرة ثانية');});
+    return;
+  }
   CONF.confirm(code).then(function(r){VERIFYING=false;b.disabled=false;b.textContent='تحقق الآن';
     clearInterval(RTM);onSignedIn(r.user.uid);})
    .catch(function(e){fail((e&&e.code)==='auth/invalid-verification-code'?'الرمز غير صحيح':'تعذّر التحقق، حاول مرة ثانية');});
@@ -2357,8 +2403,14 @@ if('serviceWorker' in navigator&&window.isSecureContext){
   }).catch(function(){});
 }
 if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else go('scLogin');}
-else auth.onAuthStateChanged(function(u){
-  if(isCustomer(u)){ME.ph=String(u.phoneNumber).replace('+','');onSignedIn(u.uid);}
+else if(!auth){
+  go('scLogin');
+  lgErr('تعذّر تحميل التطبيق — تأكد من الإنترنت وأعد فتح الصفحة');
+  var pb=$('btnPh');if(pb)pb.disabled=true;
+}else auth.onAuthStateChanged(function(u){
+  if(isCustomer(u)){if(u.phoneNumber)ME.ph=String(u.phoneNumber).replace('+','');
+    else ME.ph=String(u.uid).slice(3);
+    onSignedIn(u.uid);}
   else go('scLogin');});
 </script>
 </body>
