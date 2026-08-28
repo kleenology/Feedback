@@ -978,7 +978,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.1512';
+var APP_VER='2026.08.28.1544';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2270,8 +2270,21 @@ $('bkPh').innerHTML=ic('back','','ic-sm')+'<span>تغيير الرقم</span>';
 $('inPh').addEventListener('keydown',function(e){if(e.key==='Enter')sendCode();});
 renderTerms();
 /* الملف في الجذر، فنطاقه يغطي /app/ — والعميل اللي ما يفتح إلا التطبيق يسجّله بنفسه */
-if('serviceWorker' in navigator&&location.protocol==='https:'){
+if('serviceWorker' in navigator&&window.isSecureContext){
   window.addEventListener('load',function(){navigator.serviceWorker.register('../sw.js').catch(function(){});});
+  /* على شبكة بطيئة يخدم الكاش نسخة قديمة، فالعميل يحتاج يفتح التطبيق مرتين حتى
+     يشوف التحديث. نسأل الشبكة عن آخر إصدار ونعيد التحميل مرة واحدة لكل إصدار */
+  fetch('../version.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(v){
+    if(!v||!v.ver||v.ver===APP_VER)return;
+    try{if(sessionStorage.getItem('kln_upd')===v.ver)return;sessionStorage.setItem('kln_upd',v.ver);}catch(e){}
+    var again=function(){location.reload();};
+    (window.caches?caches.keys().then(function(ks){
+      return Promise.all(ks.map(function(k){return caches.delete(k);}));
+    }):Promise.resolve()).then(function(){
+      return navigator.serviceWorker.getRegistrations().then(function(rs){
+        return Promise.all(rs.map(function(r){return r.update();}));});
+    }).then(again,again);
+  }).catch(function(){});
 }
 if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else go('scLogin');}
 else auth.onAuthStateChanged(function(u){
