@@ -434,14 +434,40 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .incl .tick{width:22px;height:22px;border-radius:50%;background:var(--blue-l);display:grid;
   place-items:center;flex:0 0 auto;margin-top:2px}
 .incl .tick .ic{width:12px;height:12px;color:var(--blue-d);stroke-width:3.2}
+/* استثناء لا ميزة — علامة صح زرقاء عليه تقلب المعنى عند العميل */
+.incl div.x{color:var(--tx)}
+.incl .tick.x{background:var(--gold-l)}
+.incl .tick.x .ic{color:var(--gold-d)}
 .prose{font-size:14px;line-height:2;color:var(--mut)}
 .prose h3{font-size:15px;font-weight:700;font-family:var(--dsp);color:var(--tx);margin:22px 0 4px}
 .prose h3:first-child{margin-top:0}
-.sv-hero{text-align:center;padding:30px 22px;background:var(--card);border-radius:var(--r);box-shadow:var(--sh)}
-.sv-hero .ring{width:104px;height:104px;border-radius:50%;background:var(--blue-l);display:grid;
-  place-items:center;margin:0 auto 16px}
-.sv-hero h2{font-size:23px;font-weight:700;margin-bottom:8px}
-.sv-hero p{font-size:14px;color:var(--mut);line-height:1.85}
+/* رأس الخدمة أفقي ومختصر — الدائرة الكبيرة كانت تاخذ ثلث الشاشة الأولى بلا معلومة */
+.sv-hero{display:flex;gap:14px;align-items:center;padding:16px 17px;background:var(--card);
+  border-radius:var(--r);box-shadow:var(--sh)}
+.sv-hero .ring{flex:0 0 auto;width:58px;height:58px;border-radius:18px;background:var(--blue-l);
+  display:grid;place-items:center}
+.sv-hero .ring .il{width:34px;height:34px}
+.sv-hero div{min-width:0}
+.sv-hero h2{font-size:18.5px;font-weight:700;margin-bottom:3px}
+.sv-hero p{font-size:13px;color:var(--mut);line-height:1.7}
+
+/* صفوف التسعير القابلة للاختيار — الجدول نفسه هو الاختيار، بلا شاشة ثانية */
+.rows-p{display:grid;gap:8px}
+.row-p{display:flex;align-items:center;gap:12px;width:100%;text-align:right;padding:13px 14px;
+  border-radius:var(--r2);background:var(--card);box-shadow:var(--sh);
+  transition:background .16s,box-shadow .16s}
+.row-p .rp-k{flex:0 0 auto;width:21px;height:21px;border-radius:50%;background:var(--sunk);
+  box-shadow:inset 0 0 0 1.6px var(--line);display:grid;place-items:center;transition:all .16s}
+.row-p .rp-k .ic{width:12px;height:12px;color:#fff;stroke-width:3.4;opacity:0;transition:opacity .16s}
+.row-p .rp-t{flex:1;min-width:0}
+.row-p .rp-t b{display:block;font-size:14.5px;font-weight:600}
+.row-p .rp-t s{display:block;text-decoration:none;font-size:12.5px;color:var(--mut);margin-top:1px}
+.row-p .rp-p{flex:0 0 auto;font-size:15.5px;font-weight:700;color:var(--blue-d);font-family:var(--dsp)}
+.row-p[aria-pressed="true"]{background:var(--blue-xl);box-shadow:inset 0 0 0 2px var(--blue)}
+.row-p[aria-pressed="true"] .rp-k{background:var(--blue);box-shadow:inset 0 0 0 1.6px var(--blue)}
+.row-p[aria-pressed="true"] .rp-k .ic{opacity:1}
+/* ‎.scr يحجز أصلاً 96px+sb لشريط التبويب، والزر العائم يعلو عنه 42px — هذي فرقها وحده */
+.svpad{height:58px}
 .sticky{position:fixed;bottom:calc(88px + var(--sb));right:0;left:0;z-index:35;padding:0 18px}
 .sticky-in{max-width:520px;margin:0 auto}
 .demo{background:var(--gold);color:#4A3200;text-align:center;font-size:12px;font-weight:700;
@@ -833,12 +859,12 @@ var SVCS=[
         'المندوب يزور الموقع ويأخذ المقاسات لتحديد العناصر المطلوب تنظيفها بدقة',
         'عرض سعر يشمل التكلفة الإجمالية قبل ما يبدأ الشغل',
         'التنظيف يتم في مكانه — ما ننقل أثاثك من بيتك']},
- {k:'home',  ic:'home',  t:'تنظيف المنازل', s:'استوديو · شقة · دور · فيلا', img:[],
+ {k:'home',  ic:'home',  t:'تنظيف المنازل', s:'استوديو · شقة · دور · فيلا', img:[], one:true,
   d:'تنظيف عام للبيت كامل — تختار مقاس مكانك ونجيك بفريق ملتزم بالموعد.',
   incl:['إزالة الأوساخ والغبار من الصالة وغرف النوم والمجالس',
         'تنظيف المطبخ والحمامات والتخلص من القمامة',
         'خدمة تعطير للمكان بعد التنظيف',
-        'ما يشمل: مخلفات البناء والدهون الصعبة والأثاث — لها خدماتها']},
+        '!ما لا يشمل: مخلفات البناء والدهون الصعبة والأثاث — لها خدماتها']},
  {k:'parts', ic:'kitchen',t:'تنظيف بالقطعة', s:'مطبخ · دورات · نوافذ', img:[],
   d:'تبي جزءاً محدداً بس؟ اختر القطعة ومقاسها وادفع سعرها وحدها.',
   incl:['المطبخ شامل الفرن والثلاجات والأجهزة',
@@ -876,64 +902,65 @@ var CAT=[
  {sv:'sofa', k:'bed2',   ic:'bed',     t:'مرتبة سرير',      u:'مزدوجة',      p:140},
 
  /* ===== تنظيف المنازل — التنظيف العام حسب مقاس العقار ونوعه ===== */
- {sv:'home', k:'gen1',   ic:'home',    t:'استوديو',         u:'حتى 50م²',    p:500},
- {sv:'home', k:'gen2',   ic:'home',    t:'استوديو أو شقة',  u:'51 – 100م²',  p:700},
- {sv:'home', k:'gen3',   ic:'home',    t:'شقة',             u:'101 – 150م²', p:800},
- {sv:'home', k:'gen4',   ic:'home',    t:'شقة',             u:'151 – 200م²', p:1200},
- {sv:'home', k:'gen5',   ic:'home',    t:'دور',             u:'151 – 200م²', p:1400},
- {sv:'home', k:'gen6',   ic:'home',    t:'دور',             u:'201 – 300م²', p:1800},
- {sv:'home', k:'gen7',   ic:'home',    t:'دور',             u:'301 – 400م²', p:2200},
- {sv:'home', k:'gen8',   ic:'home',    t:'فيلا',            u:'201 – 300م²', p:2600},
- {sv:'home', k:'gen9',   ic:'home',    t:'فيلا',            u:'301 – 400م²', p:3000},
- {sv:'home', k:'gen10',  ic:'home',    t:'فيلا',            u:'401 – 500م²', p:4000},
- {sv:'home', k:'gen11',  ic:'home',    t:'فيلا',            u:'501 – 600م²', p:4800},
+ /* g = المجموعة في شرائح صفحة الخدمة — صنف واحد يقدر ينتمي لمجموعتين */
+ {sv:'home', k:'gen1',   ic:'home',    t:'استوديو',         u:'حتى 50م²',    p:500,  g:['استوديو']},
+ {sv:'home', k:'gen2',   ic:'home',    t:'استوديو أو شقة',  u:'51 – 100م²',  p:700,  g:['استوديو','شقة']},
+ {sv:'home', k:'gen3',   ic:'home',    t:'شقة',             u:'101 – 150م²', p:800,  g:['شقة']},
+ {sv:'home', k:'gen4',   ic:'home',    t:'شقة',             u:'151 – 200م²', p:1200, g:['شقة']},
+ {sv:'home', k:'gen5',   ic:'home',    t:'دور',             u:'151 – 200م²', p:1400, g:['دور']},
+ {sv:'home', k:'gen6',   ic:'home',    t:'دور',             u:'201 – 300م²', p:1800, g:['دور']},
+ {sv:'home', k:'gen7',   ic:'home',    t:'دور',             u:'301 – 400م²', p:2200, g:['دور']},
+ {sv:'home', k:'gen8',   ic:'home',    t:'فيلا',            u:'201 – 300م²', p:2600, g:['فيلا']},
+ {sv:'home', k:'gen9',   ic:'home',    t:'فيلا',            u:'301 – 400م²', p:3000, g:['فيلا']},
+ {sv:'home', k:'gen10',  ic:'home',    t:'فيلا',            u:'401 – 500م²', p:4000, g:['فيلا']},
+ {sv:'home', k:'gen11',  ic:'home',    t:'فيلا',            u:'501 – 600م²', p:4800, g:['فيلا']},
 
  /* ===== تنظيف بالقطعة ===== */
- {sv:'parts',k:'kit1',   ic:'kitchen', t:'مطبخ',            u:'حتى 50م²',    p:600},
- {sv:'parts',k:'kit2',   ic:'kitchen', t:'مطبخ',            u:'51 – 100م²',  p:1000},
- {sv:'parts',k:'kit3',   ic:'kitchen', t:'مطبخ',            u:'101 – 140م²', p:1500},
- {sv:'parts',k:'kit4',   ic:'kitchen', t:'مطبخ',            u:'141 – 200م²', p:2000},
- {sv:'parts',k:'kit5',   ic:'kitchen', t:'مطبخ',            u:'201 – 300م²', p:2500},
- {sv:'parts',k:'kit6',   ic:'kitchen', t:'مطبخ',            u:'301 – 400م²', p:3000},
- {sv:'parts',k:'bath1',  ic:'bath',    t:'دورة مياه',       u:'حتى 6م²',     p:100},
- {sv:'parts',k:'bath2',  ic:'bath',    t:'دورة مياه',       u:'8 – 25م²',    p:130},
- {sv:'parts',k:'bath3',  ic:'bath',    t:'دورة مياه',       u:'28 – 50م²',   p:180},
- {sv:'parts',k:'win1',   ic:'glass',   t:'نوافذ',           u:'حتى 4م²',     p:40},
- {sv:'parts',k:'win2',   ic:'glass',   t:'نوافذ',           u:'6 – 12م²',    p:70},
- {sv:'parts',k:'win3',   ic:'glass',   t:'نوافذ',           u:'16 – 25م²',   p:100},
- {sv:'parts',k:'win4',   ic:'glass',   t:'نوافذ',           u:'26 – 35م²',   p:150},
- {sv:'parts',k:'flr1',   ic:'grid',    t:'الأرضيات',        u:'للمتر',       p:7},
- {sv:'parts',k:'str1',   ic:'home',    t:'درج',             u:'للدور',       p:150},
- {sv:'parts',k:'out1',   ic:'home',    t:'مساحات خارجية',   u:'حتى 75م²',    p:500},
- {sv:'parts',k:'out2',   ic:'home',    t:'مساحات خارجية',   u:'76 – 100م²',  p:700},
- {sv:'parts',k:'out3',   ic:'home',    t:'مساحات خارجية',   u:'101 – 150م²', p:900},
- {sv:'parts',k:'ste1',   ic:'shield',  t:'تعقيم وتطهير',    u:'حتى 50م²',    p:150},
- {sv:'parts',k:'ste2',   ic:'shield',  t:'تعقيم وتطهير',    u:'51 – 150م²',  p:250},
- {sv:'parts',k:'ste3',   ic:'shield',  t:'تعقيم وتطهير',    u:'151 – 300م²', p:350},
- {sv:'parts',k:'ste4',   ic:'shield',  t:'تعقيم وتطهير',    u:'301 – 500م²', p:500},
+ {sv:'parts',k:'kit1',   ic:'kitchen', t:'مطبخ',            u:'حتى 50م²',    p:600, g:['مطبخ']},
+ {sv:'parts',k:'kit2',   ic:'kitchen', t:'مطبخ',            u:'51 – 100م²',  p:1000, g:['مطبخ']},
+ {sv:'parts',k:'kit3',   ic:'kitchen', t:'مطبخ',            u:'101 – 140م²', p:1500, g:['مطبخ']},
+ {sv:'parts',k:'kit4',   ic:'kitchen', t:'مطبخ',            u:'141 – 200م²', p:2000, g:['مطبخ']},
+ {sv:'parts',k:'kit5',   ic:'kitchen', t:'مطبخ',            u:'201 – 300م²', p:2500, g:['مطبخ']},
+ {sv:'parts',k:'kit6',   ic:'kitchen', t:'مطبخ',            u:'301 – 400م²', p:3000, g:['مطبخ']},
+ {sv:'parts',k:'bath1',  ic:'bath',    t:'دورة مياه',       u:'حتى 6م²',     p:100, g:['دورات المياه']},
+ {sv:'parts',k:'bath2',  ic:'bath',    t:'دورة مياه',       u:'8 – 25م²',    p:130, g:['دورات المياه']},
+ {sv:'parts',k:'bath3',  ic:'bath',    t:'دورة مياه',       u:'28 – 50م²',   p:180, g:['دورات المياه']},
+ {sv:'parts',k:'win1',   ic:'glass',   t:'نوافذ',           u:'حتى 4م²',     p:40, g:['نوافذ']},
+ {sv:'parts',k:'win2',   ic:'glass',   t:'نوافذ',           u:'6 – 12م²',    p:70, g:['نوافذ']},
+ {sv:'parts',k:'win3',   ic:'glass',   t:'نوافذ',           u:'16 – 25م²',   p:100, g:['نوافذ']},
+ {sv:'parts',k:'win4',   ic:'glass',   t:'نوافذ',           u:'26 – 35م²',   p:150, g:['نوافذ']},
+ {sv:'parts',k:'flr1',   ic:'grid',    t:'الأرضيات',        u:'للمتر',       p:7, g:['أرضيات ودرج']},
+ {sv:'parts',k:'str1',   ic:'home',    t:'درج',             u:'للدور',       p:150, g:['أرضيات ودرج']},
+ {sv:'parts',k:'out1',   ic:'home',    t:'مساحات خارجية',   u:'حتى 75م²',    p:500, g:['مساحات خارجية']},
+ {sv:'parts',k:'out2',   ic:'home',    t:'مساحات خارجية',   u:'76 – 100م²',  p:700, g:['مساحات خارجية']},
+ {sv:'parts',k:'out3',   ic:'home',    t:'مساحات خارجية',   u:'101 – 150م²', p:900, g:['مساحات خارجية']},
+ {sv:'parts',k:'ste1',   ic:'shield',  t:'تعقيم وتطهير',    u:'حتى 50م²',    p:150, g:['تعقيم']},
+ {sv:'parts',k:'ste2',   ic:'shield',  t:'تعقيم وتطهير',    u:'51 – 150م²',  p:250, g:['تعقيم']},
+ {sv:'parts',k:'ste3',   ic:'shield',  t:'تعقيم وتطهير',    u:'151 – 300م²', p:350, g:['تعقيم']},
+ {sv:'parts',k:'ste4',   ic:'shield',  t:'تعقيم وتطهير',    u:'301 – 500م²', p:500, g:['تعقيم']},
 
  /* ===== النظافة التأهيلية — التنظيف العميق ومكوّناته بعد البناء ===== */
- {sv:'post', k:'nkit1',  ic:'kitchen', t:'مطبخ جديد',       u:'حتى 50م²',    p:500},
- {sv:'post', k:'nkit2',  ic:'kitchen', t:'مطبخ جديد',       u:'51 – 100م²',  p:800},
- {sv:'post', k:'nkit3',  ic:'kitchen', t:'مطبخ جديد',       u:'101 – 140م²', p:1200},
- {sv:'post', k:'nkit4',  ic:'kitchen', t:'مطبخ جديد',       u:'141 – 200م²', p:1800},
- {sv:'post', k:'nkit5',  ic:'kitchen', t:'مطبخ جديد',       u:'201 – 300م²', p:2200},
- {sv:'post', k:'nkit6',  ic:'kitchen', t:'مطبخ جديد',       u:'301 – 400م²', p:2500},
- {sv:'post', k:'nwin1',  ic:'glass',   t:'نوافذ جديدة',     u:'حتى 4م²',     p:60},
- {sv:'post', k:'nwin2',  ic:'glass',   t:'نوافذ جديدة',     u:'6 – 12م²',    p:90},
- {sv:'post', k:'nwin3',  ic:'glass',   t:'نوافذ جديدة',     u:'16 – 25م²',   p:150},
- {sv:'post', k:'nwin4',  ic:'glass',   t:'نوافذ جديدة',     u:'26 – 35م²',   p:180},
- {sv:'post', k:'dep1',   ic:'post',    t:'استوديو',         u:'حتى 50م²',    p:700},
- {sv:'post', k:'dep2',   ic:'post',    t:'استوديو أو شقة',  u:'51 – 100م²',  p:900},
- {sv:'post', k:'dep3',   ic:'post',    t:'شقة',             u:'101 – 150م²', p:1200},
- {sv:'post', k:'dep4',   ic:'post',    t:'شقة',             u:'151 – 200م²', p:1500},
- {sv:'post', k:'dep5',   ic:'post',    t:'دور',             u:'151 – 200م²', p:2000},
- {sv:'post', k:'dep6',   ic:'post',    t:'دور',             u:'201 – 300م²', p:2200},
- {sv:'post', k:'dep7',   ic:'post',    t:'دور',             u:'301 – 400م²', p:2800},
- {sv:'post', k:'dep8',   ic:'post',    t:'فيلا',            u:'201 – 300م²', p:3200},
- {sv:'post', k:'dep9',   ic:'post',    t:'فيلا',            u:'301 – 400م²', p:3600},
- {sv:'post', k:'dep10',  ic:'post',    t:'فيلا',            u:'401 – 500م²', p:4800},
- {sv:'post', k:'dep11',  ic:'post',    t:'فيلا',            u:'501 – 600م²', p:5500}
+ {sv:'post', k:'dep1',   ic:'post',    t:'استوديو',         u:'حتى 50م²',    p:700, g:['المكان كامل']},
+ {sv:'post', k:'dep2',   ic:'post',    t:'استوديو أو شقة',  u:'51 – 100م²',  p:900, g:['المكان كامل']},
+ {sv:'post', k:'dep3',   ic:'post',    t:'شقة',             u:'101 – 150م²', p:1200, g:['المكان كامل']},
+ {sv:'post', k:'dep4',   ic:'post',    t:'شقة',             u:'151 – 200م²', p:1500, g:['المكان كامل']},
+ {sv:'post', k:'dep5',   ic:'post',    t:'دور',             u:'151 – 200م²', p:2000, g:['المكان كامل']},
+ {sv:'post', k:'dep6',   ic:'post',    t:'دور',             u:'201 – 300م²', p:2200, g:['المكان كامل']},
+ {sv:'post', k:'dep7',   ic:'post',    t:'دور',             u:'301 – 400م²', p:2800, g:['المكان كامل']},
+ {sv:'post', k:'dep8',   ic:'post',    t:'فيلا',            u:'201 – 300م²', p:3200, g:['المكان كامل']},
+ {sv:'post', k:'dep9',   ic:'post',    t:'فيلا',            u:'301 – 400م²', p:3600, g:['المكان كامل']},
+ {sv:'post', k:'dep10',  ic:'post',    t:'فيلا',            u:'401 – 500م²', p:4800, g:['المكان كامل']},
+ {sv:'post', k:'dep11',  ic:'post',    t:'فيلا',            u:'501 – 600م²', p:5500, g:['المكان كامل']},
+ {sv:'post', k:'nkit1',  ic:'kitchen', t:'مطبخ جديد',       u:'حتى 50م²',    p:500, g:['مطبخ جديد']},
+ {sv:'post', k:'nkit2',  ic:'kitchen', t:'مطبخ جديد',       u:'51 – 100م²',  p:800, g:['مطبخ جديد']},
+ {sv:'post', k:'nkit3',  ic:'kitchen', t:'مطبخ جديد',       u:'101 – 140م²', p:1200, g:['مطبخ جديد']},
+ {sv:'post', k:'nkit4',  ic:'kitchen', t:'مطبخ جديد',       u:'141 – 200م²', p:1800, g:['مطبخ جديد']},
+ {sv:'post', k:'nkit5',  ic:'kitchen', t:'مطبخ جديد',       u:'201 – 300م²', p:2200, g:['مطبخ جديد']},
+ {sv:'post', k:'nkit6',  ic:'kitchen', t:'مطبخ جديد',       u:'301 – 400م²', p:2500, g:['مطبخ جديد']},
+ {sv:'post', k:'nwin1',  ic:'glass',   t:'نوافذ جديدة',     u:'حتى 4م²',     p:60, g:['نوافذ جديدة']},
+ {sv:'post', k:'nwin2',  ic:'glass',   t:'نوافذ جديدة',     u:'6 – 12م²',    p:90, g:['نوافذ جديدة']},
+ {sv:'post', k:'nwin3',  ic:'glass',   t:'نوافذ جديدة',     u:'16 – 25م²',   p:150, g:['نوافذ جديدة']},
+ {sv:'post', k:'nwin4',  ic:'glass',   t:'نوافذ جديدة',     u:'26 – 35م²',   p:180, g:['نوافذ جديدة']}
 ];
 
 /* الباقات: اشتراك متكرر. عدّل الأسعار والتكرار كما تحب — و«يعادل» هو سعر نفس الخدمة لو طلبها مفرقة */
@@ -967,7 +994,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.1148';
+var APP_VER='2026.08.28.1319';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1286,30 +1313,106 @@ function renderHome(){
 
 /* ================= تفاصيل الخدمة ================= */
 function openService(k){CTV=k;go('scService');renderService();}
+
+/* مجموعات التسعير داخل الخدمة — شرائح فوق الجدول. صنف واحد يقدر ينتمي لمجموعتين */
+var SVG={};
+function svcItems(k){return CAT.filter(function(x){return x.sv===k;});}
+function svcGroups(k){
+  var out=[];
+  svcItems(k).forEach(function(it){(it.g||[]).forEach(function(g){if(out.indexOf(g)<0)out.push(g);});});
+  return out;
+}
+function svcGroup(k){
+  var gs=svcGroups(k);
+  if(!gs.length)return '';
+  if(gs.indexOf(SVG[k])>=0)return SVG[k];          /* اختيار العميل للشريحة يسبق */
+  var sel=svcPicked(k)[0];                          /* وإلا نفتح على مجموعة المقاس المختار */
+  if(sel&&sel.g&&sel.g.length&&gs.indexOf(sel.g[0])>=0)return sel.g[0];
+  return gs[0];
+}
+function svcPicked(k){return svcItems(k).filter(function(it){return CART[it.k];});}
+
 function renderService(){
-  var s=svcOf(CTV),n=CAT.filter(function(x){return x.sv===CTV;}).length;
+  var s=svcOf(CTV);
   $('svBack').innerHTML=ic('back','','ic-sm')+'<span>الرئيسية</span>';
-  if(s.quote){
-    $('svGo').innerHTML=ic('cal','','ic-sm')+'<span>اطلب تسعير</span>';
-    $('svGo').onclick=function(){openQuote(CTV);};
-  }else{
-    $('svGo').innerHTML=ic('cart','','ic-sm')+'<span>اختر الأصناف ('+n+')</span>';
-    $('svGo').onclick=function(){openCatalog(CTV);};
-  }
+  var gs=svcGroups(CTV);
+  /* الاختيار قبل الشرح: مهمة العميل هنا أن يختار مقاسه، والتفاصيل تجي بعدها تسنده */
+  var price = s.quote
+    ? '<div class="sec"><div class="note acc">سعر هذي الخدمة يتغيّر حسب المساحة وحالة المكان — نعاينها أول. '+
+      (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b> و<b>تُخصم من قيمة الخدمة</b> لو أكملت معنا، وتحدّد موقعك وقت الحجز.':'وزيارة التسعير مجانية.')+'</div></div>'
+    : '<div class="sec"><div class="sec-h"><h2>'+(s.one?'اختر مقاس مكانك':'الأسعار')+'</h2></div>'+
+      (gs.length>1?'<div class="cats" id="svTabs" style="padding:0 0 12px;margin:0"></div>':'')+
+      '<div class="rows-p" id="svRows"></div></div>';
   $('svBody').innerHTML=
-    '<div class="sec" style="border:none"><div class="sv-hero"><span class="ring">'+il(s.ic,'','il-xl')+'</span>'+
-      '<h2>'+esc(s.t)+'</h2><p>'+esc(s.d)+'</p></div></div>'+
+    '<div class="sec" style="border:none;padding-bottom:0"><div class="sv-hero"><span class="ring">'+il(s.ic,'','il-xl')+'</span>'+
+      '<div><h2>'+esc(s.t)+'</h2><p>'+esc(s.d)+'</p></div></div></div>'+
     gallery(s)+
+    price+
     '<div class="sec"><div class="sec-h"><h2>ما الذي تتضمنه الخدمة</h2></div>'+
-      '<div class="incl">'+s.incl.map(function(x){return '<div><span class="tick">'+ic('check')+'</span><span>'+esc(x)+'</span></div>';}).join('')+'</div></div>'+
-    (s.quote
-      ? '<div class="sec"><div class="note acc">سعر هذي الخدمة يتغيّر حسب المساحة وحالة المكان — نعاينها أول. '+
-        (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b> و<b>تُخصم من قيمة الخدمة</b> لو أكملت معنا، وتحدّد موقعك وقت الحجز.':'وزيارة التسعير مجانية.')+'</div></div>'
-      : '<div class="sec"><div class="sec-h"><h2>الأسعار تبدأ من</h2></div><div class="rows">'+
-        CAT.filter(function(x){return x.sv===CTV;}).slice(0,4).map(function(it){
-          return '<div class="row-i"><span><b>'+esc(it.t)+'</b><s>'+esc(it.u)+'</s></span><b>'+sar(it.p)+'</b></div>';
-        }).join('')+'</div></div>')+'<div style="height:70px"></div>';
+      '<div class="incl">'+s.incl.map(function(x){
+        /* سطر يبدأ بـ«!» = استثناء، لا ميزة — يأخذ علامة ولوناً مختلفين */
+        var no=x.charAt(0)==='!';
+        return '<div'+(no?' class="x"':'')+'><span class="tick'+(no?' x':'')+'">'+ic(no?'close':'check')+'</span>'+
+          '<span>'+esc(no?x.slice(1):x)+'</span></div>';}).join('')+'</div></div>'+
+    '<div class="svpad"></div>';
+  if(!s.quote)svRows();
+  svCta();
   galInit();
+}
+
+/* نبني الصفوف وحدها عند تبديل المجموعة — إعادة بناء الصفحة كلها تقفز بالتمرير */
+function svRows(){
+  var g=svcGroup(CTV),host=$('svRows');
+  if(!host)return;
+  var tabs=$('svTabs');
+  if(tabs)tabs.innerHTML=svcGroups(CTV).map(function(x){
+    return '<button class="cat" aria-pressed="'+(x===g)+'" onclick="svPickGroup(\''+esc(x)+'\')">'+esc(x)+'</button>';}).join('');
+  host.innerHTML=svcItems(CTV).filter(function(it){return !g||(it.g||[]).indexOf(g)>=0;}).map(function(it){
+    return '<button class="row-p" data-k="'+it.k+'" aria-pressed="'+(CART[it.k]?'true':'false')+'" '+
+      'onclick="pickBand(\''+it.k+'\')">'+
+      '<span class="rp-k">'+ic('check')+'</span>'+
+      '<span class="rp-t"><b>'+esc(it.t)+'</b><s>'+esc(it.u)+'</s></span>'+
+      '<b class="rp-p">'+sar(it.p)+'</b></button>';}).join('');
+}
+function svPickGroup(g){SVG[CTV]=g;svRows();}
+
+/* الضغط على الصف يختاره مباشرة. في خدمة one:true المقاس واحد — الاختيار يستبدل السابق */
+function pickBand(k){
+  var it=CAT.filter(function(x){return x.k===k;})[0];if(!it)return;
+  var s=svcOf(it.sv),was=!!CART[k];
+  if(was)delete CART[k];
+  else{
+    if(s.one)svcItems(it.sv).forEach(function(x){delete CART[x.k];});
+    CART[k]=1;
+  }
+  LS.set('cart',CART);
+  /* نبدّل حالة الصفوف في مكانها — إعادة البناء تسحب الصف من تحت الإصبع */
+  var host=$('svRows');
+  if(host)svcItems(it.sv).forEach(function(x){
+    var el=host.querySelector('.row-p[data-k="'+x.k+'"]');
+    if(el)el.setAttribute('aria-pressed',CART[x.k]?'true':'false');
+  });
+  svCta();renderCart();syncCartUI();
+}
+
+/* الزر السفلي: بلا اختيار يفتح الكتالوج، ومع اختيار يصير «التالي» ومعه الإجمالي */
+function svCta(){
+  var s=svcOf(CTV),b=$('svGo');
+  if(!b)return;
+  if(s.quote){
+    b.innerHTML=ic('cal','','ic-sm')+'<span>اطلب تسعير</span>';
+    b.onclick=function(){openQuote(CTV);};
+    return;
+  }
+  if(svcPicked(CTV).length){
+    /* لا نستخدم sar() هنا — «ر.س» فيها لون خافت يضيع على الزر الأزرق */
+    b.innerHTML=ic('cart','','ic-sm')+'<span>التالي · <span class="mono">'+
+      cartTotals().tot.toLocaleString('en-US')+'</span> ر.س</span>';
+    b.onclick=function(){go('scCart');setTab('');};
+  }else{
+    b.innerHTML=ic('grid','','ic-sm')+'<span>تصفّح كل الأصناف ('+svcItems(CTV).length+')</span>';
+    b.onclick=function(){openCatalog(CTV);};
+  }
 }
 
 /* ================= توفّر المواعيد ================= */
@@ -1588,7 +1691,7 @@ function setQty(k,q){
     card.classList.toggle('in',!!CART[k]);
     renderLadder();
   }else renderCatalog();
-  renderCart();syncCartUI();
+  renderCart();syncCartUI();svRows();svCta();
 }
 function syncCartUI(){
   var n=cartCount(),t=cartTotals();
@@ -1635,7 +1738,7 @@ function renderCart(){
     '<div class="sec" style="border:none"><button class="btn" onclick="startBooking()">أكمل الحجز</button>'+
       '<button class="btn btn-x btn-sm" style="margin-top:9px" onclick="clearCart()">'+ic('trash','','ic-sm')+'<span>أفرغ السلة</span></button></div>';
 }
-function clearCart(){if(!confirm('تفريغ السلة؟'))return;CART={};LS.set('cart',{});renderCatalog();renderCart();toast('فُرّغت السلة');}
+function clearCart(){if(!confirm('تفريغ السلة؟'))return;CART={};LS.set('cart',{});renderCatalog();renderCart();svRows();svCta();toast('فُرّغت السلة');}
 
 /* ================= إتمام الحجز ================= */
 var STEPS=['الموعد','العنوان','التأكيد'];
