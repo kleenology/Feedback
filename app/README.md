@@ -42,21 +42,40 @@
 
 ## 3) البناء لآيفون (على جهاز الماك)
 
+**الوضع الحالي:** التطبيق **ويب يشتغل بالكامل**، ومجهّز للتغليف — لكن مشروع Xcode **ما أُنشئ بعد**، لأن إنشاءه يتطلب جهاز ماك.
+
+الملفات الجاهزة في `app/`: `package.json` · `capacitor.config.json` · `build.mjs`.
+
 ```bash
 cd app
 npm install
-npm run ios        # ينسخ الملفات ويفتح Xcode
+npm run ios:add    # أول مرة فقط — ينشئ مشروع iOS
+npm run ios        # كل مرة بعدها — يجهّز www ويفتح Xcode
 ```
+
+`build.mjs` يجهّز مجلد `www/`: ينسخ الصفحة، يصلّح مسار الشعار، ويشيل تسجيل الـService Worker (داخل التطبيق الأصلي يخدّم نسخة قديمة بلا فائدة — التحديث يجي من المتجر).
 
 في Xcode: اختر جهازك أو Simulator ← **Run**.
 
-### تسجيل الدخول داخل التطبيق الأصلي
+### ⚠️ خطوتان لازمتان قبل أول تشغيل
 
-الكود الحالي يستخدم Firebase Web SDK مع reCAPTCHA، وهذي **ما تشتغل داخل WebView الأصلي**. الحزمة `@capacitor-firebase/authentication` موجودة في `package.json` — عند أول بناء بدّل دالة `sendCode()`/`verifyCode()` لتستخدمها. الدالتان معزولتان في قسم «تسجيل الدخول» عشان التبديل يكون في مكان واحد.
+**١) `GoogleService-Info.plist`** — من Firebase Console ← Project settings ← أضف تطبيق iOS بمعرّف `sa.kleenology.app` ← نزّل الملف ← اسحبه داخل مشروع Xcode في مجلد `App`.
 
-تحتاج أيضاً `GoogleService-Info.plist` من Firebase Console (Project settings → iOS app) وتسحبه داخل مشروع Xcode.
+**٢) بدّل تسجيل الدخول.** الكود الحالي يستخدم Firebase Web SDK مع reCAPTCHA، و**reCAPTCHA ما تشتغل داخل WebView الأصلي**. الحزمة `@capacitor-firebase/authentication` مثبّتة، ودالتا `sendCode()` و`verifyCode()` معزولتان في قسم واحد عشان التبديل يكون في مكان واحد:
 
----
+```js
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+// بدل auth.signInWithPhoneNumber(...)
+await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: '+' + p });
+```
+
+> بدون هاتين الخطوتين التطبيق يفتح ويعرض الشاشات، لكن **الدخول ما يشتغل**.
+
+### قبل ذلك: جرّبه كتطبيق بلا متجر
+
+التطبيق الآن **قابل للتثبيت من المتصفح**: فيه `manifest.json` وأيقونة وService Worker. العميل يفتح الرابط في سفاري ← **مشاركة** ← **إضافة إلى الشاشة الرئيسية** — يصير أيقونة على جواله ويفتح بلا شريط متصفح، ويشتغل حتى لو الشبكة ضعيفة.
+
+**ابدأ بهذا.** ما يكلّف شيئاً ولا ينتظر مراجعة، ويعطيك تجربة حقيقية مع أول عملائك قبل ما تدفع 99$ وتنتظر المراجعة.
 
 ## 4) الرفع لمتجر آبل
 

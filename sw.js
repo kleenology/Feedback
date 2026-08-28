@@ -1,6 +1,6 @@
 /* كاش الأصول الثابتة فقط — بيانات Firestore تُجلب دائماً من الشبكة */
-var CACHE = 'kln-v19';
-var ASSETS = ['./index.html', './reviews.html', './app/index.html', './logo.png', './manifest.json'];
+var CACHE = 'kln-v20';
+var ASSETS = ['./index.html', './reviews.html', './app/index.html', './app/manifest.json', './logo.png', './manifest.json'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }).then(function () { return self.skipWaiting(); }));
