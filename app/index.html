@@ -785,7 +785,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.27.2357';
+var APP_VER='2026.08.28.0002';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -812,12 +812,14 @@ var BK={step:0,date:'',slot:'',adr:null,kind:'',locErr:''};
 
 var db=null,auth=null;
 if(!DEMO){
-  firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"});
-  db=firebase.firestore();auth=firebase.auth();
+  var FAPP=firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"},'kln-app');
+  db=FAPP.firestore();auth=FAPP.auth();
 }else{document.getElementById('demoBar').classList.remove('hide');}
 
 /* ================= أدوات ================= */
 function $(id){return document.getElementById(id);}
+/* العميل يدخل برقم جواله. حساب بلا رقم = حساب لوحة الإدارة، ما يُعامل كعميل. */
+function isCustomer(u){return !!(u&&u.phoneNumber);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function go(id){
   document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
@@ -1801,7 +1803,8 @@ function renderMe(){
       '<button class="btn btn-2 btn-sm" onclick="openTerms()">'+ic('shield','','ic-sm')+'<span>الشروط وسياسة الخصوصية</span></button>'+
       '<button class="btn btn-x btn-sm" onclick="logout()">'+ic('out','','ic-sm')+'<span>تسجيل الخروج</span></button>'+
     '</div>'+
-    '<p class="hint" style="margin-top:14px">الإصدار <span class="mono">'+APP_VER+'</span></p></div>';
+    '<p class="hint" style="margin-top:14px">الإصدار <span class="mono">'+APP_VER+'</span>'+
+      (ME.uid?' · معرّف الحساب <span class="mono" style="user-select:all">'+esc(ME.uid)+'</span>':'')+'</p></div>';
 }
 function saveName(from){
   var el=$(from||'meN');if(!el)return;
@@ -1846,7 +1849,8 @@ $('inPh').addEventListener('keydown',function(e){if(e.key==='Enter')sendCode();}
 renderTerms();
 if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else go('scLogin');}
 else auth.onAuthStateChanged(function(u){
-  if(u){ME.ph=String(u.phoneNumber||'').replace('+','');onSignedIn(u.uid);}else go('scLogin');});
+  if(isCustomer(u)){ME.ph=String(u.phoneNumber).replace('+','');onSignedIn(u.uid);}
+  else go('scLogin');});
 </script>
 </body>
 </html>
