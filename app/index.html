@@ -1021,7 +1021,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.2237';
+var APP_VER='2026.08.28.2312';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1283,6 +1283,7 @@ function sendCode(again){
     lgErr(c==='auth/invalid-phone-number'?'الرقم غير صحيح':
       c==='auth/too-many-requests'?'محاولات كثيرة — انتظر شوي وحاول':
       c==='auth/operation-not-allowed'?'تسجيل الدخول بالجوال غير مفعّل في Firebase (راجع app/README.md)':
+      c==='auth/billing-not-enabled'?'إرسال الرموز يحتاج ترقية مشروع Firebase إلى خطة Blaze (راجع app/README.md)':
       'تعذّر إرسال الرمز'+(c?' ('+c+')':' — '+((e&&e.message)||'خطأ غير معروف')));
   }
   /* try/catch لازم: خطأ متزامن هنا (مثل كابتشا بلا تطبيق) يقع قبل أي catch
