@@ -858,16 +858,23 @@ var SVCS=[
 var CAT=[
  {sv:'sofa', k:'sofa1',  ic:'sofa',    t:'كنب',            u:'للشخص',   p:25},
  {sv:'sofa', k:'rug1',   ic:'rug',     t:'سجاد',           u:'للمتر',   p:12},
- {sv:'sofa', k:'cur1',   ic:'curtain', t:'ستائر',          u:'للقطعة',  p:35},
- {sv:'sofa', k:'bed1',   ic:'bed',     t:'مرتبة سرير',     u:'مفرد',    p:45},
- {sv:'sofa', k:'bed2',   ic:'bed',     t:'مرتبة سرير',     u:'مزدوج',   p:70},
+ {sv:'sofa', k:'cur1',   ic:'curtain', t:'ستارة صغيرة',    u:'حتى 8م²',  p:70},
+ {sv:'sofa', k:'cur2',   ic:'curtain', t:'ستارة كبيرة',    u:'9 – 18م²', p:90},
+ {sv:'sofa', k:'bed1',   ic:'bed',     t:'مرتبة سرير',     u:'مفردة',    p:120},
+ {sv:'sofa', k:'bed2',   ic:'bed',     t:'مرتبة سرير',     u:'مزدوجة',   p:140},
  {sv:'sofa', k:'maj1',   ic:'majlis',  t:'جلسة عربية',     u:'للمتر',   p:20},
  {sv:'sofa', k:'chr1',   ic:'chair',   t:'كرسي طعام',      u:'للقطعة',  p:15},
  {sv:'sofa', k:'pil1',   ic:'pillow',  t:'مساند',          u:'للقطعة',  p:8},
  {sv:'home', k:'room1',  ic:'bed',     t:'غرفة',           u:'للغرفة',  p:60},
  {sv:'home', k:'hall1',  ic:'sofa',    t:'صالة',           u:'للقطعة',  p:90},
  {sv:'home', k:'kit1',   ic:'kitchen', t:'مطبخ',           u:'للقطعة',  p:120},
- {sv:'home', k:'bath1',  ic:'bath',    t:'دورة مياه',      u:'للقطعة',  p:70},
+ {sv:'home', k:'bath1',  ic:'bath',    t:'دورة مياه صغيرة',u:'حتى 6م²',  p:100},
+ {sv:'home', k:'bath2',  ic:'bath',    t:'دورة مياه متوسطة',u:'8 – 25م²', p:130},
+ {sv:'home', k:'bath3',  ic:'bath',    t:'دورة مياه كبيرة', u:'28 – 50م²',p:180},
+ {sv:'home', k:'ste1',   ic:'shield',  t:'تعقيم وتطهير',   u:'حتى 50م²',  p:150},
+ {sv:'home', k:'ste2',   ic:'shield',  t:'تعقيم وتطهير',   u:'51 – 150م²',p:250},
+ {sv:'home', k:'ste3',   ic:'shield',  t:'تعقيم وتطهير',   u:'151 – 300م²',p:350},
+ {sv:'home', k:'ste4',   ic:'shield',  t:'تعقيم وتطهير',   u:'301 – 500م²',p:500},
  {sv:'home', k:'apt1',   ic:'home',    t:'شقة كاملة',      u:'تبدأ من', p:450},
  {sv:'home', k:'vil1',   ic:'home',    t:'فيلا كاملة',     u:'تبدأ من', p:900},
  {sv:'office',k:'off1',  ic:'office',  t:'مكتب صغير',      u:'حتى 100م',p:350},
@@ -910,7 +917,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.0947';
+var APP_VER='2026.08.28.1021';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
