@@ -442,15 +442,22 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .prose{font-size:14px;line-height:2;color:var(--mut)}
 .prose h3{font-size:15px;font-weight:700;font-family:var(--dsp);color:var(--tx);margin:22px 0 4px}
 .prose h3:first-child{margin-top:0}
-/* رأس الخدمة أفقي ومختصر — الدائرة الكبيرة كانت تاخذ ثلث الشاشة الأولى بلا معلومة */
-.sv-hero{display:flex;gap:14px;align-items:center;padding:16px 17px;background:var(--card);
+/* رأس عمودي — تستخدمه الباقة وصفحة التسعير، ومحتواهما ليس عنصرين فقط */
+.sv-hero{text-align:center;padding:30px 22px;background:var(--card);border-radius:var(--r);box-shadow:var(--sh)}
+.sv-hero .ring{width:104px;height:104px;border-radius:50%;background:var(--blue-l);display:grid;
+  place-items:center;margin:0 auto 16px}
+.sv-hero h2{font-size:23px;font-weight:700;margin-bottom:8px}
+.sv-hero p{font-size:14px;color:var(--mut);line-height:1.85}
+/* رأس صفحة الخدمة وحدها: أفقي ومختصر — الدائرة ١٠٤ بكسل كانت تاخذ ثلث
+   الشاشة الأولى بلا معلومة. كلاس مستقل لأن الشاشات الأخرى بنيتها مختلفة */
+.sv-head{display:flex;gap:14px;align-items:center;padding:16px 17px;background:var(--card);
   border-radius:var(--r);box-shadow:var(--sh)}
-.sv-hero .ring{flex:0 0 auto;width:58px;height:58px;border-radius:18px;background:var(--blue-l);
+.sv-head .ring{flex:0 0 auto;width:58px;height:58px;border-radius:18px;background:var(--blue-l);
   display:grid;place-items:center}
-.sv-hero .ring .il{width:34px;height:34px}
-.sv-hero div{min-width:0}
-.sv-hero h2{font-size:18.5px;font-weight:700;margin-bottom:3px}
-.sv-hero p{font-size:13px;color:var(--mut);line-height:1.7}
+.sv-head .ring .il{width:34px;height:34px}
+.sv-head div{min-width:0}
+.sv-head h2{font-size:18.5px;font-weight:700;margin-bottom:3px}
+.sv-head p{font-size:13px;color:var(--mut);line-height:1.7}
 
 /* صفوف التسعير — الجدول نفسه هو الاختيار، بلا شاشة كتالوج ثانية.
    الترتيب واحد في الوضعين: الاسم يميناً، السعر، وأداة التحكم يساراً —
@@ -981,7 +988,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.1704';
+var APP_VER='2026.08.28.1748';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1340,7 +1347,7 @@ function renderService(){
       (gs.length>1?'<div class="cats" id="svTabs" style="padding:0 0 12px;margin:0"></div>':'')+
       '<div class="rows-p" id="svRows"></div></div>';
   $('svBody').innerHTML=
-    '<div class="sec" style="border:none;padding-bottom:0"><div class="sv-hero"><span class="ring">'+il(s.ic,'','il-xl')+'</span>'+
+    '<div class="sec" style="border:none;padding-bottom:0"><div class="sv-head"><span class="ring">'+il(s.ic,'','il-xl')+'</span>'+
       '<div><h2>'+esc(s.t)+'</h2><p>'+esc(s.d)+'</p></div></div></div>'+
     gallery(s)+
     price+
