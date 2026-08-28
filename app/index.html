@@ -524,6 +524,8 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .qopt i .ic{width:14px;height:14px}
 .qopt i .fee{background:var(--gold-l);color:var(--gold-d);padding:4px 10px;border-radius:999px;
   font-size:12.5px;font-variant-numeric:tabular-nums}
+.qopt i .feen{color:var(--mut);font-weight:500;font-size:11.5px}
+.tot .totn{display:block;text-decoration:none;font-size:11px;color:var(--mut);font-weight:500;margin-top:2px}
 
 /* ===== الباقات ===== */
 .tagline{display:inline-block;background:var(--gold);color:#4A3200;font-size:11.5px;font-weight:700;
@@ -910,7 +912,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.08.28.0138';
+var APP_VER='2026.08.28.0143';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1239,7 +1241,7 @@ function renderService(){
       '<div class="incl">'+s.incl.map(function(x){return '<div><span class="tick">'+ic('check')+'</span><span>'+esc(x)+'</span></div>';}).join('')+'</div></div>'+
     (s.quote
       ? '<div class="sec"><div class="note acc">سعر هذي الخدمة يتغيّر حسب المساحة وحالة المكان — نعاينها أول. '+
-        (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b>، وتحدّد موقعك وقت الحجز.':'وزيارة التسعير مجانية.')+'</div></div>'
+        (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b> و<b>تُخصم من قيمة الخدمة</b> لو أكملت معنا، وتحدّد موقعك وقت الحجز.':'وزيارة التسعير مجانية.')+'</div></div>'
       : '<div class="sec"><div class="sec-h"><h2>الأسعار تبدأ من</h2></div><div class="rows">'+
         CAT.filter(function(x){return x.sv===CTV;}).slice(0,4).map(function(it){
           return '<div class="row-i"><span><b>'+esc(it.t)+'</b><s>'+esc(it.u)+'</s></span><b>'+sar(it.p)+'</b></div>';
@@ -1393,7 +1395,7 @@ function renderQuote(){
           '<span class="qic">'+ic('cal')+'</span>'+
           '<b>احجز زيارة للتسعير</b>'+
           '<s>تحدّد موقعك وموعدك، والمندوب يجيك ويعاين ويعطيك السعر النهائي في مكانك</s>'+
-          '<i>'+(QUOTE_FEE?'<b class="fee">'+QUOTE_FEE+' ر.س</b>':'الأدق')+ic('back','','ic-sm')+'</i></button>'+
+          '<i>'+(QUOTE_FEE?'<b class="fee">'+QUOTE_FEE+' ر.س</b><span class="feen">تُخصم من الخدمة</span>':'الأدق')+ic('back','','ic-sm')+'</i></button>'+
         '<button class="qopt" onclick="go(\'scQuoteWa\');renderQuoteWa()">'+
           '<span class="qic">'+ic('chat')+'</span>'+
           '<b>تسعير عبر واتساب</b>'+
@@ -1401,7 +1403,7 @@ function renderQuote(){
           '<i>الأسرع'+ic('back','','ic-sm')+'</i></button>'+
       '</div></div>'+
     '<div class="sec" style="padding-top:0"><div class="note">'+
-      (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b> وما تلزمك بشي بعدها — تسمع السعر وتقرر. والتسعير عبر واتساب مجاني.'
+      (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b>، و<b>تُخصم كاملة من قيمة الخدمة</b> لو أكملت معنا — يعني ما تخسر شي. والتسعير عبر واتساب مجاني.'
                 :'زيارة التسعير مجانية وما تلزمك بشي — تسمع السعر وتقرر.')+'</div></div>';
 }
 /* زيارة التسعير تمر بنفس خطوات الحجز وتحجز فترة فعلية — لأنها موعد حقيقي على فريقك */
@@ -1879,12 +1881,12 @@ function stepConfirmQuote(){
       row('الخدمة',BK.quote.t)+row('الزيارة',fmtDate(BK.date))+row('الفترة',slotOf(BK.slot))+
       row('العنوان',(BK.adr?BK.adr.t+(BK.adr.d?' — '+BK.adr.d:''):''))+
     '</div>'+
-    (QUOTE_FEE?'<div class="tot big" style="margin-top:4px"><span>قيمة المعاينة</span><b>'+sar(QUOTE_FEE)+'</b></div>':'')+
+    (QUOTE_FEE?'<div class="tot big" style="margin-top:4px"><span>قيمة المعاينة<s class="totn">تُخصم من قيمة الخدمة</s></span><b>'+sar(QUOTE_FEE)+'</b></div>':'')+
     '</div>'+
     quoteFields()+
     '<div class="fld"><label class="lb" for="bkNt">ملاحظات إضافية (اختياري)</label>'+
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="حالة المكان · متى تبي الخدمة · أي شي يفيد المندوب">'+esc(QW.nt||'')+'</textarea></div>'+
-    '<div class="note acc">'+(QUOTE_FEE?'تدفع <b>'+QUOTE_FEE+' ر.س</b> للمعاينة، وبعدها تسمع السعر وتقرر — ما تلزمك بشي.'
+    '<div class="note acc">'+(QUOTE_FEE?'تدفع <b>'+QUOTE_FEE+' ر.س</b> للمعاينة، و<b>تُخصم كاملة من قيمة الخدمة</b> لو أكملت معنا. وإن ما ناسبك السعر ما تلزمك بشي.'
                                       :'الزيارة مجانية وما تلزمك بشي — تسمع السعر وتقرر.')+'</div>'+
     '<button class="btn" style="margin-top:20px" id="bkGo" '+(qwReady()?'':'disabled')+
       ' onclick="submitOrder()">اطلب الزيارة</button>';
@@ -1973,7 +1975,7 @@ function ordCard(o,live){
       (o.no?'<div class="ordno mono">طلب رقم '+o.no+'</div>':'')+'</div>'+
       '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>'+
     '<div class="meta">'+
-      (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — '+(o.est?o.est+' ر.س':'مجانية')+'</span></div>':
+      (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — '+(o.est?o.est+' ر.س · تُخصم من الخدمة':'مجانية')+'</span></div>':
         o.sub?'<div>'+ic('repeat','','ic-sm')+'<span>يتكرر '+esc((o.pkg&&o.pkg.every)||'')+'</span></div>':
         n?'<div>'+ic('list','','ic-sm')+'<span>'+n+' صنف</span></div>':'')+
       '<div>'+ic('cal','','ic-sm')+'<span>'+(o.sub?'أول زيارة: ':'')+esc(fmtDate(o.date))+'</span></div>'+
