@@ -1,5 +1,5 @@
 /* كاش الأصول الثابتة فقط — بيانات Firestore تُجلب دائماً من الشبكة */
-var CACHE = 'kln-v15';
+var CACHE = 'kln-v16';
 var ASSETS = ['./index.html', './reviews.html', './app/index.html', './logo.png', './manifest.json'];
 
 self.addEventListener('install', function (e) {
