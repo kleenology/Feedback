@@ -83,7 +83,9 @@ service cloud.firestore {
           (request.resource.data.at is string && request.resource.data.at.size() <= 40)) &&
         (!('seen' in request.resource.data) ||
           (request.resource.data.seen is string && request.resource.data.seen.size() <= 40));
-      allow delete: if false;
+      /* آبل تشترط حذف الحساب من داخل التطبيق (5.1.1(v))، فالعميل يحذف ملفه بنفسه.
+         الطلبات تبقى — سجل محاسبي للنشاط، ومكشوف للعميل في سياسة الخصوصية. */
+      allow delete: if isUser(uid);
 
       match /addresses/{aid} {
         allow read, write: if isUser(uid);
