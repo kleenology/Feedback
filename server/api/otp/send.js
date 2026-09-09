@@ -36,7 +36,10 @@ module.exports = async function handler(req, res) {
     const dayCap = Number(process.env.OTP_DAILY_CAP || 300);
     if (!(await S.bumpDaily(dayCap))) return U.json(res, 503, { error: 'daily_cap' });
 
-    const code = U.newCode();
+    /* الرقم التجريبي يأخذ رمزه الثابت ولا تُرسَل له رسالة — لكن الحدود
+       تنطبق عليه كغيره حتى لا يصير باباً مفتوحاً */
+    const test = U.testNumbers()[phone];
+    const code = test || U.newCode();
     await S.putOtp(phone, {
       hash: U.hashCode(code, phone),
       exp: now + TTL,
@@ -47,7 +50,7 @@ module.exports = async function handler(req, res) {
     });
 
     try {
-      await sendSms(phone, code);
+      if (!test) await sendSms(phone, code);
     } catch (e) {
       /* الرسالة ما وصلت: نمسح الرمز حتى لا يبقى صالحاً بلا أحد يعرفه،
          ولا نحبس العميل ٦٠ ثانية على محاولة فاشلة ليست منه */

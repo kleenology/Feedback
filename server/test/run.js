@@ -160,6 +160,44 @@ const reset = () => { DB = {}; DAY = 0; SENT = []; FAIL_SMS = false; };
     eq((await call(verify, {}, { method: 'GET' })).status, 405);
   });
 
+  await t('الرقم التجريبي: رمز ثابت بلا رسالة ولا تكلفة', async () => {
+    reset(); process.env.OTP_DAILY_CAP = '99';
+    process.env.OTP_TEST_NUMBERS = '0500000001:123456';
+    const TN = '966500000001';
+    eq((await call(send, { phone: TN })).status, 200);
+    eq(SENT.length, 0, 'أرسل رسالة لرقم تجريبي');
+    eq(DAY, 1, 'ما احتسبه على السقف اليومي');   /* يُحسب: باب مفتوح لو ما انحسب */
+    const r = await call(verify, { phone: TN, code: '123456' });
+    eq(r.status, 200); eq(r.body.token, 'token-for-' + TN);
+  });
+
+  await t('الرقم التجريبي ما يقبل رمزاً غيره', async () => {
+    reset(); process.env.OTP_TEST_NUMBERS = '0500000001:123456';
+    const TN = '966500000001';
+    await call(send, { phone: TN });
+    eq((await call(verify, { phone: TN, code: '000000' })).status, 400);
+  });
+
+  await t('رمز التجربة ما يفتح رقماً حقيقياً', async () => {
+    reset(); process.env.OTP_TEST_NUMBERS = '0500000001:123456';
+    await call(send, { phone: PH });
+    eq(SENT.length, 1, 'الرقم الحقيقي لازم تُرسل له رسالة');
+    eq((await call(verify, { phone: PH, code: '123456' })).status, 400, 'قبل رمز التجربة لرقم حقيقي');
+  });
+
+  await t('الحدود تنطبق على الرقم التجريبي كذلك', async () => {
+    reset(); process.env.OTP_TEST_NUMBERS = '0500000001:123456';
+    const TN = '966500000001';
+    await call(send, { phone: TN });
+    eq((await call(send, { phone: TN })).status, 429, 'ما طبّق المهلة على التجريبي');
+  });
+
+  await t('إعداد خاطئ للأرقام التجريبية يُتجاهل بأمان', async () => {
+    process.env.OTP_TEST_NUMBERS = 'خربطة,0500000002:12,:,,0412345678:123456';
+    eq(Object.keys(U.testNumbers()).length, 0, JSON.stringify(U.testNumbers()));
+    process.env.OTP_TEST_NUMBERS = '';
+  });
+
   console.log('\n' + (fail ? 'ERRORS: ' + fail : 'ERRORS: none'));
   process.exit(fail ? 1 : 0);
 })();
