@@ -71,4 +71,17 @@ function clientIp(req) {
     (req.socket && req.socket.remoteAddress) || 'unknown';
 }
 
-module.exports = { normPhone, hashCode, sameHash, newCode, cors, json, readBody, clientIp };
+/* أرقام تجريبية: «رقم:رمز» مفصولة بفاصلة. لا تُرسَل لها رسالة ولا تُحتسب
+   على الرصيد، ورمزها ثابت. مراجع آبل يحتاج واحداً منها ليدخل التطبيق —
+   بدونه يقف على شاشة الدخول ويرفض المراجعة. */
+function testNumbers() {
+  const out = {};
+  for (const pair of String(process.env.OTP_TEST_NUMBERS || '').split(',')) {
+    const [p, c] = pair.split(':').map(x => (x || '').trim());
+    const ph = normPhone(p), code = String(c || '').replace(/\D/g, '');
+    if (ph && code.length === 6) out[ph] = code;
+  }
+  return out;
+}
+
+module.exports = { normPhone, hashCode, sameHash, newCode, cors, json, readBody, clientIp, testNumbers };
