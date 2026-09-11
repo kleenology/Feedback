@@ -521,7 +521,14 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     </div>
     <div class="cc">
       <h3>🚀 الإرسال السريع</h3>
-      <div class="of-note">ثلاث ضغطات لكل عميل: زر الإرسال يفتح واتساب والرسالة مكتوبة باسمه، وترجع تلقائياً للعميل التالي. اللي أرسلت له هذا العرض ما يرجع لك مرة ثانية حتى لو أضفت أرقام جديدة بكرة.</div>
+      <div class="of-note">ثلاث ضغطات لكل عميل: زر الإرسال يفتح واتساب والرسالة مكتوبة باسمه، وترجع تلقائياً للعميل التالي. اللي أرسلت له هذا العرض ما يرجع لك مرة ثانية حتى لو أضفت أرقام جديدة بكرة. <b>ضغطة «إرسال» داخل واتساب تبقى عليك</b> — واتساب ما يسمح بإرسال آلي، وأي أداة تعدك بذلك تعرّض رقمك للحظر.</div>
+      <label class="of-lb" style="margin-bottom:6px">يفتح بأي تطبيق</label>
+      <div class="of-row" id="ofWaChips" style="margin-bottom:6px">
+        <button type="button" class="of-tp on" data-w="w4b">💼 واتساب للأعمال</button>
+        <button type="button" class="of-tp" data-w="wa">📱 واتساب العادي</button>
+        <button type="button" class="of-tp" data-w="ask">❓ خلّه يسألني</button>
+      </div>
+      <div id="ofWaNote"></div>
       <label class="of-lb" style="margin-bottom:6px">أرسل لـ</label>
       <div class="of-row" id="ofTgtChips" style="margin-bottom:10px">
         <button type="button" class="of-tp on" data-t="all">الكل</button>
@@ -2119,6 +2126,41 @@ function ofFill(m,c){
     .replace(/\{واتساب\}/g,bizWa()).replace(/\{التطبيق\}/g,appUrl())
     .replace(/\{ينتهي\}/g,ofEnd()).replace(/\{الوطني\}/g,String(ndInfo().no));
 }
+/* ===== أي تطبيق واتساب يفتح =====
+   عندك العادي والأعمال على نفس الجوال؟ أندرويد يسألك «افتح بـ» كل مرة.
+   رابط intent يحدد التطبيق بالضبط فما يسأل — والرسالة تنطلق من الحساب
+   المسجّل فيه. آيفون وسطح المكتب: ما فيه تحديد من الرابط، يفتح الافتراضي. */
+var WAK='kln_waapp';
+/* الافتراضي «الأعمال»: هو الغالب في شغل الشركة، فيفتح مباشرة بلا اختيار.
+   ولو ما كان منصّباً يرجع الرابط للطريقة العادية تلقائياً (fallback). */
+function waApp(){
+  var v='';try{v=localStorage.getItem(WAK)||'';}catch(e){}
+  return v||'w4b';
+}
+function waIsAnd(){return /android/i.test(navigator.userAgent||'');}
+function waPick(v){
+  try{localStorage.setItem(WAK,v);}catch(e){}
+  rOfWaNote();rOfSend();rOfTri();
+  showToast(v==='ask'?'رجّعناه يسألك':('يفتح مباشرة بـ'+(v==='w4b'?'واتساب للأعمال':'واتساب العادي')+' ✓'));
+}
+/* يرجع الرابط ووسم الفتح معاً — intent ما ينفتح في تبويب جديد */
+function waOpen(phone,text){
+  var url='https://wa.me/'+phone+(text?'?text='+encodeURIComponent(text):'');
+  var app=waApp();
+  if(app==='ask'||!waIsAnd())return {h:url,t:' target="_blank" rel="noopener"'};
+  return {h:'intent://send?phone='+phone+(text?'&text='+encodeURIComponent(text):'')+
+    '#Intent;scheme=whatsapp;package='+(app==='w4b'?'com.whatsapp.w4b':'com.whatsapp')+
+    ';S.browser_fallback_url='+encodeURIComponent(url)+';end',t:''};
+}
+function rOfWaNote(){
+  var el=document.getElementById('ofWaNote');if(!el)return;
+  var app=waApp();
+  el.innerHTML='<div class="of-hint" style="margin:0 0 10px">'+(
+    !waIsAnd()?'ℹ️ تحديد التطبيق يشتغل على <b>أندرويد</b> وحده — الآيفون وسطح المكتب ما يقبلان اختيار التطبيق من الرابط، ينفتح الافتراضي عندك.':
+    app==='ask'?'☝️ أندرويد بيسألك «افتح بـ» مع كل رقم. اختر تطبيقاً فوق وينتهي السؤال.':
+    '✓ يفتح مباشرة بـ<b>'+(app==='w4b'?'واتساب للأعمال':'واتساب العادي')+'</b> بلا سؤال. الرسالة تنطلق من الحساب المسجّل في هذا التطبيق — تأكد أنه <b>'+esc(BIZ.phone||'رقم شركتك')+'</b>. ولو التطبيق مو منصّب يرجع للطريقة العادية تلقائياً.'
+  )+'</div>';
+}
 function ofSentIn(c,k){return !!((c.cs&&c.cs.indexOf(k)>=0)||ofLMHas(k,c.p));}
 /* الدور: كل من لم يُرسل له هذا العرض ضمن الفئة المستهدفة، ما عدا الموقوفين والمتخطّين في هذه الجلسة */
 function ofQueue(){
@@ -2179,7 +2221,7 @@ function rOfTri(){
   var c=q[0],pct=tot?Math.round(done/tot*100):0;
   el.innerHTML='<div class="of-cur"><div class="of-cur-n">'+esc(c.n||'بدون اسم')+'</div><div class="of-cur-p">+'+esc(c.p)+'</div>'+
     (c.sn?'<div style="font-size:10px;color:#9ab;margin-top:5px">🎯 '+esc(c.sn)+'</div>':'')+
-    '<a target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;padding:7px 14px;border-radius:9px;background:#e8f4fb;color:#0f7cb8;font-size:11.5px;font-weight:700;text-decoration:none" href="https://wa.me/'+c.p+'">💬 افتح محادثته وشوف</a></div>'+
+    '<a'+waOpen(c.p,'').t+' style="display:inline-block;margin-top:9px;padding:7px 14px;border-radius:9px;background:#e8f4fb;color:#0f7cb8;font-size:11.5px;font-weight:700;text-decoration:none" href="'+esc(waOpen(c.p,'').h)+'">💬 افتح محادثته وشوف</a></div>'+
     '<div class="of-row"><button type="button" class="exp-btn" style="margin:0;flex:1;border-color:#16a34a;color:#16a34a" onclick="triSet(\''+c.p+'\',\'cu\')">👤 طلب الخدمة</button>'+
     '<button type="button" class="exp-btn" style="margin:0;flex:1;border-color:#c026d3;color:#c026d3" onclick="triSet(\''+c.p+'\',\'ld\')">🎯 ما طلب</button></div>'+
     '<div class="of-mini"><button type="button" onclick="triSkip(\''+c.p+'\')">⏭ بعدين</button>'+
@@ -2242,12 +2284,12 @@ function rOfSend(){
       '<button type="button" class="exp-btn" style="margin-bottom:0;border-color:#d8e6f0;color:#5d8aa8" onclick="ofResetCamp()">🔄 ابدأ إرسال «'+esc(k)+'» من جديد</button>';
     return;
   }
-  var c=q[0],txt=ofFill(document.getElementById('ofMsg').value,c);
+  var c=q[0],txt=ofFill(document.getElementById('ofMsg').value,c),w=waOpen(c.p,txt);
   var pct=tot?Math.round((sent+skipped)/tot*100):0;
   el.innerHTML=ofNewHint(k,sent)+ofTgtHint()+'<div class="of-cur"><div class="of-cur-n">'+esc(c.n||'عميل')+' '+ctTag(c)+'</div><div class="of-cur-p">+'+esc(c.p)+'</div>'+
     (c.sn?'<div style="font-size:10px;color:#9ab;margin-top:4px">حملة: '+esc(c.sn)+'</div>':'')+
     (c.la?'<div style="font-size:10px;color:#9ab;margin-top:5px">آخر رسالة: '+esc(new Date(c.la).toLocaleDateString('ar-SA'))+(c.lc?' · '+esc(c.lc):'')+'</div>':'')+'</div>'+
-    '<a class="of-send" target="_blank" rel="noopener" href="https://wa.me/'+c.p+'?text='+encodeURIComponent(txt)+'" onclick="ofSent(\''+c.p+'\')">💬 افتح واتساب وأرسل</a>'+
+    '<a class="of-send"'+w.t+' href="'+esc(w.h)+'" onclick="ofSent(\''+c.p+'\')">💬 افتح واتساب وأرسل</a>'+
     '<div class="of-mini"><button type="button" onclick="ofSkip(\''+c.p+'\')">⏭ تخطي</button><button type="button" onclick="ofMute(\''+c.p+'\')">🔕 لا ترسل له</button></div>'+
     '<div class="of-prog"><i style="width:'+pct+'%"></i></div>'+
     '<div class="of-cnt">أُرسل '+sent+' من '+tot+(skipped?' · متخطّى '+skipped:'')+' · باقي '+q.length+'</div>'+
@@ -2405,6 +2447,10 @@ function ofInit(){
   ofChipRow('ofSfChips','s',function(v){OFSF=v;OFSHOW=40;rOfList();});
   ofChipRow('ofTgtChips','t',function(v){OFTGT=v;OFSK={};rOf();});
   ofChipRow('ofSrcChips','s',function(v){OFSRC=v;rOfSrc();});
+  var wapp=waApp(),wrow=document.getElementById('ofWaChips');
+  if(wrow)wrow.querySelectorAll('.of-tp').forEach(function(x){x.classList.toggle('on',x.dataset.w===wapp);});
+  ofChipRow('ofWaChips','w',function(v){waPick(v);});
+  rOfWaNote();
   rOfSrc();
 }
 /* صفوف الأزرار: واحد فعّال في كل صف */
