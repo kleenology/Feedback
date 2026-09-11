@@ -523,11 +523,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
       <h3>🚀 الإرسال السريع</h3>
       <div class="of-note">ثلاث ضغطات لكل عميل: زر الإرسال يفتح واتساب والرسالة مكتوبة باسمه، وترجع تلقائياً للعميل التالي. اللي أرسلت له هذا العرض ما يرجع لك مرة ثانية حتى لو أضفت أرقام جديدة بكرة. <b>ضغطة «إرسال» داخل واتساب تبقى عليك</b> — واتساب ما يسمح بإرسال آلي، وأي أداة تعدك بذلك تعرّض رقمك للحظر.</div>
       <label class="of-lb" style="margin-bottom:6px">يفتح بأي تطبيق</label>
-      <div class="of-row" id="ofWaChips" style="margin-bottom:6px">
-        <button type="button" class="of-tp on" data-w="w4b">💼 واتساب للأعمال</button>
-        <button type="button" class="of-tp" data-w="wa">📱 واتساب العادي</button>
-        <button type="button" class="of-tp" data-w="ask">❓ خلّه يسألني</button>
-      </div>
+      <div class="of-row" id="ofWaChips" style="margin-bottom:6px"></div>
       <div id="ofWaNote"></div>
       <label class="of-lb" style="margin-bottom:6px">أرسل لـ</label>
       <div class="of-row" id="ofTgtChips" style="margin-bottom:10px">
@@ -2130,33 +2126,67 @@ function ofFill(m,c){
    عندك العادي والأعمال على نفس الجوال؟ أندرويد يسألك «افتح بـ» كل مرة.
    رابط intent يحدد التطبيق بالضبط فما يسأل — والرسالة تنطلق من الحساب
    المسجّل فيه. آيفون وسطح المكتب: ما فيه تحديد من الرابط، يفتح الافتراضي. */
-var WAK='kln_waapp';
-/* الافتراضي «الأعمال»: هو الغالب في شغل الشركة، فيفتح مباشرة بلا اختيار.
-   ولو ما كان منصّباً يرجع الرابط للطريقة العادية تلقائياً (fallback). */
+var WAK='kln_waapp',OFLAST=null;
+function waIsAnd(){return /android/i.test(navigator.userAgent||'');}
+/* آيفون وآيباد — والآيباد الحديث يعرّف نفسه Mac، فنكشفه باللمس */
+function waIsIOS(){
+  var u=navigator.userAgent||'';
+  return /iphone|ipad|ipod/i.test(u)||(/macintosh/i.test(u)&&navigator.maxTouchPoints>1);
+}
+/* الخيارات تختلف بالجهاز: أندرويد يحدد التطبيق بالحزمة. آيفون لا —
+   التطبيقان يسجّلان نفس روابط واتساب وما فيه Scheme خاص بالأعمال،
+   فخياره بين فتح التطبيق مباشرة (whatsapp://) والطريقة العادية. */
+function waOpts(){
+  if(waIsIOS())return [{v:'app',t:'⚡ يفتح التطبيق مباشرة'},{v:'web',t:'🌐 الطريقة العادية'}];
+  if(waIsAnd())return [{v:'w4b',t:'💼 واتساب للأعمال'},{v:'wa',t:'📱 واتساب العادي'},{v:'ask',t:'❓ خلّه يسألني'}];
+  return [];
+}
 function waApp(){
   var v='';try{v=localStorage.getItem(WAK)||'';}catch(e){}
-  return v||'w4b';
+  var opts=waOpts(),ok=false;
+  opts.forEach(function(o){if(o.v===v)ok=true;});
+  return ok?v:(opts.length?opts[0].v:'');
 }
-function waIsAnd(){return /android/i.test(navigator.userAgent||'');}
 function waPick(v){
   try{localStorage.setItem(WAK,v);}catch(e){}
-  rOfWaNote();rOfSend();rOfTri();
-  showToast(v==='ask'?'رجّعناه يسألك':('يفتح مباشرة بـ'+(v==='w4b'?'واتساب للأعمال':'واتساب العادي')+' ✓'));
+  rOfWaRow();rOfWaNote();rOfSend();rOfTri();
+  showToast(v==='ask'?'رجّعناه يسألك':v==='web'?'رجّعناه للطريقة العادية':
+    v==='app'?'يفتح التطبيق مباشرة ✓':('يفتح مباشرة بـ'+(v==='w4b'?'واتساب للأعمال':'واتساب العادي')+' ✓'));
 }
 /* يرجع الرابط ووسم الفتح معاً — intent ما ينفتح في تبويب جديد */
 function waOpen(phone,text){
+  var q=(text?'&text='+encodeURIComponent(text):''),app=waApp();
   var url='https://wa.me/'+phone+(text?'?text='+encodeURIComponent(text):'');
-  var app=waApp();
-  if(app==='ask'||!waIsAnd())return {h:url,t:' target="_blank" rel="noopener"'};
-  return {h:'intent://send?phone='+phone+(text?'&text='+encodeURIComponent(text):'')+
+  /* آيفون: رابط wa.me من داخل سفاري وفي تبويب جديد يقف عند صفحة
+     «Continue to Chat» فتضغط مرتين. whatsapp:// يفتح التطبيق مباشرة. */
+  if(waIsIOS())return app==='web'?{h:url,t:' target="_blank" rel="noopener"',alt:''}
+    :{h:'whatsapp://send?phone='+phone+q,t:'',alt:url};
+  if(app==='ask'||!waIsAnd())return {h:url,t:' target="_blank" rel="noopener"',alt:''};
+  return {h:'intent://send?phone='+phone+q+
     '#Intent;scheme=whatsapp;package='+(app==='w4b'?'com.whatsapp.w4b':'com.whatsapp')+
-    ';S.browser_fallback_url='+encodeURIComponent(url)+';end',t:''};
+    ';S.browser_fallback_url='+encodeURIComponent(url)+';end',t:'',alt:''};
+}
+/* صف الخيارات يُبنى بالجافاسكربت لأنه يختلف بالجهاز */
+function rOfWaRow(){
+  var row=document.getElementById('ofWaChips');if(!row)return;
+  var opts=waOpts(),cur=waApp();
+  row.innerHTML='';
+  row.style.display=opts.length?'':'none';
+  opts.forEach(function(o){
+    var b=document.createElement('button');
+    b.type='button';b.className='of-tp'+(o.v===cur?' on':'');b.textContent=o.t;b.dataset.w=o.v;
+    b.onclick=function(){waPick(o.v);};
+    row.appendChild(b);
+  });
 }
 function rOfWaNote(){
   var el=document.getElementById('ofWaNote');if(!el)return;
   var app=waApp();
   el.innerHTML='<div class="of-hint" style="margin:0 0 10px">'+(
-    !waIsAnd()?'ℹ️ تحديد التطبيق يشتغل على <b>أندرويد</b> وحده — الآيفون وسطح المكتب ما يقبلان اختيار التطبيق من الرابط، ينفتح الافتراضي عندك.':
+    waIsIOS()?(app==='app'
+      ?'⚡ يفتح واتساب مباشرة بلا صفحة «Continue to Chat» الوسيطة. <b>الآيفون ما يسمح بتحديد أي تطبيق يفتح</b> (العادي أو الأعمال) — يفتح الذي ربطه النظام بروابط واتساب عندك، ولا توجد طريقة نحددها من الصفحة. فلو تبي الإرسال من <b>'+esc(BIZ.phone||'رقم شركتك')+'</b>، تأكد أنه الحساب المسجّل في التطبيق الذي يفتح عندك. وتحت الزر رابط احتياطي لو ما فتح.'
+      :'🌐 الطريقة العادية: رابط wa.me في تبويب جديد — وقد يقف عند صفحة «Continue to Chat» فتحتاج ضغطة زيادة.'):
+    !waIsAnd()?'ℹ️ سطح المكتب: ينفتح واتساب ويب أو التطبيق حسب إعداد جهازك — تحديد التطبيق يشتغل على الجوال.':
     app==='ask'?'☝️ أندرويد بيسألك «افتح بـ» مع كل رقم. اختر تطبيقاً فوق وينتهي السؤال.':
     '✓ يفتح مباشرة بـ<b>'+(app==='w4b'?'واتساب للأعمال':'واتساب العادي')+'</b> بلا سؤال. الرسالة تنطلق من الحساب المسجّل في هذا التطبيق — تأكد أنه <b>'+esc(BIZ.phone||'رقم شركتك')+'</b>. ولو التطبيق مو منصّب يرجع للطريقة العادية تلقائياً.'
   )+'</div>';
@@ -2291,8 +2321,10 @@ function rOfSend(){
     (c.la?'<div style="font-size:10px;color:#9ab;margin-top:5px">آخر رسالة: '+esc(new Date(c.la).toLocaleDateString('ar-SA'))+(c.lc?' · '+esc(c.lc):'')+'</div>':'')+'</div>'+
     '<a class="of-send"'+w.t+' href="'+esc(w.h)+'" onclick="ofSent(\''+c.p+'\')">💬 افتح واتساب وأرسل</a>'+
     '<div class="of-mini"><button type="button" onclick="ofSkip(\''+c.p+'\')">⏭ تخطي</button><button type="button" onclick="ofMute(\''+c.p+'\')">🔕 لا ترسل له</button></div>'+
+    (w.alt?'<a href="'+esc(w.alt)+'" target="_blank" rel="noopener" style="display:block;margin:8px auto 0;font-size:11px;color:#9ab;text-align:center;text-decoration:none" onclick="ofSent(\''+c.p+'\')">🌐 ما فتح التطبيق؟ افتحه بالطريقة العادية</a>':'')+
     '<div class="of-prog"><i style="width:'+pct+'%"></i></div>'+
     '<div class="of-cnt">أُرسل '+sent+' من '+tot+(skipped?' · متخطّى '+skipped:'')+' · باقي '+q.length+'</div>'+
+    (OFLAST?'<button type="button" class="ct-b" style="display:block;margin:9px auto 0;background:none;color:#9ab" onclick="ofUndoSent()">↩️ تراجع عن آخر إرسال ('+esc(OFLAST.n||OFLAST.p)+')</button>':'')+
     (sent?'<button type="button" class="ct-b" style="display:block;margin:9px auto 0;background:none;color:#9ab" onclick="ofResetCamp()">🔄 صفّر إرسال «'+esc(k)+'»</button>':'');
 }
 function rOfList(){
@@ -2329,12 +2361,25 @@ function ofSent(p){
   var c=ofGet(p);if(!c)return;
   var k=ofCamp(),now=new Date().toISOString();
   ofLMAdd(k,p); /* على الجهاز أولاً: لو انقفلت الصفحة الآن ما يرجع للدور */
+  OFLAST={p:p,n:c.n,k:k}; /* للتراجع: الزر انضغط والتطبيق ما فتح، أو انضغط غلط */
   if(!c.cs)c.cs=[];
   if(c.cs.indexOf(k)<0)c.cs.push(k);
   c.la=now;c.lc=k;
   db.collection('contacts').doc(p).set({cs:firebase.firestore.FieldValue.arrayUnion(k),la:now,lc:k},{merge:true})
    .catch(function(){showToast('تعذّر حفظ حالة الإرسال — تحقق من الاتصال');});
   setTimeout(rOf,400);
+}
+function ofLMDel(k,p){var m=ofLM();if(m[k]&&m[k].p){delete m[k].p[p];ofLMSave();}}
+/* يرجّع آخر واحد علّمناه «أُرسل له» لأول الدور — على الجهاز وعلى الخادم */
+function ofUndoSent(){
+  if(!OFLAST)return;
+  var u=OFLAST,c=ofGet(u.p);OFLAST=null;
+  ofLMDel(u.k,u.p);
+  if(c&&c.cs)c.cs=c.cs.filter(function(x){return x!==u.k;});
+  db.collection('contacts').doc(u.p).update({cs:firebase.firestore.FieldValue.arrayRemove(u.k)})
+    .catch(function(){showToast('تعذّر التراجع على الخادم — رجّعناه على جهازك');});
+  showToast('رجّعناه للدور ↩️');
+  rOf();
 }
 function ofSkip(p){OFSK[p]=1;rOf();}
 function ofUnskip(){OFSK={};rOf();}
@@ -2447,10 +2492,7 @@ function ofInit(){
   ofChipRow('ofSfChips','s',function(v){OFSF=v;OFSHOW=40;rOfList();});
   ofChipRow('ofTgtChips','t',function(v){OFTGT=v;OFSK={};rOf();});
   ofChipRow('ofSrcChips','s',function(v){OFSRC=v;rOfSrc();});
-  var wapp=waApp(),wrow=document.getElementById('ofWaChips');
-  if(wrow)wrow.querySelectorAll('.of-tp').forEach(function(x){x.classList.toggle('on',x.dataset.w===wapp);});
-  ofChipRow('ofWaChips','w',function(v){waPick(v);});
-  rOfWaNote();
+  rOfWaRow();rOfWaNote();
   rOfSrc();
 }
 /* صفوف الأزرار: واحد فعّال في كل صف */
