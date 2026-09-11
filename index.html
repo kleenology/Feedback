@@ -506,6 +506,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
     </div>
     <div class="cc">
       <h3>✍️ رسالة العرض</h3>
+      <div id="ofNd"></div>
       <div class="of-row" style="margin-bottom:10px" id="ofTpls"></div>
       <div class="of-row" style="margin-bottom:9px">
         <div class="of-fld" style="min-width:130px"><label class="of-lb" for="ofName">اسم العرض (للمتابعة)</label><input id="ofName" class="of-in" maxlength="40" placeholder="عرض نهاية الأسبوع"></div>
@@ -513,7 +514,7 @@ body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;m
         <div class="of-fld"><label class="of-lb" for="ofDays">صالح (أيام)</label><input id="ofDays" class="of-in" inputmode="numeric" maxlength="3" value="5"></div>
       </div>
       <textarea id="ofMsg" class="of-ta" maxlength="900"></textarea>
-      <div class="of-hint">تُستبدل تلقائياً: <b>{الاسم}</b> · <b>{الخصم}</b> · <b>{المدة}</b> · <b>{التحية}</b> · <b>{الشركة}</b> · <b>{المندوب}</b> · <b>{واتساب}</b> · <b>{التطبيق}</b></div>
+      <div class="of-hint">تُستبدل تلقائياً: <b>{الاسم}</b> · <b>{الخصم}</b> · <b>{المدة}</b> · <b>{التحية}</b> · <b>{الشركة}</b> · <b>{المندوب}</b> · <b>{واتساب}</b> · <b>{التطبيق}</b> · <b>{ينتهي}</b> · <b>{الوطني}</b></div>
       <label class="of-lb" style="margin-top:11px">معاينة الرسالة</label>
       <div class="of-pv" id="ofPv"></div>
     </div>
@@ -1842,8 +1843,25 @@ var OFTPL=[
 /* إطلاق التطبيق — الأسرع لإيصاله لقائمتك الحالية */
 {t:'📱 نزّل التطبيق',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nجهزنا لك تطبيق تحجز منه خدمتك بنفسك — تختار اللي تبي تنظّفه، تشوف السعر قبل ما تأكد، وتحدد الموعد اللي يناسبك.\n\n{التطبيق}\n\nافتحه من جوالك واحجز في دقيقة ✨\nولك خصم {الخصم} على أول طلب من التطبيق.'},
 {t:'📱 التطبيق — لليدز',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nوصلنا اهتمامك بخدمة التنظيف 🙏\nتقدر تشوف كل خدماتنا وأسعارها وتحجز بنفسك من هنا:\n\n{التطبيق}\n\nالأسعار واضحة قدامك قبل ما تأكد، ولك خصم {الخصم} على أول طلب ✨'},
-{t:'🎯 ليد من الحملة',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nوصلنا اهتمامك بخدمة التنظيف من إعلاننا، وحبيت أرد عليك بنفسي 🙏\nجهزنا لك خصم {الخصم} على أول طلب، صالح {المدة}.\n\nقل لي وش تبي تنظّف (شقة · فيلا · كنب · سجاد) وأجهز لك السعر والموعد على طول ✨'}
+{t:'🎯 ليد من الحملة',m:'{التحية} {الاسم} 🌟\nمعك {المندوب} من {الشركة}\n\nوصلنا اهتمامك بخدمة التنظيف من إعلاننا، وحبيت أرد عليك بنفسي 🙏\nجهزنا لك خصم {الخصم} على أول طلب، صالح {المدة}.\n\nقل لي وش تبي تنظّف (شقة · فيلا · كنب · سجاد) وأجهز لك السعر والموعد على طول ✨'},
+/* ===== اليوم الوطني — ثلاثة نصوص: للعميل، لليد، وتذكير آخر الأيام =====
+   nd يربط القالب بالفئة، فزر «جهّز حملة اليوم الوطني» يختار المناسب للمستهدَف */
+{t:'🇸🇦 اليوم الوطني',nd:'cu',m:'{التحية} {الاسم} 🇸🇦\nمعك {المندوب} من {الشركة}\n\nكل عام وأنت بخير باليوم الوطني الـ{الوطني} 🎉\nفرحة الوطن نشاركك إياها: خصم {الخصم} على أي خدمة تنظيف تختارها، صالح إلى {ينتهي}.\nاكتب (حجز) ونجيك في الوقت اللي يناسبك ✨'},
+{t:'🇸🇦 الوطني — لليدز',nd:'ld',m:'{التحية} {الاسم} 🇸🇦\nمعك {المندوب} من {الشركة}\n\nكل عام وأنت بخير باليوم الوطني الـ{الوطني} 🎉\nوصلنا اهتمامك بخدمة التنظيف، وجهزنا لك عرض الوطني: خصم {الخصم} على أول طلب، صالح إلى {ينتهي}.\nقل لي وش تبي تنظّف (شقة · فيلا · كنب · سجاد) وأجهز لك السعر والموعد على طول ✨'},
+{t:'🇸🇦 تذكير — آخر الأيام',nd:'rm',m:'{التحية} {الاسم} 🇸🇦\nمعك {المندوب} من {الشركة}\n\nتذكير سريع: عرض اليوم الوطني — خصم {الخصم} — ينتهي {ينتهي}، والمواعيد بدأت تنحجز.\nاكتب (حجز) ونثبت لك موعدك قبل ما يمتلئ الجدول ✨'}
 ];
+/* ===== اليوم الوطني: ٢٣ سبتمبر من كل سنة =====
+   رقم اليوم الوطني يُعدّ بالسنين الهجرية، لكن فرقه عن الميلادي ثابت عملياً لعقود
+   (٢٠٢٥ = ٩٥). لو اختلف يوماً، ND_BASE وحده يُعدَّل. */
+var ND_BASE=1930,ND_DISC='25%',ND_SEASON=45;
+var WD=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+function ndInfo(){
+  var now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var y=today.getFullYear(),d=new Date(y,8,23);
+  if(today>d){y++;d=new Date(y,8,23);}
+  return {d:d,no:y-ND_BASE,left:Math.round((d-today)/86400000)};
+}
+function ofDate(d){return WD[d.getDay()]+' '+d.getDate()+' '+MO[d.getMonth()];}
 /* الأرقام السعودية تُحوّل لصيغة 9665xxxxxxxx، وأي رقم دولي يُقبل كما هو */
 function ofNorm(raw){
   var d=waNum(raw);
@@ -2023,13 +2041,23 @@ function appUrl(){
   if(location.protocol!=='https:')return 'https://kleenology.github.io/Feedback/app/';
   return location.origin+location.pathname.replace(/[^/]*$/,'')+'app/';
 }
+function ofDaysV(){
+  var d=parseInt((document.getElementById('ofDays')||{}).value,10);
+  return isFinite(d)&&d>=1?d:5;
+}
+/* آخر يوم يسري فيه العرض — اليوم محسوب ضمن المدة، فـ«اليوم فقط» = اليوم نفسه */
+function ofEnd(){
+  var t=new Date();t.setDate(t.getDate()+ofDaysV()-1);
+  return ofDate(t);
+}
 function ofFill(m,c){
-  var d=parseInt(document.getElementById('ofDays').value,10);if(!isFinite(d)||d<1)d=5;
+  var d=ofDaysV();
   var disc=String(document.getElementById('ofDisc').value||'').trim()||'20%';
   var nm=(c&&c.n?String(c.n).trim():'')||'عميلنا العزيز';
   return String(m||'').replace(/\{الاسم\}/g,nm).replace(/\{الخصم\}/g,disc).replace(/\{المدة\}/g,ofDur(d))
     .replace(/\{التحية\}/g,greetAr()).replace(/\{الشركة\}/g,BIZ.name).replace(/\{المندوب\}/g,BIZ.rep)
-    .replace(/\{واتساب\}/g,bizWa()).replace(/\{التطبيق\}/g,appUrl());
+    .replace(/\{واتساب\}/g,bizWa()).replace(/\{التطبيق\}/g,appUrl())
+    .replace(/\{ينتهي\}/g,ofEnd()).replace(/\{الوطني\}/g,String(ndInfo().no));
 }
 function ofSentIn(c,k){return !!(c.cs&&c.cs.indexOf(k)>=0);}
 /* الدور: كل من لم يُرسل له هذا العرض ضمن الفئة المستهدفة، ما عدا الموقوفين والمتخطّين في هذه الجلسة */
@@ -2273,17 +2301,14 @@ function orInit(){
   });
 }
 function ofInit(){
-  var tb=document.getElementById('ofTpls');
+  var tb=document.getElementById('ofTpls'),def=ndSeason()?ndTpl():0;
   OFTPL.forEach(function(t,i){
-    var b=document.createElement('button');b.type='button';b.className='of-tp'+(i===0?' on':'');b.textContent=t.t;
-    b.onclick=function(){
-      document.getElementById('ofMsg').value=t.m;
-      tb.querySelectorAll('.of-tp').forEach(function(x){x.classList.remove('on');});
-      b.classList.add('on');rOfPv();rOfSend();
-    };
+    var b=document.createElement('button');b.type='button';b.className='of-tp'+(i===def?' on':'');b.textContent=t.t;
+    b.onclick=function(){ofPickTpl(i);rOfPv();rOfSend();};
     tb.appendChild(b);
   });
-  document.getElementById('ofMsg').value=OFTPL[0].m;
+  ofPickTpl(def);
+  rOfNd();
   ['ofMsg','ofDisc','ofDays'].forEach(function(id){
     document.getElementById(id).addEventListener('input',function(){rOfPv();rOfSend();});
   });
@@ -2310,6 +2335,43 @@ function ofChipRow(id,key,fn){
       c.classList.add('on');fn(c.dataset[key]);
     };
   });
+}
+/* اختيار قالب: يملأ النص ويعلّم زرّه — والزر يظهر في الصف لو كان خارج المنظور */
+function ofPickTpl(i){
+  var tb=document.getElementById('ofTpls'),t=OFTPL[i];
+  if(!tb||!t)return;
+  document.getElementById('ofMsg').value=t.m;
+  var bs=tb.querySelectorAll('.of-tp');
+  bs.forEach(function(x,j){x.classList.toggle('on',j===i);});
+  try{if(bs[i])bs[i].scrollIntoView({block:'nearest',inline:'center'});}catch(e){}
+}
+/* الموسم: من ٤٥ يوماً قبل اليوم الوطني إلى اليوم نفسه */
+function ndSeason(){return ndInfo().left<=ND_SEASON;}
+/* القالب المناسب للفئة المستهدَفة — الليد ما جرّبنا، فنصه غير نص العميل */
+function ndTpl(kind){
+  var want=kind||(OFTGT==='ld'?'ld':'cu'),i=-1;
+  OFTPL.forEach(function(t,j){if(t.nd===want&&i<0)i=j;});
+  return i<0?0:i;
+}
+/* شريط الموسم: العدّ التنازلي وزر يجهّز الحملة كاملة بضغطة */
+function rOfNd(){
+  var el=document.getElementById('ofNd');if(!el)return;
+  var n=ndInfo();
+  if(!ndSeason()){el.innerHTML='';return;}
+  var when=n.left===0?'<b>اليوم هو اليوم الوطني</b> 🎉':n.left===1?'باقي <b>يوم واحد</b>':n.left===2?'باقي <b>يومان</b>':'باقي <b>'+n.left+'</b> يوم';
+  el.innerHTML='<div class="of-note" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534">🇸🇦 <b>اليوم الوطني '+n.no+'</b> — '+when+'. الزر يجهّز لك الحملة: اسم العرض، وخصم '+ND_DISC+' تقدر تغيّره، ومدة تنتهي يوم الوطني نفسه، والنص المناسب للفئة اللي مختارها في «أرسل لـ».</div>'+
+    '<button type="button" class="exp-btn" style="margin:0 0 10px;background:#16a34a;color:#fff;border-color:#16a34a" onclick="ofNdKit()">🇸🇦 جهّز حملة اليوم الوطني '+n.no+'</button>'+
+    (n.left<=3?'<button type="button" class="exp-btn" style="margin:0 0 10px;border-color:#16a34a;color:#16a34a" onclick="ofNdKit(1)">⏰ تذكير آخر الأيام (حملة منفصلة)</button>':'');
+}
+/* حملة جاهزة: اسم مستقل لكل حملة حتى يبقى «أُرسل له» صحيحاً، ومدة تقف على ٢٣ سبتمبر */
+function ofNdKit(rm){
+  var n=ndInfo(),disc=document.getElementById('ofDisc');
+  document.getElementById('ofName').value=(rm?'تذكير الوطني ':'اليوم الوطني ')+n.no;
+  if(!String(disc.value||'').trim()||disc.value==='20%')disc.value=ND_DISC;
+  document.getElementById('ofDays').value=Math.max(1,n.left+1);
+  ofPickTpl(rm?ndTpl('rm'):ndTpl());
+  OFSK={};rOf();
+  showToast(rm?'جهّزنا حملة التذكير — حملة منفصلة عن الأولى ✓':'جهّزنا حملة اليوم الوطني — راجع الخصم والنص قبل الإرسال ✓');
 }
 /* تنبيه فوق الإرسال: الليد ما جرّبنا، فرسالة «خصصنا لك خصم» تنفع، ورسالة العميل القديم لا */
 function ofTgtHint(){
