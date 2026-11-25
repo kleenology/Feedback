@@ -187,12 +187,8 @@ button{cursor:pointer;border:none;background:none}
 }
 .svc b{display:block;font-size:14.5px;font-weight:700;margin-top:10px;font-family:var(--dsp)}
 .svc s{display:block;text-decoration:none;font-size:11.5px;color:var(--mut);margin-top:2px}
-/* عدد فردي من الخدمات يترك نصف صف فاضياً — الأخيرة تاخذ العرض كاملاً أفقية */
-.svcs .svc:last-child:nth-child(odd){grid-column:1 / -1;display:flex;align-items:center;
-  gap:14px;text-align:right;padding:14px 17px}
-.svcs .svc:last-child:nth-child(odd) .il{width:40px;height:40px;flex:0 0 auto}
-.svcs .svc:last-child:nth-child(odd) .svc-t{flex:1;min-width:0}
-.svcs .svc:last-child:nth-child(odd) b{margin-top:0}
+/* عدد فردي من الخدمات: الأخيرة بنفس مقاس أخواتها، في منتصف الصف */
+.svcs .svc:last-child:nth-child(odd){grid-column:1 / -1;justify-self:center;width:calc(50% - 6px)}
 
 /* ===== سلّم الخصم ===== */
 /* مطوي افتراضياً: الكرت الكامل كان يأكل أول شاشة قبل ما يشوف العميل صنفاً واحداً */
@@ -672,7 +668,6 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
       <button class="promo" id="heroBtn" onclick="openService('sofa')">
         <span class="bub b1"></span><span class="bub b2"></span></button>
     </div>
-    <div class="sec" style="border:none;padding:14px 0 0"><div class="fade-x"><div class="scrollx chips" id="featList"></div></div></div>
     <div id="activeOrder"></div>
     <div class="sec" style="padding-bottom:0">
       <div class="sec-h"><h2>الخدمات</h2></div>
@@ -749,7 +744,10 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <!-- ===== حسابي ===== -->
 <section class="scr" id="scMe">
   <header class="top"><div class="top-in">
-    <div><h1>حسابي</h1><p>بياناتك وإعداداتك</p></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="bk" id="meBack" aria-label="رجوع للرئيسية" onclick="go('scHome');setTab('scHome');renderHome()"></button>
+      <div><h1>حسابي</h1><p>بياناتك وإعداداتك</p></div>
+    </div>
   </div></header>
   <div class="wrap"><div id="meBody"></div></div>
 </section>
@@ -881,6 +879,13 @@ var BIZ={name:'كلينولوجي',rep:'عبد الهادي',wa:'966537519929',t
 /* img: صور شغلكم الحقيقية — ضع الملفات في app/img/ واكتب مساراتها هنا.
    القائمة فاضية = ما يظهر معرض صور أصلاً (لا صور مزيفة للعميل) */
 var SVCS=[
+ {k:'post',  ic:'post',  t:'النظافة التأهيلية', s:'بعد البناء أو الترميم', img:[],
+  d:'التنظيف العام كامل، وفوقه إزالة مخلفات البناء والدهون الصعبة — وتسليم المكان جاهزاً للسكن.',
+  tip:{a:'هذي للمكان بعد البناء أو الترميم. لو بيتك مسكون وما فيه أعمال بناء، ',k:'home',b:' يكفيك وأوفر.'},
+  incl:['كل ما يشمله التنظيف العام',
+        'إزالة بقع ومخلفات البناء: بويه · أسمنت · تروبة · جبس · غراء',
+        'إزالة الدهون والزيوت الصعبة',
+        'تنظيف النوافذ والواجهات الزجاجية والإطارات']},
  {k:'sofa',  ic:'sofa',  t:'الأثاث والمفروشات', s:'كنب · سجاد · ستائر', img:[],
   d:'خدمة تنظيف شاملة لأثاثك بالبخار ومنظفات آمنة، وأيدٍ محترفة تهتم بكل قطعة في مكانها.',
   incl:['تشمل الكنب، السجاد، الستائر، كراسي الطعام، الجلسات العربية، مرتبة السرير، المساند',
@@ -905,15 +910,8 @@ var SVCS=[
   incl:['تنظيف المكاتب والكراسي والأرضيات',
         'تعقيم أسطح اللمس ومقابض الأبواب',
         'تنظيف الواجهات الزجاجية',
-        'جدولة أسبوعية أو شهرية حسب طلبك']},
+        'جدولة أسبوعية أو شهرية حسب طلبك']}
  /* quote:true = ما تُسعّر من كتالوج، تحتاج معاينة. أضفها لأي خدمة أخرى تبيها كذا */
- {k:'post',  ic:'post',  t:'النظافة التأهيلية', s:'بعد البناء أو الترميم', img:[],
-  d:'التنظيف العام كامل، وفوقه إزالة مخلفات البناء والدهون الصعبة — وتسليم المكان جاهزاً للسكن.',
-  tip:{a:'هذي للمكان بعد البناء أو الترميم. لو بيتك مسكون وما فيه أعمال بناء، ',k:'home',b:' يكفيك وأوفر.'},
-  incl:['كل ما يشمله التنظيف العام',
-        'إزالة بقع ومخلفات البناء: بويه · أسمنت · تروبة · جبس · غراء',
-        'إزالة الدهون والزيوت الصعبة',
-        'تنظيف النوافذ والواجهات الزجاجية والإطارات']}
 ];
 
 /* الأصناف: sv = الخدمة · u = وحدة التسعير · p = السعر (تقديري — بدّله) */
@@ -1023,7 +1021,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.25.1900';
+var APP_VER='2026.11.26.1030';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1039,10 +1037,6 @@ var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
 var FLOW=['new','confirmed','on_way','done'];
 var FLOWL={new:{t:'استلمنا طلبك'},confirmed:{t:'أكدنا الموعد'},on_way:{t:'الفريق في الطريق'},done:{t:'اكتملت الخدمة'}};
-var FEATS=[{t:'يوصل في وقته',ic:'clock'},
-           {t:'مواد آمنة على الأطفال',ic:'shield'},
-           {t:'سعر واضح قبل الشغل',ic:'check'},
-           {t:'تقييمك يوصل للمالك',ic:'chat'}];
 var MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var DAYS_S=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
@@ -1106,7 +1100,7 @@ function fmtDate(s){var d=new Date(s+'T00:00:00');return DAYS[d.getDay()]+' '+d.
 function stamp(iso){var d=new Date(iso);return d.getDate()+' '+MO[d.getMonth()]+' · '+
   String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function slotOf(k){var s=SLOTS.filter(function(x){return x.k===k;})[0];return s?s.t+' ('+s.s+')':'';}
-function svcOf(k){return SVCS.filter(function(x){return x.k===k;})[0]||SVCS[0];}
+function svcOf(k){return SVCS.filter(function(x){return x.k===k;})[0]||SVCS.filter(function(x){return x.k==='sofa';})[0];}
 function itemOf(k){return CAT.filter(function(x){return x.k===k;})[0];}
 function feeTxt(){return QUOTE_FEE?QUOTE_FEE+' ر.س':'مجانية';}
 function pct(n){return '<span dir="ltr" style="unicode-bidi:isolate">'+n+'%</span>';}
@@ -1413,8 +1407,6 @@ function renderHome(){
       '<p style="font-size:12.5px;color:var(--mut);margin-top:8px">عشان نناديك باسمك عند وصول الفريق.</p>'+
     '</div></div>';
   renderInstCard();
-  $('featList').innerHTML=FEATS.map(function(f){
-    return '<span class="chip">'+ic(f.ic,'','ic-sm')+'<span>'+esc(f.t)+'</span></span>';}).join('');
 }
 
 /* بطاقات الخدمات — تظهر في الرئيسية وفي تبويب «الخدمات»، وكلها تفتح صفحة الخدمة.
@@ -2433,6 +2425,7 @@ document.querySelectorAll('.tab').forEach(function(t){
   };
 });
 $('bkPh').innerHTML=ic('back','','ic-sm')+'<span>تغيير الرقم</span>';
+$('meBack').innerHTML='<span class="bk-i">'+ic('back')+'</span>';
 $('inPh').addEventListener('keydown',function(e){if(e.key==='Enter')sendCode();});
 renderTerms();
 /* ===== تثبيت التطبيق (PWA) =====
