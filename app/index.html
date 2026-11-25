@@ -728,11 +728,12 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
     </div>
     <div id="lgCode" class="hide">
       <h1>تحقق من رقم الجوال</h1>
-      <p>أدخل رمز التحقق (6 أرقام) المرسل إلى</p>
+      <p id="sentVia">أدخل رمز التحقق (6 أرقام) المرسل إلى</p>
       <div class="sent mono" id="sentTo"></div>
       <div class="otp" id="otpRow"></div>
       <button class="btn" id="btnCode" onclick="verifyCode()">تحقق الآن</button>
       <button class="btn btn-2 btn-sm" style="margin-top:9px;color:#8FA9B6;border-color:#1F4256" id="btnResend" onclick="resend()"></button>
+      <button class="btn btn-2 btn-sm hide" style="margin-top:9px" id="btnSms" onclick="sendSmsInstead()"></button>
       <button class="lnk" style="width:100%;justify-content:center" onclick="backToPhone()" id="bkPh"></button>
     </div>
     <div class="err hide" id="lgErr"></div>
@@ -1108,7 +1109,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.26.2200';
+var APP_VER='2026.11.26.2300';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1374,7 +1375,23 @@ function tickResend(){
   else{b.disabled=false;b.innerHTML=ic('chat','','ic-sm')+'<span>إعادة إرسال الرمز</span>';}
 }
 function resend(){if(RT>0)return;sendCode(true);}
-function sendCode(again){
+/* الخادم يرسل على واتساب أولاً. Meta ما تقول لنا فوراً إن الرقم بلا واتساب،
+   فبعد ٢٠ ثانية نعرض للعميل يطلبه برسالة نصية */
+var OTPVIA='',SMT=0,SMTM=null;
+function viaUI(){
+  $('sentVia').textContent=OTPVIA==='whatsapp'?'أرسلنا الرمز على واتساب إلى':
+    OTPVIA==='sms'?'أرسلنا الرمز برسالة نصية إلى':'أدخل رمز التحقق (6 أرقام) المرسل إلى';
+  var b=$('btnSms');clearInterval(SMTM);
+  if(OTPVIA!=='whatsapp'){b.classList.add('hide');return;}
+  b.classList.remove('hide');SMT=20;
+  function tick(){
+    if(SMT>0){b.disabled=true;b.textContent='أرسله برسالة نصية بعد '+SMT+' ثانية';}
+    else{b.disabled=false;b.textContent='ما وصلك على واتساب؟ أرسله برسالة نصية';clearInterval(SMTM);}
+  }
+  tick();SMTM=setInterval(function(){SMT--;tick();},1000);
+}
+function sendSmsInstead(){if(SMT>0)return;var b=$('btnSms');b.disabled=true;b.textContent='جاري الإرسال…';sendCode(true,'sms');}
+function sendCode(again,via){
   var p=norm($('inPh').value);lgErr('');
   if(!p){lgErr('أدخل رقم جوال سعودي يبدأ بـ 5');return;}
   ME.ph=p;var b=again?$('btnResend'):$('btnPh');b.disabled=true;b.textContent='جاري الإرسال…';
@@ -1382,13 +1399,14 @@ function sendCode(again){
     $('btnPh').disabled=false;$('btnPh').textContent='متابعة';
     $('sentTo').textContent='+'+p.slice(0,3)+' '+p.slice(3,5)+' ••• ••'+p.slice(-2);
     $('lgPhone').classList.add('hide');$('lgCode').classList.remove('hide');
-    buildOtp();startResend();
+    buildOtp();startResend();viaUI();
     var f=document.querySelector('#otpRow input');if(f)f.focus();
   }
   if(DEMO){setTimeout(function(){ok();toast('وضع المعاينة: أي 6 أرقام تمشّي');},450);return;}
   function sendFail(e){
     resetRecap();
     $('btnPh').disabled=false;$('btnPh').textContent='متابعة';tickResend();
+    if(via==='sms'){var sb=$('btnSms');sb.disabled=false;sb.textContent='ما وصلك على واتساب؟ أرسله برسالة نصية';}
     var c=(e&&e.code)||'';
     lgErr(c==='auth/invalid-phone-number'?'الرقم غير صحيح':
       c==='auth/too-many-requests'?'محاولات كثيرة — انتظر شوي وحاول':
@@ -1403,10 +1421,10 @@ function sendCode(again){
   if(OTP_API){
     /* خادمنا: الرسالة تصل باسم المرسل المعتمد، والرمز يُتحقق منه هناك */
     fetch(OTP_API+'/api/otp/send',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({phone:p})})
+      body:JSON.stringify(via?{phone:p,via:via}:{phone:p})})
       .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
       .then(function(x){
-        if(x.s===200){ok();return;}
+        if(x.s===200){OTPVIA=(x.j&&x.j.via)||'';ok();return;}
         var e=x.j&&x.j.error;
         sendFail({code:e==='cooldown'?'otp/cooldown':e==='too_many'?'otp/too-many':
           e==='daily_cap'?'otp/daily-cap':e==='bad_phone'?'auth/invalid-phone-number':'otp/failed',
@@ -1455,7 +1473,7 @@ function verifyCode(){
     clearInterval(RTM);onSignedIn(r.user.uid);})
    .catch(function(e){fail((e&&e.code)==='auth/invalid-verification-code'?'الرمز غير صحيح':'تعذّر التحقق، حاول مرة ثانية');});
 }
-function backToPhone(){clearInterval(RTM);$('lgCode').classList.add('hide');$('lgPhone').classList.remove('hide');lgErr('');}
+function backToPhone(){clearInterval(RTM);clearInterval(SMTM);OTPVIA='';$('lgCode').classList.add('hide');$('lgPhone').classList.remove('hide');lgErr('');}
 /* لقطة من آخر بيانات العميل على جهازه: نعرض الرئيسية منها فوراً عند الفتح،
    والبيانات الحية من فايربيس تحلّ محلها أول ما توصل — بدل ما ينتظر أربع قراءات */
 function saveSnap(){

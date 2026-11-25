@@ -82,4 +82,71 @@ async function sendSms(phone, code) {
   return fn(phone, smsText(code));
 }
 
-module.exports = { sendSms, smsText, PROVIDERS };
+/* ================= واتساب ================= */
+/* WhatsApp Cloud API من Meta: قالب من فئة «Authentication» فيه زر «نسخ الرمز».
+   القالب يُنشأ ويُعتمد من WhatsApp Manager باسم WA_TEMPLATE (افتراضي kleenology_otp)
+   ولغة WA_LANG (افتراضي ar). جسم القالب فيه {{1}} = الرمز، والزر copy-code يأخذ نفس الرمز.
+
+   ⚠️ Meta ترد 200 حتى لو الرقم ما عليه واتساب — الفشل يوصل لاحقاً عبر webhook.
+   لهذا التطبيق يعرض زر «أرسله برسالة نصية» بعد ثوانٍ، ويطلب via:'sms'. */
+const WA = {
+  async meta(to, code) {
+    const ver = process.env.WA_API_VERSION || 'v21.0';
+    const out = await post('https://graph.facebook.com/' + ver + '/' + process.env.WA_PHONE_ID + '/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.WA_TOKEN },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to,
+        type: 'template',
+        template: {
+          name: process.env.WA_TEMPLATE || 'kleenology_otp',
+          language: { code: process.env.WA_LANG || 'ar' },
+          components: [
+            { type: 'body', parameters: [{ type: 'text', text: code }] },
+            { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: code }] }
+          ]
+        }
+      })
+    });
+    let j = null; try { j = JSON.parse(out); } catch (e) {}
+    if (!j || !j.messages || !j.messages.length) throw new Error('واتساب: ' + out.slice(0, 200));
+    return out;
+  },
+
+  /* للتجربة: يطبع الرمز في سجل الخادم بدل ما يرسله */
+  async mock(to, code) {
+    console.log('[mock-whatsapp] →', to, '|', code);
+    return 'mock';
+  }
+};
+
+async function sendWhatsApp(phone, code) {
+  const name = (process.env.WA_PROVIDER || 'mock').toLowerCase();
+  const fn = WA[name];
+  if (!fn) throw new Error('مزوّد واتساب غير معروف: ' + name);
+  return fn(phone, code);
+}
+
+/* ================= اختيار القناة ================= */
+/* OTP_CHANNELS بالترتيب، مثال: "whatsapp,sms" = واتساب أولاً، وإذا فشل الإرسال فوراً SMS.
+   الافتراضي "sms" وحده — نفس سلوك الخادم قبل إضافة واتساب. */
+const SENDERS = { whatsapp: sendWhatsApp, sms: sendSms };
+function channels() {
+  const list = String(process.env.OTP_CHANNELS || 'sms').toLowerCase().split(',')
+    .map(x => x.trim()).filter(x => SENDERS[x]);
+  return list.length ? list : ['sms'];
+}
+
+/* يرسل عبر أول قناة تنجح ويرجّع اسمها. via يفرض قناة واحدة (زر «أرسله برسالة نصية») */
+async function deliver(phone, code, via) {
+  const order = via && SENDERS[via] ? [via] : channels();
+  let last = null;
+  for (const ch of order) {
+    try { await SENDERS[ch](phone, code); return ch; }
+    catch (e) { last = e; console.error('قناة ' + ch + ' فشلت:', (e && e.message) || e); }
+  }
+  throw last || new Error('لا توجد قناة إرسال');
+}
+
+module.exports = { deliver, channels, sendSms, sendWhatsApp, smsText, PROVIDERS, WA, SENDERS };
