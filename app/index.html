@@ -672,7 +672,6 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
       <button class="promo" id="heroBtn" onclick="openService('sofa')">
         <span class="bub b1"></span><span class="bub b2"></span></button>
     </div>
-    <div class="sec" style="border:none;padding:14px 0 0"><div class="fade-x"><div class="scrollx chips" id="featList"></div></div></div>
     <div id="activeOrder"></div>
     <div class="sec" style="padding-bottom:0">
       <div class="sec-h"><h2>الخدمات</h2></div>
@@ -749,7 +748,10 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 <!-- ===== حسابي ===== -->
 <section class="scr" id="scMe">
   <header class="top"><div class="top-in">
-    <div><h1>حسابي</h1><p>بياناتك وإعداداتك</p></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="bk" id="meBack" aria-label="رجوع للرئيسية" onclick="go('scHome');setTab('scHome');renderHome()"></button>
+      <div><h1>حسابي</h1><p>بياناتك وإعداداتك</p></div>
+    </div>
   </div></header>
   <div class="wrap"><div id="meBody"></div></div>
 </section>
@@ -1023,7 +1025,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.25.1900';
+var APP_VER='2026.11.26.0945';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1039,10 +1041,6 @@ var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
 var FLOW=['new','confirmed','on_way','done'];
 var FLOWL={new:{t:'استلمنا طلبك'},confirmed:{t:'أكدنا الموعد'},on_way:{t:'الفريق في الطريق'},done:{t:'اكتملت الخدمة'}};
-var FEATS=[{t:'يوصل في وقته',ic:'clock'},
-           {t:'مواد آمنة على الأطفال',ic:'shield'},
-           {t:'سعر واضح قبل الشغل',ic:'check'},
-           {t:'تقييمك يوصل للمالك',ic:'chat'}];
 var MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var DAYS_S=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
@@ -1413,8 +1411,6 @@ function renderHome(){
       '<p style="font-size:12.5px;color:var(--mut);margin-top:8px">عشان نناديك باسمك عند وصول الفريق.</p>'+
     '</div></div>';
   renderInstCard();
-  $('featList').innerHTML=FEATS.map(function(f){
-    return '<span class="chip">'+ic(f.ic,'','ic-sm')+'<span>'+esc(f.t)+'</span></span>';}).join('');
 }
 
 /* بطاقات الخدمات — تظهر في الرئيسية وفي تبويب «الخدمات»، وكلها تفتح صفحة الخدمة.
@@ -2433,6 +2429,7 @@ document.querySelectorAll('.tab').forEach(function(t){
   };
 });
 $('bkPh').innerHTML=ic('back','','ic-sm')+'<span>تغيير الرقم</span>';
+$('meBack').innerHTML='<span class="bk-i">'+ic('back')+'</span>';
 $('inPh').addEventListener('keydown',function(e){if(e.key==='Enter')sendCode();});
 renderTerms();
 /* ===== تثبيت التطبيق (PWA) =====
