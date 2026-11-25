@@ -1057,7 +1057,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.26.1400';
+var APP_VER='2026.11.26.1530';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1174,7 +1174,7 @@ var LS={get:function(k,d){try{var v=localStorage.getItem('kln_'+k);
 LADX=LS.get('ladx',false);
 var API={
   saveMe:function(){if(DEMO){LS.set('me',ME);return Promise.resolve();}
-    return db.collection('customers').doc(ME.uid).set({n:ME.n,ph:ME.ph,ok:!!ME.ok},{merge:true});},
+    return db.collection('customers').doc(ME.uid).set({n:ME.n,ph:ME.ph,ok:!!ME.ok},{merge:true}).then(function(r){saveSnap();return r;});},
   /* نسجّل الدخول في ملف العميل حتى لو ما كتب اسمه — عشان تعرف مين فتح التطبيق
      وما طلب. `at` تُكتب مرة واحدة فقط، و`seen` تتحدّث كل دخول. */
   loadMe:function(){if(DEMO){var m=LS.get('me',null);if(m){ME.n=m.n||'';ME.ok=!!m.ok;}return Promise.resolve();}
@@ -1198,7 +1198,7 @@ var API={
         ORD=[];sn.forEach(function(d){var o=d.data();o.id=d.id;ORD.push(o);});
         ORD.sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});
         ORERR='';
-        if(!first){renderOrders();renderHome();}
+        if(!first){renderOrders();renderHome();saveSnap();}
         done();
       },function(e){
         ORERR=(e&&e.code)||'error';ORD=[];
@@ -1266,10 +1266,10 @@ var API={
     return db.collection('customers').doc(ME.uid).collection('addresses').limit(20).get().then(function(s){
       ADR=[];s.forEach(function(d){var a=d.data();a.id=d.id;ADR.push(a);});}).catch(function(){ADR=[];});},
   addAddr:function(a){if(DEMO){a.id='a'+Date.now();ADR.push(a);LS.set('addrs',ADR);return Promise.resolve(a);}
-    return db.collection('customers').doc(ME.uid).collection('addresses').add(a).then(function(r){a.id=r.id;ADR.push(a);return a;});},
+    return db.collection('customers').doc(ME.uid).collection('addresses').add(a).then(function(r){a.id=r.id;ADR.push(a);saveSnap();return a;});},
   delAddr:function(a){ADR=ADR.filter(function(x){return x.id!==a.id;});
     if(DEMO){LS.set('addrs',ADR);return Promise.resolve();}
-    return db.collection('customers').doc(ME.uid).collection('addresses').doc(a.id).delete();}
+    return db.collection('customers').doc(ME.uid).collection('addresses').doc(a.id).delete().then(saveSnap);}
 };
 
 /* ================= الدخول ================= */
@@ -1403,20 +1403,34 @@ function verifyCode(){
    .catch(function(e){fail((e&&e.code)==='auth/invalid-verification-code'?'الرمز غير صحيح':'تعذّر التحقق، حاول مرة ثانية');});
 }
 function backToPhone(){clearInterval(RTM);$('lgCode').classList.add('hide');$('lgPhone').classList.remove('hide');lgErr('');}
+/* لقطة من آخر بيانات العميل على جهازه: نعرض الرئيسية منها فوراً عند الفتح،
+   والبيانات الحية من فايربيس تحلّ محلها أول ما توصل — بدل ما ينتظر أربع قراءات */
+function saveSnap(){
+  if(DEMO||!ME.uid||ORERR)return;
+  LS.set('snap',{uid:ME.uid,n:ME.n||'',ok:!!ME.ok,ord:ORD.slice(0,20),adr:ADR});
+}
 function onSignedIn(uid){
   ME.uid=uid;AUTHED=true;$('tabBar').classList.remove('hide');
   CART=LS.get('cart',{});
-  Promise.all([API.loadMe(),API.orders(),API.addrs(),loadSlots()]).then(function(){
+  var snap=DEMO?null:LS.get('snap',null),shown=false;
+  if(snap&&snap.uid===uid){
+    ME.n=snap.n||'';ME.ok=!!snap.ok;ORD=snap.ord||[];ADR=snap.adr||[];
+    renderAll();go('scHome');setTab('scHome');shown=true;
+  }
+  /* المواعيد ما تلزم إلا عند الحجز — تتحمّل بالخلفية، ولو فتح الحجز قبلها نعيد رسمه */
+  loadSlots().then(function(){var b=$('scBook');if(b&&b.classList.contains('on')&&BK.step===0)renderBook();});
+  Promise.all([API.loadMe(),API.orders(),API.addrs()]).then(function(){
+    saveSnap();
     renderAll();
     /* الرئيسية أول شي دائماً — والاسم يُطلب من بطاقة داخلها بدل ما نرمي العميل في «حسابي» */
-    go('scHome');setTab('scHome');
+    if(!shown){go('scHome');setTab('scHome');}
   });
 }
 function logout(){
   if(!confirm('تسجيل الخروج؟'))return;
   function done(){
     if(ORUN){ORUN();ORUN=null;}ORERR='';
-    AUTHED=false;ME={uid:'',ph:'',n:'',ok:false};ORD=[];ADR=[];CART={};LS.set('cart',{});
+    AUTHED=false;ME={uid:'',ph:'',n:'',ok:false};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
     $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';go('scLogin');}
   if(DEMO){done();return;}
   auth.signOut().then(done).catch(done);
@@ -2463,7 +2477,7 @@ function doDelAccount(){
   API.delAccount().then(function(){
     closeSheet();
     if(ORUN){ORUN();ORUN=null;}
-    AUTHED=false;ME={uid:'',ph:'',n:'',ok:false};ORD=[];ADR=[];CART={};LS.set('cart',{});
+    AUTHED=false;ME={uid:'',ph:'',n:'',ok:false};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
     $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';go('scLogin');
     toast('انحذف حسابك');
   }).catch(function(e){
@@ -2560,7 +2574,8 @@ if('serviceWorker' in navigator&&window.isSecureContext){
     try{if(sessionStorage.getItem('kln_upd')===v.ver)return;sessionStorage.setItem('kln_upd',v.ver);}catch(e){}
     var again=function(){location.reload();};
     (window.caches?caches.keys().then(function(ks){
-      return Promise.all(ks.map(function(k){return caches.delete(k);}));
+      /* مكتبات فايربيس والخط ثابتة الإصدار — ما تنمسح مع تحديث التطبيق */
+      return Promise.all(ks.filter(function(k){return k.indexOf('kln-lib')!==0;}).map(function(k){return caches.delete(k);}));
     }):Promise.resolve()).then(function(){
       return navigator.serviceWorker.getRegistrations().then(function(rs){
         return Promise.all(rs.map(function(r){return r.update();}));});
