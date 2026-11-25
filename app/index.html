@@ -459,13 +459,32 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .note.acc b{color:var(--gold-d)}
 .empty{text-align:center;color:var(--mut);font-size:14px;padding:50px 20px}
 .empty .il{margin:0 auto 14px;opacity:.6}
-.incl{display:grid;gap:2px}
-.incl div{display:flex;gap:12px;padding:13px 0;font-size:14px;color:var(--mut);line-height:1.75;
-  border-bottom:1px solid var(--line)}
+.incl{background:var(--card);border-radius:var(--r2);box-shadow:var(--sh);padding:4px 18px}
+.incl div{display:flex;gap:13px;align-items:flex-start;padding:15px 0;font-size:14.5px;font-weight:500;
+  color:var(--tx);line-height:1.7;border-bottom:1px solid var(--line)}
 .incl div:last-child{border-bottom:none}
-.incl .tick{width:22px;height:22px;border-radius:50%;background:var(--blue-l);display:grid;
-  place-items:center;flex:0 0 auto;margin-top:2px}
-.incl .tick .ic{width:12px;height:12px;color:var(--blue-d);stroke-width:3.2}
+.incl .tick{width:24px;height:24px;border-radius:9px;background:var(--blue);display:grid;
+  place-items:center;flex:0 0 auto;margin-top:1px}
+.incl .tick .ic{width:13px;height:13px;color:#fff;stroke-width:3.2}
+/* بيانات التحويل */
+.pay{background:var(--card);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden;margin-top:16px}
+.pay-h{background:var(--blue);color:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pay-h span{font-size:13px;opacity:.92;line-height:1.6}
+.pay-h span b{display:block;font-size:15.5px;font-family:var(--dsp);opacity:1}
+.pay-h strong{font-family:var(--dsp);font-size:26px;font-weight:800;white-space:nowrap}
+.pay-h strong small{font-size:13px;font-weight:600}
+.pay-b{padding:4px 18px 12px}
+.pay-r{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.pay-r:last-of-type{border-bottom:none}
+.pay-r s{text-decoration:none;font-size:12.5px;color:var(--mut);flex:0 0 auto}
+.pay-r b{font-size:14px;font-weight:700;text-align:left}
+.pay-iban{background:var(--sunk);border-radius:var(--r3);padding:10px 12px 12px;margin:4px 0 8px}
+.pay-iban>div{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.pay-iban>div s{text-decoration:none;font-size:12.5px;color:var(--mut)}
+.pay-iban code{display:block;direction:ltr;text-align:center;font-family:ui-monospace,Menlo,monospace;font-size:clamp(11.5px,3.6vw,14px);
+  font-weight:700;color:var(--tx);white-space:nowrap}
+.pay-iban button{background:var(--blue);color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:5px 14px}
+.pay-n{font-size:12.5px;color:var(--mut);line-height:1.8;padding:2px 0 4px}
 /* استثناء لا ميزة — علامة صح زرقاء عليه تقلب المعنى عند العميل */
 .incl div.x{color:var(--tx)}
 .incl .tick.x{background:var(--gold-l)}
@@ -1021,7 +1040,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.26.1030';
+var APP_VER='2026.11.26.1200';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1030,6 +1049,9 @@ var SLOT_CAP=1;
 var ORD_BASE=1000;
 /* قيمة زيارة المعاينة بالريال. صفر = مجانية، ويرجع النص «مجانية» تلقائياً. */
 var QUOTE_FEE=29;
+/* العربون: نسبة من الإجمالي التقديري تُحوَّل لتثبيت الحجز. صفر = بلا عربون */
+var DEP_PCT=0.5;
+var BANK={bank:'مصرف الإنماء',iban:'SA5405000068204621866000',name:'مؤسسة علم التنظيف التجارية'};
 /* خادم رموز التحقق (مجلد server/). فاضي = نرجع لرموز فايربيس */
 var OTP_API='';
 var BOOKED={};   /* {'2026-09-10':{am:1,pm:0,ev:0}} — كم محجوز في كل فترة */
@@ -1461,7 +1483,7 @@ function renderService(){
     gallery(s)+
     tip+
     price+
-    '<div class="sec"><div class="sec-h"><h2>ما الذي تتضمنه الخدمة</h2></div>'+
+    '<div class="sec"><div class="sec-h"><h2>وش تشمل الخدمة</h2></div>'+
       '<div class="incl">'+s.incl.map(function(x){
         /* سطر يبدأ بـ«!» = استثناء، لا ميزة — يأخذ علامة ولوناً مختلفين */
         var no=x.charAt(0)==='!';
@@ -2093,6 +2115,33 @@ function commitWhere(){
   API.addAddr(a).then(function(){renderMe();})
    .catch(function(e){console.log('حفظ العنوان:',e&&e.code);});
 }
+function depOf(v){return DEP_PCT&&v?Math.ceil(v*DEP_PCT):0;}
+function ibanFmt(x){return String(x).replace(/(.{4})/g,'$1 ').trim();}
+function copyIban(){
+  var ok=function(){toast('نسخنا الآيبان');};
+  var fb=function(){
+    var t=document.createElement('textarea');t.value=BANK.iban;t.setAttribute('readonly','');
+    t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
+    try{document.execCommand('copy');ok();}catch(e){toast(BANK.iban);}t.remove();};
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(BANK.iban).then(ok,fb);else fb();
+}
+/* بطاقة التحويل — في مراجعة الطلب وفي بطاقة الطلب لين يتأكد */
+function payCard(dep,o){
+  return '<div class="pay"><div class="pay-h"><span><b>عربون تثبيت الحجز</b>'+Math.round(DEP_PCT*100)+'% من الإجمالي التقديري</span>'+
+      '<strong class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></strong></div>'+
+    '<div class="pay-b">'+
+      '<div class="pay-r"><s>البنك</s><b>'+esc(BANK.bank)+'</b></div>'+
+      '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
+      '<div class="pay-iban"><div><s>الآيبان</s><button type="button" onclick="copyIban()">نسخ</button></div><code>'+esc(ibanFmt(BANK.iban))+'</code></div>'+
+      '<p class="pay-n">'+(o?'حوّل العربون وأرسل لنا صورة الإيصال — نأكد موعدك أول ما يوصل.'
+        :'بعد إرسال الطلب حوّل العربون وأرسل صورة الإيصال على واتساب. <b style="color:var(--tx)">الموعد ما يتثبت إلا بعد وصول العربون</b>، والباقي تدفعه بعد التنفيذ.')+'</p>'+
+      (o?'<a class="btn btn-sm" style="margin:6px 0 6px;text-decoration:none" target="_blank" rel="noopener" href="'+depLink(o)+'">'+ic('chat','','ic-sm')+'<span>أرسل الإيصال على واتساب</span></a>':'')+
+    '</div></div>';
+}
+function depLink(o){
+  return 'https://wa.me/'+BIZ.wa+'?text='+encodeURIComponent(
+    'السلام عليكم، حوّلت عربون طلبي'+(o.no?' رقم '+o.no:'')+' بقيمة '+o.dep+' ر.س — مرفق الإيصال.');
+}
 function stepConfirm(){
   if(BK.quote)return stepConfirmQuote();
   if(BK.pkg)return stepConfirmPkg();
@@ -2111,7 +2160,8 @@ function stepConfirm(){
     '</div></div>'+
     '<div class="fld" style="margin-top:16px"><label class="lb" for="bkNt">ملاحظات للفريق (اختياري)</label>'+
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="فيه درج ضيق · الباب الجانبي · أي شي يفيد الفريق"></textarea></div>'+
-    '<div class="note">بعد الإرسال يعاين '+esc(BIZ.rep)+' طلبك ويأكد السعر النهائي. تقدر تلغيه قبل التأكيد.</div>'+
+    (depOf(t.tot)?payCard(depOf(t.tot)):'')+
+    '<div class="note" style="margin-top:14px">بعد الإرسال يعاين '+esc(BIZ.rep)+' طلبك ويأكد السعر النهائي. تقدر تلغيه قبل التأكيد.</div>'+
     '<button class="btn" style="margin-top:20px" id="bkGo" onclick="submitOrder()">أرسل الطلب</button>';
 }
 function stepConfirmQuote(){
@@ -2143,7 +2193,8 @@ function stepConfirmPkg(){
     '<div class="tot big"><span>الاشتراك الشهري</span><b>'+sar(p.p)+'</b></div></div>'+
     '<div class="fld"><label class="lb" for="bkNt">ملاحظات للفريق (اختياري)</label>'+
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="فيه درج ضيق · الباب الجانبي · أي شي يفيد الفريق"></textarea></div>'+
-    '<div class="note">يتواصل معك '+esc(BIZ.rep)+' لتأكيد الاشتراك وترتيب المواعيد. تقدر توقفه في أي وقت.</div>'+
+    (depOf(p.p)?payCard(depOf(p.p)):'')+
+    '<div class="note" style="margin-top:14px">يتواصل معك '+esc(BIZ.rep)+' لتأكيد الاشتراك وترتيب المواعيد. تقدر توقفه في أي وقت.</div>'+
     '<button class="btn" style="margin-top:20px" id="bkGo" onclick="submitOrder()">اشترك الآن</button>';
 }
 /* لو سُبق العميل على الفترة نرجّعه لخطوة الموعد بعد تحديث التوفر — لا نتركه في شاشة ميتة */
@@ -2183,7 +2234,7 @@ function submitOrder(){
     var po={uid:ME.uid,ph:ME.ph,n:ME.n||'',svc:'اشتراك — '+p.t,sub:true,
       pkg:{k:p.k,t:p.t,every:p.every},
       items:[{k:'pkg_'+p.k,t:p.t,u:p.every,p:p.p,q:1}],
-      off:0,est:p.p,date:BK.date,slot:BK.slot,
+      off:0,est:p.p,dep:depOf(p.p),date:BK.date,slot:BK.slot,
       adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
     API.addOrder(po).then(function(){
@@ -2196,7 +2247,7 @@ function submitOrder(){
   var o={uid:ME.uid,ph:ME.ph,n:ME.n||'',sub:false,
     svc:Object.keys(svs).map(function(k){return svcOf(k).t;}).join(' · '),
     items:L.map(function(l){return {k:l.k,t:l.t,u:l.u,p:l.p,q:l.q};}),
-    sub:t.sub,off:t.off,est:t.tot,
+    subt:t.sub,off:t.off,est:t.tot,dep:depOf(t.tot),
     date:BK.date,slot:BK.slot,adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
     nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
   API.addOrder(o).then(function(){
@@ -2207,27 +2258,31 @@ function submitOrder(){
 </script>
 <script>
 /* ================= الطلبات ================= */
+/* الاشتراك = sub:true أو فيه باقة. الطلبات القديمة كانت تحفظ المجموع في sub نفسه (رقم)،
+   فكانت تظهر كأنها اشتراكات — نفحص القيمة الحقيقية لا مجرد وجودها */
+function isSub(o){return o.sub===true||!!o.pkg;}
 function ordCard(o,live){
   var n=(o.items||[]).reduce(function(s,i){return s+i.q;},0);
   return '<article class="ord'+(live?' live':'')+'">'+
-    '<div class="ord-h"><div><div class="ord-t"><span class="ico">'+(o.quote?ic('cal'):o.sub?ic('repeat'):il('cart'))+'</span><span>'+esc(o.svc||'طلب')+'</span></div>'+
+    '<div class="ord-h"><div><div class="ord-t"><span class="ico">'+(o.quote?ic('cal'):isSub(o)?ic('repeat'):il('cart'))+'</span><span>'+esc(o.svc||'طلب')+'</span></div>'+
       (o.no?'<div class="ordno mono">طلب رقم '+o.no+'</div>':'')+'</div>'+
       '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>'+
     '<div class="meta">'+
       (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — '+(o.est?o.est+' ر.س · تُخصم من الخدمة':'مجانية')+'</span></div>':
-        o.sub?'<div>'+ic('repeat','','ic-sm')+'<span>يتكرر '+esc((o.pkg&&o.pkg.every)||'')+'</span></div>':
+        isSub(o)?'<div>'+ic('repeat','','ic-sm')+'<span>يتكرر '+esc((o.pkg&&o.pkg.every)||'')+'</span></div>':
         n?'<div>'+ic('list','','ic-sm')+'<span>'+n+' صنف</span></div>':'')+
-      '<div>'+ic('cal','','ic-sm')+'<span>'+(o.sub?'أول زيارة: ':'')+esc(fmtDate(o.date))+'</span></div>'+
+      '<div>'+ic('cal','','ic-sm')+'<span>'+(isSub(o)?'أول زيارة: ':'')+esc(fmtDate(o.date))+'</span></div>'+
       '<div>'+ic('clock','','ic-sm')+'<span>'+esc(slotOf(o.slot))+'</span></div>'+
       '<div>'+ic('pin','','ic-sm')+'<span>'+esc((o.adr&&o.adr.t)||'')+(o.adr&&o.adr.d?' — '+esc(o.adr.d):'')+'</span>'+
         (mapUrl(o.adr)?'<a href="'+mapUrl(o.adr)+'" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--blue);text-decoration:none">الخريطة</a>':'')+'</div>'+
     '</div>'+
     (o.items&&o.items.length?'<div class="tl" style="padding-top:13px"><div class="rows">'+
-      (o.sub?[]:o.items).map(function(i){return '<div class="row-i" style="padding:9px 0"><span><b style="font-size:13.5px">'+esc(i.t)+'</b>'+
+      (isSub(o)?[]:o.items).map(function(i){return '<div class="row-i" style="padding:9px 0"><span><b style="font-size:13.5px">'+esc(i.t)+'</b>'+
         '<s style="font-size:11px">'+esc(i.u)+' × '+i.q+'</s></span><b style="font-size:13px">'+sar(i.p*i.q)+'</b></div>';}).join('')+
       '</div></div>':'')+
-    (o.est?'<div class="tot'+(o.price?'':' big')+'" style="margin-top:6px"><span>'+(o.sub?'شهرياً':o.price?'التقديري':'الإجمالي التقديري')+'</span><b>'+sar(o.est)+'</b></div>':'')+
+    (o.est?'<div class="tot'+(o.price?'':' big')+'" style="margin-top:6px"><span>'+(isSub(o)?'شهرياً':o.price?'التقديري':'الإجمالي التقديري')+'</span><b>'+sar(o.est)+'</b></div>':'')+
     (o.price?'<div class="tot big"><span>السعر النهائي</span><b>'+sar(o.price)+'</b></div>':'')+
+    (o.st==='new'&&o.dep?payCard(o.dep,o):'')+
     timeline(o)+
     (o.st==='new'?'<button class="btn btn-x btn-sm" style="margin-top:15px" onclick="cancelOrder(\''+o.id+'\')">'+ic('trash','','ic-sm')+'<span>إلغاء الطلب</span></button>':'')+
     (o.st==='done'?'<a class="btn btn-2 btn-sm" style="margin-top:15px;text-decoration:none" target="_blank" rel="noopener" href="'+waLink(o)+'">'+ic('chat','','ic-sm')+'<span>تواصل معنا</span></a>':'')+

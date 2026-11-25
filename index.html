@@ -978,11 +978,13 @@ function rOrList(){
   if(!list.length){el.innerHTML='<div class="empty">'+(OR.length?'ما فيه طلبات في هذا الفلتر':'ما وصلك طلب بعد — الطلبات من التطبيق تظهر هنا مباشرة')+'</div>';return;}
   el.innerHTML=list.map(orCard).join('');
 }
+/* الاشتراك = sub:true أو فيه باقة — الطلبات القديمة حفظت المجموع في sub كرقم */
+function isSub(o){return o.sub===true||!!o.pkg;}
 function orCard(o){
   var c=ORCOL[o.st]||ORCOL.new,items=o.items||[];
   var nx=ORNEXT[o.st];
   return '<div class="or'+(o.st==='new'?' new':'')+'">'+
-    '<div class="or-h"><div><div class="or-n">'+(o.no?'<span class="or-no">#'+esc(o.no)+'</span>':'')+(o.quote?'📐 ':o.sub?'🔁 ':'')+esc(o.n||'عميل')+'</div>'+
+    '<div class="or-h"><div><div class="or-n">'+(o.no?'<span class="or-no">#'+esc(o.no)+'</span>':'')+(o.quote?'📐 ':isSub(o)?'🔁 ':'')+esc(o.n||'عميل')+'</div>'+
       '<div class="or-p">+'+esc(o.ph||'')+'</div></div>'+
       '<span class="or-st" style="background:'+c[0]+';color:'+c[1]+'">'+(ORST[o.st]||o.st)+'</span></div>'+
     '<div class="or-m"><b>'+esc(o.svc||'')+'</b><br>'+esc(orWhen(o))+'<br>'+esc(orAddr(o))+
@@ -993,7 +995,8 @@ function orCard(o){
     (items.length?'<div class="or-it">'+items.map(function(i){
       return '<div><span>'+esc(i.t)+' <span style="opacity:.7">'+esc(i.u)+' × '+i.q+'</span></span><b>'+(i.p*i.q)+' ر.س</b></div>';
     }).join('')+'<div style="border-top:1px dashed #dde8ee;margin-top:5px;padding-top:6px"><span>'+
-      (o.sub?'شهرياً':'التقديري'+(o.off?' (بعد خصم '+o.off+'%)':''))+'</span><b>'+(o.est||0)+' ر.س</b></div>'+
+      (isSub(o)?'شهرياً':'التقديري'+(o.off?' (بعد خصم '+o.off+'%)':''))+'</span><b>'+(o.est||0)+' ر.س</b></div>'+
+      (o.dep?'<div><span style="color:#b7791f">العربون المطلوب</span><b style="color:#b7791f">'+esc(o.dep)+' ر.س</b></div>':'')+
       (o.price?'<div><span style="color:#16a34a">السعر النهائي</span><b style="color:#16a34a">'+esc(o.price)+' ر.س</b></div>':'')+
       '</div>':'')+
     '<div class="or-ac">'+
