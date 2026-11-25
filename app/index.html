@@ -11,7 +11,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="كلينولوجي">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<!-- الخط ما يوقف الرسم: الشاشة الافتتاحية تطلع فوراً والخط يلحق، وبعدها ينحفظ على الجهاز -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"></noscript>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <style>
 /* ===== الشاشة الافتتاحية: تطلع مع أول رسم وتختفي أول ما تجهز أول شاشة ===== */
@@ -39,9 +44,8 @@
   --sh-l:0 4px 14px rgba(21,60,80,.06), 0 14px 40px rgba(21,60,80,.08);
   --sh-blue:0 6px 20px rgba(41,171,226,.28);
   --r:22px; --r2:16px; --r3:12px;
-  /* خط النظام: SF Arabic على الآيفون، ونوتو/روبوتو على أندرويد — بلا تحميل */
-  --dsp:-apple-system,BlinkMacSystemFont,'SF Arabic','SF Pro Text','Segoe UI','Noto Sans Arabic',Roboto,Tahoma,sans-serif;
-  --sf:-apple-system,BlinkMacSystemFont,'SF Arabic','SF Pro Text','Segoe UI','Noto Sans Arabic',Roboto,Tahoma,sans-serif;
+  --dsp:'IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'SF Arabic','SF Pro Text','Segoe UI','Noto Sans Arabic',Roboto,Tahoma,sans-serif;
+  --sf:'IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'SF Arabic','SF Pro Text','Segoe UI','Noto Sans Arabic',Roboto,Tahoma,sans-serif;
   --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -521,7 +525,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .pay-h{background:var(--blue);color:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
 .pay-h span{font-size:13px;opacity:.92;line-height:1.6}
 .pay-h span b{display:block;font-size:15.5px;font-family:var(--dsp);opacity:1}
-.pay-h strong{font-family:var(--dsp);font-size:26px;font-weight:800;white-space:nowrap}
+.pay-h strong{font-family:var(--dsp);font-size:26px;font-weight:700;white-space:nowrap}
 .pay-h strong small{font-size:13px;font-weight:600}
 .pay-b{padding:4px 18px 12px}
 .pay-r{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -1094,7 +1098,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.26.1700';
+var APP_VER='2026.11.26.1830';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
