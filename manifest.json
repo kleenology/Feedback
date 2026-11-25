@@ -2,6 +2,7 @@
   "name": "كلينولوجي - تقييم الخدمة",
   "short_name": "كلينولوجي",
   "description": "قيّم خدمة كلينولوجي واحصل على كوبون خصم فوري",
+  "id": "./index.html",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
