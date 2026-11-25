@@ -8,7 +8,7 @@ const path = require('path');
 const storePath = require.resolve('../api/_lib/store.js');
 const smsPath   = require.resolve('../api/_lib/sms.js');
 
-let DB = {}, DAY = 0, SENT = [], FAIL_SMS = false;
+let DB = {}, DAY = 0, SENT = [], FAIL_SMS = false, CH = 'sms';
 const store = {
   async getOtp(p) { return DB[p] ? { ...DB[p] } : null; },
   async putOtp(p, d) { DB[p] = { ...d }; },
@@ -19,7 +19,11 @@ const store = {
   uidFor: p => 'ph_' + p
 };
 const sms = {
-  async sendSms(p, code) { if (FAIL_SMS) throw new Error('boom'); SENT.push({ p, code }); }
+  channels() { return [CH]; },
+  async deliver(p, code, via) {
+    if (FAIL_SMS) throw new Error('boom');
+    const ch = via || CH; SENT.push({ p, code, via: ch }); return ch;
+  }
 };
 require.cache[storePath] = { id: storePath, filename: storePath, loaded: true, exports: store };
 require.cache[smsPath]   = { id: smsPath, filename: smsPath, loaded: true, exports: sms };
@@ -49,7 +53,7 @@ const t = async (name, fn) => {
   catch (e) { console.log('✗ ' + name + ' — ' + e.message); fail++; }
 };
 const eq = (a, b, m) => { if (a !== b) throw new Error((m || '') + ' ' + JSON.stringify(a) + ' ≠ ' + JSON.stringify(b)); };
-const reset = () => { DB = {}; DAY = 0; SENT = []; FAIL_SMS = false; };
+const reset = () => { DB = {}; DAY = 0; SENT = []; FAIL_SMS = false; CH = 'sms'; };
 
 (async () => {
   const PH = '966537519929';
@@ -197,6 +201,97 @@ const reset = () => { DB = {}; DAY = 0; SENT = []; FAIL_SMS = false; };
     eq(Object.keys(U.testNumbers()).length, 0, JSON.stringify(U.testNumbers()));
     process.env.OTP_TEST_NUMBERS = '';
   });
+
+  /* ================= واتساب و SMS احتياطي ================= */
+  await t('الرد يقول وين انرسل الرمز', async () => {
+    reset(); process.env.OTP_DAILY_CAP = '99'; CH = 'whatsapp';
+    const r = await call(send, { phone: PH });
+    eq(r.status, 200); eq(r.body.via, 'whatsapp'); eq(DB[PH].via, 'whatsapp');
+  });
+
+  await t('«أرسله SMS» بعد واتساب: مهلة ٢٠ ثانية بدل دقيقة', async () => {
+    reset(); process.env.OTP_DAILY_CAP = '99'; CH = 'whatsapp';
+    await call(send, { phone: PH });
+    eq((await call(send, { phone: PH, via: 'sms' })).status, 429, 'سمح قبل ٢٠ ثانية');
+    DB[PH].sentAt = Date.now() - 21000;
+    const r = await call(send, { phone: PH, via: 'sms' });
+    eq(r.status, 200); eq(r.body.via, 'sms'); eq(SENT[SENT.length - 1].via, 'sms');
+    /* الرمز الجديد هو اللي يفتح — القديم ما عاد صالحاً */
+    eq((await call(verify, { phone: PH, code: SENT[0].code === SENT[1].code ? 'x' : SENT[0].code })).status, 400);
+  });
+
+  await t('بعد SMS المهلة دقيقة كاملة حتى مع via:sms', async () => {
+    reset(); process.env.OTP_DAILY_CAP = '99'; CH = 'sms';
+    await call(send, { phone: PH });
+    DB[PH].sentAt = Date.now() - 21000;
+    eq((await call(send, { phone: PH, via: 'sms' })).status, 429);
+  });
+
+  await t('via غير معروف يُتجاهل', async () => {
+    reset(); CH = 'whatsapp';
+    const r = await call(send, { phone: PH, via: 'carrier-pigeon' });
+    eq(r.status, 200); eq(r.body.via, 'whatsapp');
+  });
+
+  /* اختيار القناة الحقيقي (بدون المزوّد الوهمي) */
+  delete require.cache[smsPath];
+  const real = require('../api/_lib/sms.js');
+  const quiet = console.error; console.error = () => {};
+  const L = [];
+  real.PROVIDERS.mock = async (to, body) => { L.push(['sms', to, body]); };
+  real.WA.mock = async (to, code) => { L.push(['wa', to, code]); };
+  real.WA.down = async () => { throw new Error('wa down'); };
+
+  await t('القنوات: الافتراضي SMS وحده', async () => {
+    delete process.env.OTP_CHANNELS;
+    eq(real.channels().join(), 'sms');
+    process.env.OTP_CHANNELS = 'fax, ,';
+    eq(real.channels().join(), 'sms', 'قيمة خاطئة');
+  });
+
+  await t('واتساب أولاً حين ينجح', async () => {
+    L.length = 0; process.env.OTP_CHANNELS = 'whatsapp,sms'; process.env.WA_PROVIDER = 'mock'; process.env.SMS_PROVIDER = 'mock';
+    eq(await real.deliver(PH, '111222'), 'whatsapp'); eq(L.length, 1); eq(L[0][0], 'wa');
+  });
+
+  await t('واتساب فشل ← SMS تلقائياً', async () => {
+    L.length = 0; process.env.WA_PROVIDER = 'down';
+    eq(await real.deliver(PH, '111222'), 'sms'); eq(L.length, 1); eq(L[0][0], 'sms');
+    if (!L[0][2].includes('111222')) throw new Error('نص SMS بلا الرمز');
+  });
+
+  await t('via:sms يتجاوز واتساب', async () => {
+    L.length = 0; process.env.WA_PROVIDER = 'mock';
+    eq(await real.deliver(PH, '111222', 'sms'), 'sms'); eq(L[0][0], 'sms');
+  });
+
+  await t('القناتين فشلتا ← خطأ', async () => {
+    process.env.WA_PROVIDER = 'down'; process.env.SMS_PROVIDER = 'nope';
+    let threw = false; try { await real.deliver(PH, '111222'); } catch (e) { threw = true; }
+    eq(threw, true);
+    process.env.SMS_PROVIDER = 'mock';
+  });
+
+  await t('شكل طلب Meta: قالب + الرمز في الجسم وزر النسخ', async () => {
+    const F = global.fetch; let got = null;
+    global.fetch = async (url, o) => { got = { url, o }; return { ok: true, status: 200, text: async () => '{"messages":[{"id":"wamid.x"}]}' }; };
+    process.env.WA_PHONE_ID = '1234'; process.env.WA_TOKEN = 'tok';
+    try { await real.WA.meta(PH, '654321'); } finally { global.fetch = F; }
+    if (!/graph\.facebook\.com\/v\d+\.\d+\/1234\/messages$/.test(got.url)) throw new Error(got.url);
+    eq(got.o.headers.Authorization, 'Bearer tok');
+    const b = JSON.parse(got.o.body);
+    eq(b.to, PH); eq(b.type, 'template'); eq(b.template.name, 'kleenology_otp'); eq(b.template.language.code, 'ar');
+    eq(b.template.components[0].parameters[0].text, '654321');
+    eq(b.template.components[1].sub_type, 'url'); eq(b.template.components[1].parameters[0].text, '654321');
+  });
+
+  await t('Meta ردّت بلا رسالة ← فشل (فيتحول لـ SMS)', async () => {
+    const F = global.fetch;
+    global.fetch = async () => ({ ok: true, status: 200, text: async () => '{"error":{"message":"x"}}' });
+    let threw = false; try { await real.WA.meta(PH, '654321'); } catch (e) { threw = true; } finally { global.fetch = F; }
+    eq(threw, true);
+  });
+  console.error = quiet;
 
   console.log('\n' + (fail ? 'ERRORS: ' + fail : 'ERRORS: none'));
   process.exit(fail ? 1 : 0);
