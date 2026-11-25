@@ -892,7 +892,7 @@ function ic(k,c,sz){return '<svg class="ic'+(sz?' '+sz:'')+(c?' '+c:'')+'" viewB
    إعدادات كلينولوجي — عدّل من هنا وحده
    ⚠️ الأسعار أدناه تقديرية للعرض. بدّلها بأسعارك الحقيقية قبل النشر.
    ===================================================================== */
-var BIZ={name:'كلينولوجي',rep:'عبد الهادي',wa:'966537519929',tel:'+966537519929'};
+var BIZ={name:'كلينولوجي',rep:'فريق كلينولوجي',wa:'966537519929',tel:'+966537519929'};
 
 /* الخدمات: كل خدمة لها أصنافها في CAT */
 /* img: صور شغلكم الحقيقية — ضع الملفات في app/img/ واكتب مساراتها هنا.
@@ -908,7 +908,7 @@ var SVCS=[
  {k:'sofa',  ic:'sofa',  t:'الأثاث والمفروشات', s:'كنب · سجاد · ستائر', img:[],
   d:'خدمة تنظيف شاملة لأثاثك بالبخار ومنظفات آمنة، وأيدٍ محترفة تهتم بكل قطعة في مكانها.',
   incl:['تشمل الكنب، السجاد، الستائر، كراسي الطعام، الجلسات العربية، مرتبة السرير، المساند',
-        'المندوب يزور الموقع ويأخذ المقاسات لتحديد العناصر المطلوب تنظيفها بدقة',
+        'فريقنا يزور الموقع ويأخذ المقاسات لتحديد القطع المطلوب تنظيفها بدقة',
         'عرض سعر يشمل التكلفة الإجمالية قبل ما يبدأ الشغل',
         'التنظيف يتم في مكانه — ما ننقل أثاثك من بيتك']},
  {k:'home',  ic:'home',  t:'تنظيف المنازل', s:'بيت مسكون · دوري', img:[], one:true,
@@ -1040,7 +1040,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.26.1200';
+var APP_VER='2026.11.26.1230';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1715,12 +1715,12 @@ function renderQuote(){
         '<button class="qopt" onclick="startQuoteVisit()">'+
           '<span class="qic">'+ic('cal')+'</span>'+
           '<b>احجز زيارة للتسعير</b>'+
-          '<s>تحدّد موقعك وموعدك، والمندوب يجيك ويعاين ويعطيك السعر النهائي في مكانك</s>'+
+          '<s>تحدّد موقعك وموعدك، ويزورك فريقنا للمعاينة ويعطيك السعر النهائي في مكانك</s>'+
           '<i>'+(QUOTE_FEE?'<b class="fee">'+QUOTE_FEE+' ر.س</b><span class="feen">تُخصم من الخدمة</span>':'الأدق')+ic('back','','ic-sm')+'</i></button>'+
         '<a class="qopt" href="tel:'+BIZ.tel+'" style="text-decoration:none;color:inherit">'+
           '<span class="qic">'+ic('phone')+'</span>'+
           '<b>تسعير عن طريق الاتصال</b>'+
-          '<s>كلّم '+esc(BIZ.rep)+' مباشرة، ياخذ تفاصيل مكانك ويعطيك سعراً مبدئياً</s>'+
+          '<s>تواصل مع '+esc(BIZ.rep)+' مباشرة، ويعطيك سعراً مبدئياً حسب تفاصيل مكانك</s>'+
           '<i><b class="feeo">مجاني</b>'+ic('back','','ic-sm')+'</i></a>'+
       '</div></div>'+
     '<div class="sec" style="padding-top:0"><div class="note">'+
@@ -1856,7 +1856,7 @@ function renderCart(){
       '<div class="tot"><span>المجموع</span><b>'+sar(t.sub)+'</b></div>'+
       (t.off?'<div class="tot"><span>خصم '+esc(discNames())+' '+pct(t.off)+'</span><b class="cut">− '+sar(t.cut)+'</b></div>':'')+
       '<div class="tot big"><span>الإجمالي التقديري</span><b>'+sar(t.tot)+'</b></div>'+
-      '<p class="note" style="margin-top:12px">السعر تقديري — المندوب يعاين ويأكد لك السعر النهائي قبل ما يبدأ الشغل.</p>'+
+      '<p class="note" style="margin-top:12px">السعر تقديري — يعاين '+esc(BIZ.rep)+' المكان ويؤكد لك السعر النهائي قبل بدء العمل.</p>'+
     '</div></div>'+
     '<div class="sec" style="border:none"><button class="btn" onclick="startBooking()">أكمل الحجز</button>'+
       '<button class="btn btn-x btn-sm" style="margin-top:9px" onclick="clearCart()">'+ic('trash','','ic-sm')+'<span>أفرغ السلة</span></button></div>';
@@ -2133,7 +2133,7 @@ function payCard(dep,o){
       '<div class="pay-r"><s>البنك</s><b>'+esc(BANK.bank)+'</b></div>'+
       '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
       '<div class="pay-iban"><div><s>الآيبان</s><button type="button" onclick="copyIban()">نسخ</button></div><code>'+esc(ibanFmt(BANK.iban))+'</code></div>'+
-      '<p class="pay-n">'+(o?'حوّل العربون وأرسل لنا صورة الإيصال — نأكد موعدك أول ما يوصل.'
+      '<p class="pay-n">'+(o?'حوّل العربون وأرسل لنا صورة الإيصال — نؤكد موعدك أول ما يوصل.'
         :'بعد إرسال الطلب حوّل العربون وأرسل صورة الإيصال على واتساب. <b style="color:var(--tx)">الموعد ما يتثبت إلا بعد وصول العربون</b>، والباقي تدفعه بعد التنفيذ.')+'</p>'+
       (o?'<a class="btn btn-sm" style="margin:6px 0 6px;text-decoration:none" target="_blank" rel="noopener" href="'+depLink(o)+'">'+ic('chat','','ic-sm')+'<span>أرسل الإيصال على واتساب</span></a>':'')+
     '</div></div>';
@@ -2161,7 +2161,7 @@ function stepConfirm(){
     '<div class="fld" style="margin-top:16px"><label class="lb" for="bkNt">ملاحظات للفريق (اختياري)</label>'+
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="فيه درج ضيق · الباب الجانبي · أي شي يفيد الفريق"></textarea></div>'+
     (depOf(t.tot)?payCard(depOf(t.tot)):'')+
-    '<div class="note" style="margin-top:14px">بعد الإرسال يعاين '+esc(BIZ.rep)+' طلبك ويأكد السعر النهائي. تقدر تلغيه قبل التأكيد.</div>'+
+    '<div class="note" style="margin-top:14px">بعد الإرسال يراجع '+esc(BIZ.rep)+' طلبك ويؤكد السعر النهائي، وتقدر تلغيه قبل التأكيد.</div>'+
     '<button class="btn" style="margin-top:20px" id="bkGo" onclick="submitOrder()">أرسل الطلب</button>';
 }
 function stepConfirmQuote(){
@@ -2174,7 +2174,7 @@ function stepConfirmQuote(){
     '</div>'+
     quoteFields()+
     '<div class="fld"><label class="lb" for="bkNt">ملاحظات إضافية (اختياري)</label>'+
-      '<textarea class="in" id="bkNt" maxlength="600" placeholder="حالة المكان · متى تبي الخدمة · أي شي يفيد المندوب">'+esc(QW.nt||'')+'</textarea></div>'+
+      '<textarea class="in" id="bkNt" maxlength="600" placeholder="حالة المكان · متى تبي الخدمة · أي شي يفيد الفريق">'+esc(QW.nt||'')+'</textarea></div>'+
     '<div class="note acc">'+(QUOTE_FEE?'تدفع <b>'+QUOTE_FEE+' ر.س</b> للمعاينة، و<b>تُخصم كاملة من قيمة الخدمة</b> لو أكملت معنا. وإن ما ناسبك السعر ما تلزمك بشي.'
                                       :'الزيارة مجانية وما تلزمك بشي — تسمع السعر وتقرر.')+'</div>'+
     '<button class="btn" style="margin-top:20px" id="bkGo" '+(qwReady()?'':'disabled')+
@@ -2194,7 +2194,7 @@ function stepConfirmPkg(){
     '<div class="fld"><label class="lb" for="bkNt">ملاحظات للفريق (اختياري)</label>'+
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="فيه درج ضيق · الباب الجانبي · أي شي يفيد الفريق"></textarea></div>'+
     (depOf(p.p)?payCard(depOf(p.p)):'')+
-    '<div class="note" style="margin-top:14px">يتواصل معك '+esc(BIZ.rep)+' لتأكيد الاشتراك وترتيب المواعيد. تقدر توقفه في أي وقت.</div>'+
+    '<div class="note" style="margin-top:14px">يتواصل معك '+esc(BIZ.rep)+' لتأكيد الاشتراك وترتيب المواعيد، وتقدر توقفه في أي وقت.</div>'+
     '<button class="btn" style="margin-top:20px" id="bkGo" onclick="submitOrder()">اشترك الآن</button>';
 }
 /* لو سُبق العميل على الفترة نرجّعه لخطوة الموعد بعد تحديث التوفر — لا نتركه في شاشة ميتة */
@@ -2463,7 +2463,7 @@ function renderTerms(){
     '<h3>وين تُحفظ؟</h3>على خوادم Google Firebase، بصلاحيات ما تسمح لأي عميل آخر يشوف بياناتك.'+
     '<h3>حذف حسابك</h3>من <b>«حسابي ← حذف الحساب»</b> — يُمسح اسمك ورقمك وعناوينك فوراً وبلا انتظار. '+
     'تبقى فواتير طلباتك السابقة سجلاً محاسبياً للنشاط ولا تظهر لك بعد الحذف.'+
-    '<h3>الأسعار</h3>الأسعار داخل التطبيق تقديرية وتُحسب حسب الأصناف والكميات. المندوب يعاين ويأكد السعر النهائي قبل بدء العمل.'+
+    '<h3>الأسعار</h3>الأسعار داخل التطبيق تقديرية وتُحسب حسب الأصناف والكميات. يعاين فريق كلينولوجي المكان ويؤكد السعر النهائي قبل بدء العمل.'+
     '<h3>الإلغاء</h3>تقدر تلغي أي طلب قبل تأكيده مجاناً من «طلباتي».'+
     '<h3>الدفع</h3>الدفع عند تنفيذ الخدمة مباشرة مع الفريق — التطبيق ما يستوفي أي مبالغ.';
 }
