@@ -18,10 +18,10 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-body{font-family:'Noto Kufi Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;min-height:100vh;color:#222}
+body{font-family:'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif;background:#f5f5f5;min-height:100vh;color:#222}
 .hide{display:none!important}
 
 /* ===== FORM PAGE ===== */
@@ -2611,7 +2611,7 @@ if(TKS.length){
 }else{CURT='';}
 el.innerHTML=h;
 if(CURT){if(TKS.indexOf(CURT)>=0)renderTeamDetail(CURT);else CURT='';}
-if(n>0&&CHL){try{kC('chR');CH['chR']=new Chart(document.getElementById('chR'),{type:'radar',data:{labels:cats.map(function(c){return c.l;}),datasets:[{data:cats.map(function(c){return parseFloat(avg(D,c.k));}),backgroundColor:'rgba(8,145,178,0.15)',borderColor:'#0891b2',borderWidth:2,pointBackgroundColor:'#0891b2'}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:5,ticks:{stepSize:1,font:{size:9}},pointLabels:{font:{size:11,family:"'Noto Kufi Arabic'"}}}},plugins:{legend:{display:false}}}});}catch(e){}}}
+if(n>0&&CHL){try{kC('chR');CH['chR']=new Chart(document.getElementById('chR'),{type:'radar',data:{labels:cats.map(function(c){return c.l;}),datasets:[{data:cats.map(function(c){return parseFloat(avg(D,c.k));}),backgroundColor:'rgba(8,145,178,0.15)',borderColor:'#0891b2',borderWidth:2,pointBackgroundColor:'#0891b2'}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:5,ticks:{stepSize:1,font:{size:9}},pointLabels:{font:{size:11,family:"'IBM Plex Sans Arabic'"}}}},plugins:{legend:{display:false}}}});}catch(e){}}}
 
 function isTestReview(r){
   var testNames=['تجربة النظام','فحص النظام','عميل تجريبي غاضب','عميل تجريبي سعيد','تقييم ناقص للاختبار'];
@@ -2907,7 +2907,7 @@ if(!md.length){el.innerHTML='<div class="empty">لا توجد بيانات كا�
 var h=CHL?'<div class="cc"><h3>تطور التقييم</h3><div class="cw"><canvas id="chL"></canvas></div></div>':'';
 md.slice().reverse().forEach(function(m){var bc=m.o>=4?'#0284c7':m.o>=3?'#eab308':'#ef4444';h+='<div class="mc" style="border-right-color:'+bc+'"><div class="mc-h"><div class="mc-n">'+m.m+'</div><div class="mc-c">'+m.n+' تقييم</div></div><div class="mc-g"><div class="mc-s"><div class="mc-sv" style="color:#f59e0b">'+m.o+'</div><div class="mc-sl">العام</div></div><div class="mc-s"><div class="mc-sv" style="color:#0284c7">'+m.c+'</div><div class="mc-sl">النظافة</div></div><div class="mc-s"><div class="mc-sv" style="color:#3b82f6">'+m.p+'</div><div class="mc-sl">الموعد</div></div><div class="mc-s"><div class="mc-sv" style="color:#8b5cf6">'+m.tw+'</div><div class="mc-sl">التعامل</div></div></div><div style="margin-top:8px;font-size:11px;color:#999;text-align:center">ترشيح: <b style="color:#0284c7">'+m.rp+'%</b></div></div>';});
 el.innerHTML=h;
-if(CHL&&document.getElementById('chL')){try{kC('chL');CH['chL']=new Chart(document.getElementById('chL'),{type:'line',data:{labels:md.map(function(m){return m.m;}),datasets:[{label:'العام',data:md.map(function(m){return m.o;}),borderColor:'#0891b2',backgroundColor:'rgba(8,145,178,0.1)',borderWidth:3,pointBackgroundColor:'#0891b2',pointRadius:4,fill:true,tension:.3},{label:'النظافة',data:md.map(function(m){return m.c;}),borderColor:'#3b82f6',borderWidth:2,borderDash:[5,5],pointRadius:3,fill:false,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:5,ticks:{stepSize:1}}},plugins:{legend:{labels:{font:{size:10,family:"'Noto Kufi Arabic'"}}}}}});}catch(e){}}}
+if(CHL&&document.getElementById('chL')){try{kC('chL');CH['chL']=new Chart(document.getElementById('chL'),{type:'line',data:{labels:md.map(function(m){return m.m;}),datasets:[{label:'العام',data:md.map(function(m){return m.o;}),borderColor:'#0891b2',backgroundColor:'rgba(8,145,178,0.1)',borderWidth:3,pointBackgroundColor:'#0891b2',pointRadius:4,fill:true,tension:.3},{label:'النظافة',data:md.map(function(m){return m.c;}),borderColor:'#3b82f6',borderWidth:2,borderDash:[5,5],pointRadius:3,fill:false,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:5,ticks:{stepSize:1}}},plugins:{legend:{labels:{font:{size:10,family:"'IBM Plex Sans Arabic'"}}}}}});}catch(e){}}}
 
 function isFlag(r){return r.o<=2&&!r.handled;}
 
