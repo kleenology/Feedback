@@ -1108,7 +1108,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.26.2000';
+var APP_VER='2026.11.26.2100';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1119,6 +1119,8 @@ var ORD_BASE=1000;
 var QUOTE_FEE=29;
 /* العربون: نسبة من الإجمالي التقديري تُحوَّل لتثبيت الحجز. صفر = بلا عربون */
 var DEP_PCT=0.5;
+/* الحد الأدنى لقيمة الطلب بعد الخصم (من الشروط والأحكام). صفر = بلا حد. الباقات والمعاينة مستثناة */
+var MIN_ORDER=250;
 var BANK={bank:'مصرف الإنماء',iban:'SA5405000068204621866000',name:'مؤسسة علم التنظيف التجارية'};
 /* خادم رموز التحقق (مجلد server/). فاضي = نرجع لرموز فايربيس */
 var OTP_API='';
@@ -1945,7 +1947,8 @@ function renderCart(){
       '<div class="tot big"><span>الإجمالي التقديري</span><b>'+sar(t.tot)+'</b></div>'+
       '<p class="note" style="margin-top:12px">السعر تقديري — يعاين '+esc(BIZ.rep)+' المكان ويؤكد لك السعر النهائي قبل بدء العمل.</p>'+
     '</div></div>'+
-    '<div class="sec" style="border:none"><button class="btn" onclick="startBooking()">أكمل الحجز</button>'+
+    (t.tot<MIN_ORDER?'<div class="sec" style="border:none;padding-bottom:0"><div class="note acc">الحد الأدنى للطلب <b>'+MIN_ORDER+' ر.س</b> — أضف <b>'+(MIN_ORDER-t.tot)+' ر.س</b> وتقدر تكمل الحجز.</div></div>':'')+
+    '<div class="sec" style="border:none"><button class="btn" onclick="startBooking()"'+(t.tot<MIN_ORDER?' disabled':'')+'>أكمل الحجز</button>'+
       '<button class="btn btn-x btn-sm" style="margin-top:9px" onclick="clearCart()">'+ic('trash','','ic-sm')+'<span>أفرغ السلة</span></button></div>';
 }
 function clearCart(){if(!confirm('تفريغ السلة؟'))return;CART={};LS.set('cart',{});
@@ -1955,6 +1958,7 @@ function clearCart(){if(!confirm('تفريغ السلة؟'))return;CART={};LS.se
 var STEPS=['الموعد','العنوان','التأكيد'];
 function startBooking(){
   if(!cartLines().length){toast('سلتك فاضية');return;}
+  if(cartTotals().tot<MIN_ORDER){toast('الحد الأدنى للطلب '+MIN_ORDER+' ر.س');go('scCart');setTab('');renderCart();return;}
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
   BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,quote:null,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
