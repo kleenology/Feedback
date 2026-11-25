@@ -1002,6 +1002,7 @@ function orCard(o){
     '<div class="or-ac">'+
       (nx?'<button class="go" onclick="orAdvance(\''+o._id+'\')">'+ORNEXTL[o.st]+'</button>':'')+
       '<button onclick="orPrice(\''+o._id+'\')">'+(o.price?'عدّل السعر':'حدّد السعر')+'</button>'+
+      (o.dep?'<button onclick="orRcpt(\''+o._id+'\')">🧾 الإيصال</button>':'')+
       (o.ph?'<a href="https://wa.me/'+esc(o.ph)+'?text='+encodeURIComponent(orMsg(o))+'" target="_blank" rel="noopener">واتساب</a>':'')+
       (orMap(o)?'<a href="'+orMap(o)+'" target="_blank" rel="noopener">الخريطة</a>':'')+
       (orLive(o)?'<button class="x" onclick="orCancel(\''+o._id+'\')">إلغاء</button>':'')+
@@ -1014,6 +1015,24 @@ function orMsg(o){
   if(o.st==='confirmed')return g+' '+nm+' 🌟\nموعدك مثبّت: '+orWhen(o)+'\nنشوفك على خير ✨';
   if(o.st==='on_way')return g+' '+nm+' 🌟\nالفريق في الطريق لك الحين ✨';
   return g+' '+nm+' 🌟\nمعك '+BIZ.rep;
+}
+/* إيصال العربون: مستند receipts/{معرّف الطلب} يرفعه العميل من التطبيق. نجيبه وقت الضغط فقط
+   — الصور ثقيلة ونجيبها كلها مع الطلبات ما له داعي */
+function orRcpt(id){
+  var o=OR.filter(function(x){return x._id===id;})[0]||{};
+  db.collection('receipts').doc(id).get().then(function(d){
+    if(!d.exists){showToast('ما رفع العميل إيصال للحين');return;}
+    var r=d.data()||{},w=document.createElement('div');
+    w.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(10,25,35,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px';
+    w.innerHTML='<div style="color:#fff;font-weight:700;font-size:14px;text-align:center">إيصال طلب '+(o.no?'#'+esc(o.no):'')+' — '+esc(o.n||'')+
+      '<br><span style="font-weight:400;opacity:.8">العربون المطلوب: '+esc(o.dep||r.amt||0)+' ر.س · '+esc(String(r.at||'').slice(0,16).replace('T',' '))+'</span></div>'+
+      '<img src="'+r.img+'" style="max-width:100%;max-height:72vh;border-radius:12px;background:#fff">'+
+      '<div style="display:flex;gap:10px">'+(o.st==='new'?'<button id="rcOk" style="background:#16a34a;color:#fff;border:none;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700">العربون وصل — أكّد الطلب</button>':'')+
+      '<button id="rcX" style="background:#fff;border:none;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700">إغلاق</button></div>';
+    document.body.appendChild(w);
+    w.querySelector('#rcX').onclick=function(){w.remove();};
+    var ok=w.querySelector('#rcOk');if(ok)ok.onclick=function(){w.remove();orAdvance(id);};
+  }).catch(function(e){showToast(e&&e.code==='permission-denied'?'انشر firestore.rules الجديدة (مجموعة receipts)':'تعذّر جلب الإيصال');});
 }
 function orSet(id,patch){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return Promise.resolve();
