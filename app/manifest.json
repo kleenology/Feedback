@@ -2,6 +2,7 @@
   "name": "كلينولوجي — طلب خدمات التنظيف",
   "short_name": "كلينولوجي",
   "description": "اطلب تنظيف بيتك أو مكتبك، تابع حالة طلبك، واحجز موعدك.",
+  "id": "./",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

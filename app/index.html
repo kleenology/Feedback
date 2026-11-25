@@ -667,6 +667,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
   </div></header>
   <div class="wrap">
     <div id="nameCard"></div>
+    <div id="instCard"></div>
     <div class="sec" style="border:none;padding-bottom:0">
       <button class="promo" id="heroBtn" onclick="openService('sofa')">
         <span class="bub b1"></span><span class="bub b2"></span></button>
@@ -865,7 +866,8 @@ var IC={
  plus:'<path d="M12 5.2v13.6M5.2 12h13.6"/>',
  minus:'<path d="M5.2 12h13.6"/>',
  repeat:'<path d="M4 8.6A4 4 0 0 1 8 4.6h9.4M17.4 1.8l2.8 2.8-2.8 2.8M20 15.4a4 4 0 0 1-4 4H6.6M6.6 22.2 3.8 19.4l2.8-2.8"/>',
- out:'<path d="M9.4 20.6H5.2a2 2 0 0 1-2-2V5.4a2 2 0 0 1 2-2h4.2M15.6 16.6 20.6 12l-5-4.6M20.6 12H9.4"/>'
+ out:'<path d="M9.4 20.6H5.2a2 2 0 0 1-2-2V5.4a2 2 0 0 1 2-2h4.2M15.6 16.6 20.6 12l-5-4.6M20.6 12H9.4"/>',
+ dl:'<path d="M12 3.6v11.6M7 10.6l5 5 5-5M4.4 20.4h15.2"/>'
 };
 function ic(k,c,sz){return '<svg class="ic'+(sz?' '+sz:'')+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(IC[k]||'')+'</svg>';}
 
@@ -1021,7 +1023,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.09.09.0155';
+var APP_VER='2026.11.25.1900';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1410,6 +1412,7 @@ function renderHome(){
       '</div>'+
       '<p style="font-size:12.5px;color:var(--mut);margin-top:8px">عشان نناديك باسمك عند وصول الفريق.</p>'+
     '</div></div>';
+  renderInstCard();
   $('featList').innerHTML=FEATS.map(function(f){
     return '<span class="chip">'+ic(f.ic,'','ic-sm')+'<span>'+esc(f.t)+'</span></span>';}).join('');
 }
@@ -2323,6 +2326,7 @@ function renderMe(){
     '<div class="mrow" style="cursor:default"><span class="mic">'+ic('chat')+'</span>'+
       '<span class="mtx"><b>عروض وتخفيضات</b><s>نرسل لك عروضنا على واتساب — تقدر توقفها متى ما تبي</s></span>'+
       '<button class="sw" id="okSw" aria-pressed="'+(!!ME.ok)+'" aria-label="عروض وتخفيضات" onclick="toggleOk()"><i></i></button></div>'+
+    (canInstall()?mrow('dl','ثبّت التطبيق على جوالك','يفتح من شاشتك الرئيسية مثل أي تطبيق','doInstall()'):'')+
     mrow('shield','الشروط وسياسة الخصوصية','','openTerms()')+
     mrow('out','تسجيل الخروج','','logout()')+
     mrow('trash','حذف الحساب','يمسح بياناتك نهائياً','askDelAccount()','danger')+
@@ -2431,6 +2435,51 @@ document.querySelectorAll('.tab').forEach(function(t){
 $('bkPh').innerHTML=ic('back','','ic-sm')+'<span>تغيير الرقم</span>';
 $('inPh').addEventListener('keydown',function(e){if(e.key==='Enter')sendCode();});
 renderTerms();
+/* ===== تثبيت التطبيق (PWA) =====
+   أندرويد/كروم: نمسك حدث beforeinstallprompt ونطلق نافذة التثبيت من زرّنا.
+   آيفون: سفاري ما يدعم التثبيت البرمجي، فنشرح «مشاركة ← إضافة إلى الشاشة الرئيسية». */
+var INSTP=null;
+var IS_IOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function isStandalone(){
+  return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
+function canInstall(){return !window.Capacitor&&!isStandalone()&&(!!INSTP||IS_IOS);}
+function instHidden(){try{return localStorage.getItem('kln_inst_x')==='1';}catch(e){return false;}}
+function renderInstCard(){
+  var el=$('instCard');if(!el)return;
+  el.innerHTML=(canInstall()&&!instHidden())?
+    '<div class="sec" style="padding-bottom:0"><div class="card" style="padding:16px;display:flex;align-items:center;gap:12px">'+
+      '<span class="mic" style="width:42px;height:42px;border-radius:14px;background:var(--blue-l);color:var(--blue-d);display:grid;place-items:center;flex:0 0 auto">'+ic('dl')+'</span>'+
+      '<span style="flex:1;min-width:0"><b style="display:block;font-size:14.5px;font-family:var(--dsp)">ثبّت التطبيق</b>'+
+      '<span style="display:block;font-size:12.5px;color:var(--mut);margin-top:2px">يفتح من شاشتك الرئيسية</span></span>'+
+      '<button class="btn" style="width:auto;flex:0 0 auto;padding:12px 18px" onclick="doInstall()">ثبّت</button>'+
+      '<button aria-label="إخفاء" style="flex:0 0 auto;color:var(--faint);padding:4px" onclick="hideInst()">'+ic('close','','ic-sm')+'</button>'+
+    '</div></div>':'';
+}
+function hideInst(){try{localStorage.setItem('kln_inst_x','1');}catch(e){}renderInstCard();}
+function doInstall(){
+  if(INSTP){
+    var p=INSTP;INSTP=null;
+    p.prompt();
+    (p.userChoice||Promise.resolve({})).then(function(c){
+      if(c&&c.outcome==='accepted')toast('تم التثبيت 🎉');
+      renderInstCard();if(AUTHED)renderMe();
+    }).catch(function(){});
+    return;
+  }
+  if(IS_IOS){
+    openSheet('ثبّت التطبيق على الآيفون',
+      '<ol style="padding-inline-start:20px;line-height:2.1;font-size:14.5px">'+
+        '<li>افتح الصفحة في <b>سفاري</b></li>'+
+        '<li>اضغط زر <b>المشاركة</b> <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3v12M8 7l4-4 4 4M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg> أسفل الشاشة</li>'+
+        '<li>اختر <b>«إضافة إلى الشاشة الرئيسية»</b></li>'+
+        '<li>اضغط <b>«إضافة»</b> — ويطلع لك التطبيق بين تطبيقاتك</li>'+
+      '</ol>');
+  }
+}
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();INSTP=e;renderInstCard();if(AUTHED)renderMe();});
+window.addEventListener('appinstalled',function(){INSTP=null;renderInstCard();if(AUTHED)renderMe();});
+
 /* الملف في الجذر، فنطاقه يغطي /app/ — والعميل اللي ما يفتح إلا التطبيق يسجّله بنفسه */
 if('serviceWorker' in navigator&&window.isSecureContext){
   window.addEventListener('load',function(){navigator.serviceWorker.register('../sw.js').catch(function(){});});

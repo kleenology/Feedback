@@ -1,5 +1,5 @@
 /* كاش الأصول الثابتة فقط — بيانات Firestore تُجلب دائماً من الشبكة */
-var CACHE = 'kln-v47';
+var CACHE = 'kln-v48';
 var ASSETS = ['./index.html', './reviews.html', './app/index.html', './app/manifest.json', './logo.png', './icon.png', './icon-192.png', './icon-512.png', './manifest.json'];
 
 self.addEventListener('install', function (e) {
@@ -28,7 +28,12 @@ self.addEventListener('fetch', function (e) {
         var net = fetch(req).then(function (res) {
           if (res && res.status === 200) c.put(req, res.clone());
           return res;
-        }).catch(function () { return hit || c.match('./index.html'); });
+        }).catch(function () {
+          if (hit) return hit;
+          /* بدون شبكة: تطبيق العميل يرجع لصفحته، مو لصفحة التقييم */
+          if (isDoc) return c.match(/\/app(\/|$)/.test(url.pathname) ? './app/index.html' : './index.html');
+          return Promise.reject(new Error('offline'));
+        });
 
         /* الصفحات: الشبكة أولاً بمهلة ثانيتين ونصف — نسخة قديمة من التطبيق تعني
            أخطاءً وهمية يطاردها المستخدم، والكاش يبقى شبكة أمان عند ضعف الشبكة */
