@@ -1,5 +1,5 @@
 /* كاش الأصول الثابتة فقط — بيانات Firestore تُجلب دائماً من الشبكة */
-var CACHE = 'kln-v60';
+var CACHE = 'kln-v61';
 /* مكتبات خارجية روابطها فيها رقم إصدار ثابت (فايربيس 10.12.0، ملفات الخط) — محتواها ما يتغير،
    فتنحفظ مرة وتُخدم من الجهاز. كاش منفصل يعيش بين إصدارات التطبيق */
 var LIB = 'kln-lib-1';
@@ -45,7 +45,14 @@ self.addEventListener('fetch', function (e) {
   e.respondWith(
     caches.open(CACHE).then(function (c) {
       return c.match(req).then(function (hit) {
-        var net = fetch(req).then(function (res) {
+        /* الصفحات نتحقق منها عند الخادم كل مرة: GitHub Pages يخلّي المتصفح يحتفظ بنسخة
+           عشر دقايق، فكان التحديث ما يوصل حتى بعد إعادة التحميل التلقائية */
+        var fresh = isDoc
+          ? fetch(new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' })).then(function (r) {
+              return r.redirected ? fetch(req) : r; /* التنقل ما يقبل رداً محوَّلاً */
+            })
+          : fetch(req);
+        var net = fresh.then(function (res) {
           if (res && res.status === 200) c.put(req, res.clone());
           return res;
         }).catch(function () {
