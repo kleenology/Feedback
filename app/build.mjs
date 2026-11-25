@@ -27,5 +27,8 @@ let man = await readFile(join(here, 'manifest.json'), 'utf8');
 for (const f of IMGS) man = man.replaceAll('../' + f, f);
 await writeFile(join(www, 'manifest.json'), man);
 for (const f of IMGS) await copyFile(join(root, f), join(www, f));
+/* صور مجلد app/img (الشاشة الافتتاحية وغيرها) تنتقل بنفس مسارها */
+await mkdir(join(www, 'img'), { recursive: true });
+await copyFile(join(here, 'img', 'splash.png'), join(www, 'img', 'splash.png'));
 
 console.log('✓ www/ جاهز — شغّل: npx cap sync ios');
