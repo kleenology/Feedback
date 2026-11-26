@@ -1419,7 +1419,8 @@ function appUsersHtml(){
       .map(function(f){return '<button type="button" class="of-tp'+(CUF===f[0]?' on':'')+
         '" onclick="CUF=\''+f[0]+'\';rCu()">'+f[1]+' ('+f[2]+')</button>';}).join('')+
     '</div>'+
-    '<input class="of-in" id="cuQ" style="margin-bottom:9px" placeholder="ابحث باسم أو رقم أو إيميل" value="'+esc(CUQ)+'">';
+    '<input class="of-in" id="cuQ" style="margin-bottom:9px" placeholder="ابحث باسم أو رقم أو إيميل" value="'+esc(CUQ)+'">'+
+    '<button type="button" class="of-tp" style="width:100%;margin-bottom:9px" onclick="cuCsv()">⬇️ تنزيل العملاء (Excel)</button>';
   if(!L.length)h+='<div class="empty">'+(CUQ?'ما فيه نتيجة':'ما فيه أحد في هذا الفلتر')+'</div>';
   L.slice(0,40).forEach(function(r){
     var c=r.c;
@@ -1437,6 +1438,15 @@ function appUsersHtml(){
   h+='</div>';
   if(ok.length)h+='<div class="of-note" style="margin-bottom:12px">💡 <b>'+ok.length+'</b> عميلاً فعّلوا «عروض وتخفيضات» في التطبيق — هؤلاء وحدهم من يجوز ترسل لهم عروضاً، والباقي تواصل معهم بخصوص طلباتهم فقط.</div>';
   return h;
+}
+/* نسخة احتياطية عندك: كل مستخدمي التطبيق في ملف يفتحه Excel. كلمات المرور ما تُحفظ عندنا أصلاً */
+function cuCsv(){
+  if(!CU.length){showToast('القائمة فارغة');return;}
+  var rows=[['الاسم','الجوال','الإيميل','عدد الطلبات','وافق على العروض','أول دخول','آخر دخول']];
+  CU.forEach(function(c){rows.push([c.n||'',c.ph?'+'+c.ph:'',c.em||'',cuOrders(c),c.ok?'نعم':'لا',cuDay(c.at),cuDay(c.seen)]);});
+  var csv=rows.map(function(row){return row.map(csvCell).join(',');}).join('\r\n');
+  ofDL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-app-users-'+new Date().toISOString().slice(0,10)+'.csv');
+  showToast('نزّلنا '+CU.length+' عميل ✓');
 }
 function cuDay(iso){
   if(!iso)return '—';
