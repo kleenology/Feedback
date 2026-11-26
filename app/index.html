@@ -90,6 +90,32 @@ button{cursor:pointer;border:none;background:none}
 .pic{display:inline-block;width:46px;height:46px;flex:0 0 auto;background:var(--blue-d);
   -webkit-mask:var(--pic) center/contain no-repeat;mask:var(--pic) center/contain no-repeat}
 .pic-xl{width:76px;height:76px}
+/* ===== الرئيسية: الباقات وآراء العملاء — صفوف تنسحب يمين ويسار ===== */
+.hrow{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+  margin:0 -18px;padding:4px 18px 12px}
+.hrow::-webkit-scrollbar{display:none}
+.hrow>*{scroll-snap-align:start;flex:0 0 auto}
+.sec-h .more{font-size:13px;font-weight:700;color:var(--blue-d);display:flex;align-items:center;gap:4px}
+.hp{width:228px;background:var(--card);border-radius:22px;padding:16px;text-align:right;box-shadow:var(--sh);
+  display:flex;flex-direction:column;gap:6px;position:relative}
+.hp.top{box-shadow:0 0 0 2px var(--gold),var(--sh)}
+.hp .tag{position:absolute;top:14px;left:14px;background:var(--gold);color:#4A3200;font-size:10.5px;font-weight:700;
+  border-radius:999px;padding:3px 10px}
+.hp b{font-size:16px;font-weight:700;font-family:var(--dsp)}
+.hp .ev{font-size:12.5px;color:var(--mut)}
+.hp .pr{display:flex;align-items:baseline;gap:6px;margin-top:6px}
+.hp .pr strong{font-size:24px;font-weight:700;color:var(--blue-d);font-variant-numeric:tabular-nums;font-family:var(--dsp)}
+.hp .pr small{font-size:12px;color:var(--mut)}
+.hp .pr del{font-size:13px;color:var(--faint)}
+.hp .sv{align-self:flex-start;background:var(--okl);color:var(--ok);font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px}
+.rv{width:262px;background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:8px}
+.rv .rv-st{color:var(--gold);font-size:15px;letter-spacing:2px;direction:ltr;text-align:right}
+.rv p{font-size:14px;line-height:1.8;color:var(--tx);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;flex:1}
+.rv .who{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.rv .who i{width:30px;height:30px;border-radius:50%;background:var(--blue-l);color:var(--blue-d);font-style:normal;
+  display:grid;place-items:center;font-size:13px}
+.rv-avg{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mut)}
+.rv-avg b{color:var(--tx);font-size:15px}
 /* الخدمات: كل الأيقونات بأسلوب واحد مثل الأيقونات المرخّصة — خط واحد بلون الهوية، بلا تعبئة،
    وبنفس المقاس. الرسوم المدمجة تتحوّل لخطوط بس لين توصل بقية الملفات */
 .svc .il,.svc .pic{width:44px;height:44px}
@@ -819,6 +845,8 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
       <div class="sec-h"><h2>الخدمات</h2></div>
       <div class="svcs" id="svcGrid"></div>
     </div>
+    <div id="homePkgs"></div>
+    <div id="homeRevs"></div>
   </div>
 </section>
 
@@ -1169,7 +1197,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.1600';
+var APP_VER='2026.11.27.1800';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1610,6 +1638,7 @@ function onSignedIn(uid){
     ME.n=snap.n||'';ME.ok=!!snap.ok;ORD=snap.ord||[];ADR=snap.adr||[];
     renderAll();go('scHome');setTab('scHome');shown=true;
   }
+  loadRevs();
   /* المواعيد ما تلزم إلا عند الحجز — تتحمّل بالخلفية، ولو فتح الحجز قبلها نعيد رسمه */
   loadSlots().then(function(){var b=$('scBook');if(b&&b.classList.contains('on')&&BK.step===0)renderBook();});
   Promise.all([API.loadMe(),API.orders(),API.addrs()]).then(function(){
@@ -1632,7 +1661,46 @@ function logout(){
 <script>
 /* ================= الرئيسية ================= */
 function renderAll(){renderHome();renderCart();renderOrders();renderMe();renderPkgs();syncCartUI();}
+/* الباقات في الرئيسية: نفس بيانات تبويب «الباقات»، مختصرة وتنسحب */
+function renderHomePkgs(){
+  var el=$('homePkgs');if(!el)return;
+  el.innerHTML='<div class="sec" style="padding-bottom:0"><div class="sec-h"><h2>الباقات الشهرية</h2>'+
+      '<button class="more" onclick="go(\'scPkgs\');setTab(\'scPkgs\');renderPkgs()">الكل'+ic('back','','ic-sm')+'</button></div>'+
+    '<div class="hrow">'+PKGS.map(function(p,i){
+      var pc=p.was?Math.round((p.was-p.p)/p.was*100):0;
+      return '<button class="hp'+(i===1?' top':'')+'" onclick="openPkg(\''+p.k+'\')">'+
+        (i===1?'<span class="tag">الأكثر طلباً</span>':'')+
+        '<b>'+esc(p.t)+'</b><span class="ev">'+esc(p.every)+'</span>'+
+        '<span class="pr"><strong>'+p.p.toLocaleString('en-US')+'</strong><small>ر.س / شهرياً</small>'+
+          (p.was?'<del class="mono">'+p.was.toLocaleString('en-US')+'</del>':'')+'</span>'+
+        (pc?'<span class="sv">وفّر '+pct(pc)+'</span>':'')+'</button>';}).join('')+'</div></div>';
+}
+/* آراء العملاء: من public_reviews — اللي ينشرها الفريق من لوحة التحكم بس، مو كل تقييم.
+   نعرض اللي فيها تعليق و٤ نجوم فأكثر، والاسم الأول بس */
+var REVS=null;
+function loadRevs(){
+  if(DEMO){REVS=LS.get('revs',[]);renderHomeRevs();return;}
+  if(!db)return;
+  if(!REVS){REVS=LS.get('revs',null);if(REVS)renderHomeRevs();}
+  db.collection('public_reviews').orderBy('ts','desc').limit(20).get().then(function(sn){
+    var a=[];sn.forEach(function(d){var r=d.data()||{};a.push({n:r.n||'',o:Number(r.o)||0,nt:String(r.nt||'')});});
+    REVS=a;LS.set('revs',a);renderHomeRevs();
+  }).catch(function(e){console.log('revs:',e&&e.code);});
+}
+function renderHomeRevs(){
+  var el=$('homeRevs');if(!el)return;
+  var L=(REVS||[]).filter(function(r){return r.o>=4&&String(r.nt).trim().length>=8;}).slice(0,10);
+  if(!L.length){el.innerHTML='';return;}
+  var all=(REVS||[]).filter(function(r){return r.o>0;}),avg=all.reduce(function(s,r){return s+r.o;},0)/all.length;
+  el.innerHTML='<div class="sec"><div class="sec-h"><h2>آراء عملائنا</h2>'+
+      '<span class="rv-avg"><b class="mono">'+avg.toFixed(1)+'</b><span style="color:var(--gold)">★</span> من '+all.length+' تقييم</span></div>'+
+    '<div class="hrow">'+L.map(function(r){
+      var nm=String(r.n||'عميل').trim().split(/\s+/)[0]||'عميل';
+      return '<div class="rv"><span class="rv-st">'+'★★★★★'.slice(0,Math.round(r.o))+'</span>'+
+        '<p>'+esc(r.nt)+'</p><span class="who"><i>'+esc(nm.charAt(0))+'</i>'+esc(nm)+'</span></div>';}).join('')+'</div></div>';
+}
 function renderHome(){
+  renderHomePkgs();renderHomeRevs();
   $('avatar').textContent=(ME.n||'؟').trim().charAt(0);
   $('hiName').textContent=ME.n||greet();
   var top=TIERS[TIERS.length-1];
