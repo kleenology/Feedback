@@ -1,6 +1,6 @@
 /* يجهّز مجلد www/ اللي يبنيه Capacitor داخل تطبيق آيفون.
    ننسخ ملفات الويب كما هي، ونصلّح مسار الشعار لأنه خارج مجلد app/. */
-import { mkdir, rm, copyFile, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, rm, copyFile, readFile, writeFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -29,6 +29,7 @@ await writeFile(join(www, 'manifest.json'), man);
 for (const f of IMGS) await copyFile(join(root, f), join(www, f));
 /* صور مجلد app/img (الشاشة الافتتاحية وغيرها) تنتقل بنفس مسارها */
 await mkdir(join(www, 'img'), { recursive: true });
-await copyFile(join(here, 'img', 'splash.png'), join(www, 'img', 'splash.png'));
+for (const f of (await readdir(join(here, 'img'))).filter(f => /\.(png|svg|webp|jpe?g)$/i.test(f)))
+  await copyFile(join(here, 'img', f), join(www, 'img', f));
 
 console.log('✓ www/ جاهز — شغّل: npx cap sync ios');
