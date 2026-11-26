@@ -520,6 +520,15 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .paybar .due s{display:block;text-decoration:none;font-size:12px;color:var(--mut)}
 .paybar .due b{font-size:24px;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums}
 .paybar .due b small{font-size:13px;font-weight:600;color:var(--mut)}
+/* المدفوع والمتبقي في بطاقة الطلب */
+.paid{background:var(--okl);border-radius:var(--r3);padding:6px 14px;margin-top:12px}
+.paid>div{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:14px}
+.paid>div+div{border-top:1px solid rgba(18,153,111,.15)}
+.paid>div>span{display:flex;align-items:center;gap:6px;color:var(--ok);font-weight:600}
+.paid>div>span .ic{width:15px;height:15px}
+.paid>div>b{font-weight:700;white-space:nowrap}
+.paid>div.rem>span{color:var(--tx)}
+.paid .pf{justify-content:center;color:var(--ok);font-weight:700}
 /* إيصال التحويل */
 .rcpt{display:flex;align-items:center;gap:14px;background:var(--card);border:2px dashed var(--blue);border-radius:20px;
   padding:16px;cursor:pointer;box-shadow:var(--sh)}
@@ -1123,7 +1132,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.0100';
+var APP_VER='2026.11.27.0300';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2495,11 +2504,21 @@ function ordCard(o,live){
       '</div></div>':'')+
     (o.est?'<div class="tot'+(o.price?'':' big')+'" style="margin-top:6px"><span>'+(isSub(o)?'شهرياً':o.price?'التقديري':'الإجمالي التقديري')+'</span><b>'+sar(o.est)+'</b></div>':'')+
     (o.price?'<div class="tot big"><span>السعر النهائي</span><b>'+sar(o.price)+'</b></div>':'')+
+    paidBox(o)+
     (o.st==='new'&&o.dep?payCard(o.dep,o):'')+
     timeline(o)+
     (o.st==='new'?'<button class="btn btn-x btn-sm" style="margin-top:15px" onclick="cancelOrder(\''+o.id+'\')">'+ic('trash','','ic-sm')+'<span>إلغاء الطلب</span></button>':'')+
     (o.st==='done'?'<a class="btn btn-2 btn-sm" style="margin-top:15px;text-decoration:none" target="_blank" rel="noopener" href="'+waLink(o)+'">'+ic('chat','','ic-sm')+'<span>تواصل معنا</span></a>':'')+
     '</article>';
+}
+/* المدفوعات يسجّلها الفريق من اللوحة: paid = كل المستلم. نعرض المستلم والمتبقي */
+function paidBox(o){
+  var P=Number(o.paid)||0;if(!P||o.st==='cancelled')return '';
+  var T=Number(o.price)||Number(o.est)||0,R=Math.max(0,T-P);
+  return '<div class="paid'+(R?'':' full')+'">'+
+    '<div><span>'+ic('check','','ic-sm')+'استلمنا</span><b>'+sar(P)+'</b></div>'+
+    (R?'<div class="rem"><span>المتبقي — تدفعه بعد التنفيذ</span><b>'+sar(R)+'</b></div>'
+      :'<div class="pf">مدفوع بالكامل — شكراً لك</div>')+'</div>';
 }
 function toggleTl(id){if(ORX[id])delete ORX[id];else ORX[id]=1;renderOrders();renderHome();}
 function timeline(o){

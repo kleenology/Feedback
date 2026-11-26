@@ -998,11 +998,14 @@ function orCard(o){
       (isSub(o)?'شهرياً':'التقديري'+(o.off?' (بعد خصم '+o.off+'%)':''))+'</span><b>'+(o.est||0)+' ر.س</b></div>'+
       (o.dep?'<div><span style="color:#b7791f">العربون المطلوب</span><b style="color:#b7791f">'+esc(o.dep)+' ر.س</b></div>':'')+
       (o.price?'<div><span style="color:#16a34a">السعر النهائي</span><b style="color:#16a34a">'+esc(o.price)+' ر.س</b></div>':'')+
+      (o.paid?'<div><span style="color:#0f7cb8">المستلم</span><b style="color:#0f7cb8">'+esc(o.paid)+' ر.س</b></div>'+
+        '<div><span style="color:'+(orRem(o)>0?'#b45309':'#16a34a')+'">'+(orRem(o)>0?'المتبقي':'✓ مدفوع بالكامل')+'</span><b style="color:'+(orRem(o)>0?'#b45309':'#16a34a')+'">'+(orRem(o)>0?orRem(o)+' ر.س':'')+'</b></div>':'')+
       '</div>':'')+
     '<div class="or-ac">'+
       (nx?'<button class="go" onclick="orAdvance(\''+o._id+'\')">'+ORNEXTL[o.st]+'</button>':'')+
       '<button onclick="orPrice(\''+o._id+'\')">'+(o.price?'عدّل السعر':'حدّد السعر')+'</button>'+
       (o.dep?'<button onclick="orRcpt(\''+o._id+'\')">🧾 الإيصال</button>':'')+
+      (o.st!=='cancelled'?'<button onclick="orPaid(\''+o._id+'\')">💰 المستلم</button>':'')+
       (o.ph?'<a href="https://wa.me/'+esc(o.ph)+'?text='+encodeURIComponent(orMsg(o))+'" target="_blank" rel="noopener">واتساب</a>':'')+
       (orMap(o)?'<a href="'+orMap(o)+'" target="_blank" rel="noopener">الخريطة</a>':'')+
       (orLive(o)?'<button class="x" onclick="orCancel(\''+o._id+'\')">إلغاء</button>':'')+
@@ -1031,7 +1034,9 @@ function orRcpt(id){
       '<button id="rcX" style="background:#fff;border:none;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700">إغلاق</button></div>';
     document.body.appendChild(w);
     w.querySelector('#rcX').onclick=function(){w.remove();};
-    var ok=w.querySelector('#rcOk');if(ok)ok.onclick=function(){w.remove();orAdvance(id);};
+    /* تأكيد العربون = نسجّل المستلم ثم نأكد الطلب، فيشوف العميل «المدفوع والمتبقي» فوراً */
+    var ok=w.querySelector('#rcOk');if(ok)ok.onclick=function(){w.remove();
+      orSet(id,{paid:Math.max(Number(o.paid)||0,Number(o.dep)||0),paidAt:new Date().toISOString()}).then(function(){orAdvance(id);});};
   }).catch(function(e){showToast(e&&e.code==='permission-denied'?'انشر firestore.rules الجديدة (مجموعة receipts)':'تعذّر جلب الإيصال');});
 }
 function orSet(id,patch){
@@ -1044,11 +1049,29 @@ function orAdvance(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
   var nx=ORNEXT[o.st];if(!nx)return;
   var h=(o.hist||[]).concat([{s:nx,at:new Date().toISOString()}]);
-  orSet(id,{st:nx,hist:h}).then(function(){
+  var patch={st:nx,hist:h};
+  /* إتمام الخدمة: نسأل عن الباقي — «نعم» تسجّل الطلب مدفوعاً بالكامل */
+  if(nx==='done'&&orRem(o)>0&&confirm('استلمت المتبقي '+orRem(o)+' ر.س من العميل؟\n(إلغاء = يبقى المتبقي مسجّلاً عليه)')){
+    patch.paid=orTotal(o);patch.paidAt=new Date().toISOString();}
+  orSet(id,patch).then(function(){
     /* العميل ما يشوف التغيير إلا لو التطبيق مفتوح عنده — فنعرض الإبلاغ في نفس اللحظة */
     showToast(ORST[nx]+' ✓',o.ph?{t:'أبلغ العميل',
       href:'https://wa.me/'+o.ph+'?text='+encodeURIComponent(orMsg(o))}:null);
   });
+}
+/* المدفوعات: paid = كل اللي استلمته من العميل (عربون + باقي). العميل يشوف المستلم والمتبقي في تطبيقه */
+function orTotal(o){return Number(o.price)||Number(o.est)||0;}
+function orRem(o){return Math.max(0,orTotal(o)-(Number(o.paid)||0));}
+function orPaid(id){
+  var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
+  var T=orTotal(o),P=Number(o.paid)||0;
+  var v=prompt('كم استلمت من العميل إجمالاً؟ (ر.س)\nالإجمالي: '+T+' · المستلم حالياً: '+P+(o.dep?' · العربون: '+o.dep:''),
+    String(o.st==='done'?T:(P||o.dep||'')));
+  if(v===null)return;
+  var n=parseFloat(String(v).replace(/[^\d.]/g,''));
+  if(!isFinite(n)||n<0){alert('أدخل رقماً صحيحاً');return;}
+  orSet(id,{paid:Math.round(n),paidAt:new Date().toISOString()}).then(function(){
+    showToast(n>=T?'✓ مدفوع بالكامل':'حُفظ — المتبقي '+Math.max(0,T-Math.round(n))+' ر.س');});
 }
 function orPrice(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
