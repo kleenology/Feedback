@@ -565,13 +565,27 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .pay-r:last-of-type{border-bottom:none}
 .pay-r s{text-decoration:none;font-size:12.5px;color:var(--mut);flex:0 0 auto}
 .pay-r b{font-size:14px;font-weight:700;text-align:left}
-.pay-iban{background:var(--sunk);border-radius:var(--r3);padding:10px 12px 12px;margin:4px 0 8px}
-.pay-iban>div{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.pay-iban>div s{text-decoration:none;font-size:12.5px;color:var(--mut)}
-.pay-iban code{display:block;direction:ltr;text-align:center;font-family:ui-monospace,Menlo,monospace;font-size:clamp(11.5px,3.6vw,14px);
-  font-weight:700;color:var(--tx);white-space:nowrap}
-.pay-iban button{background:var(--blue);color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:5px 14px}
-.pay-n{font-size:12.5px;color:var(--mut);line-height:1.8;padding:2px 0 4px}
+.pay-n{font-size:13.5px;color:var(--tx);line-height:1.8;padding:4px 0}
+.pay-n b{font-weight:700}
+/* الآيبان */
+.iban{background:var(--sunk);border-radius:var(--r3);padding:12px 14px 14px;margin:6px 0 4px}
+.iban-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.iban-h s{text-decoration:none;font-size:13px;color:var(--mut);font-weight:600}
+.iban-cp{display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;font-size:13px;font-weight:700;
+  border-radius:999px;padding:7px 14px;transition:background .2s}
+.iban-cp.ok{background:var(--ok)}
+.iban-cp .ic{width:15px;height:15px}
+.iban code{display:block;text-align:center;font-family:ui-monospace,Menlo,monospace;
+  font-size:clamp(12.5px,3.8vw,16px);font-weight:700;color:var(--tx);line-height:1.9;white-space:nowrap}
+/* inline-block: يلتف بين المجموعات على الشاشات الضيقة، والنسخ يطلع بلا مسافات ولا أسطر */
+.iban code i{font-style:normal;display:inline-block;margin:0 .22em}
+/* خطوات الدفع */
+.pay-steps{list-style:none;counter-reset:ps;margin:12px 0 4px;padding:0;display:grid;gap:10px}
+.pay-steps li{counter-increment:ps;display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.7;color:var(--tx)}
+.pay-steps li>span{flex:1;min-width:0}
+.pay-steps li::before{content:counter(ps);flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--blue-l);
+  color:var(--blue-d);font-size:13px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+.pay-steps b{font-weight:700}
 /* استثناء لا ميزة — علامة صح زرقاء عليه تقلب المعنى عند العميل */
 .incl div.x{color:var(--tx)}
 .incl .tick.x{background:var(--gold-l)}
@@ -986,7 +1000,8 @@ var IC={
  minus:'<path d="M5.2 12h13.6"/>',
  repeat:'<path d="M4 8.6A4 4 0 0 1 8 4.6h9.4M17.4 1.8l2.8 2.8-2.8 2.8M20 15.4a4 4 0 0 1-4 4H6.6M6.6 22.2 3.8 19.4l2.8-2.8"/>',
  out:'<path d="M9.4 20.6H5.2a2 2 0 0 1-2-2V5.4a2 2 0 0 1 2-2h4.2M15.6 16.6 20.6 12l-5-4.6M20.6 12H9.4"/>',
- dl:'<path d="M12 3.6v11.6M7 10.6l5 5 5-5M4.4 20.4h15.2"/>'
+ dl:'<path d="M12 3.6v11.6M7 10.6l5 5 5-5M4.4 20.4h15.2"/>',
+ copy:'<rect x="8.6" y="8.6" width="12" height="12" rx="2.4"/><path d="M15.4 8.6V5.8a2.4 2.4 0 0 0-2.4-2.4H5.8a2.4 2.4 0 0 0-2.4 2.4V13a2.4 2.4 0 0 0 2.4 2.4h2.8"/>'
 };
 function ic(k,c,sz){return '<svg class="ic'+(sz?' '+sz:'')+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(IC[k]||'')+'</svg>';}
 
@@ -1142,7 +1157,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.0800';
+var APP_VER='2026.11.27.0900';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2264,9 +2279,18 @@ function commitWhere(){
    .catch(function(e){console.log('حفظ العنوان:',e&&e.code);});
 }
 function depOf(v){return DEP_PCT&&v?Math.ceil(v*DEP_PCT):0;}
-function ibanFmt(x){return String(x).replace(/(.{4})/g,'$1 ').trim();}
-function copyIban(){
-  var ok=function(){toast('نسخنا الآيبان');};
+/* الآيبان مقسّم أربع أربع للقراءة، والفراغ هامش CSS مو مسافة — فلو نسخه العميل بيده
+   ينسخ الرقم متصلاً مثل ما يطلبه تطبيق البنك */
+function ibanHtml(x){return String(x).match(/.{1,4}/g).map(function(g){return '<i>'+esc(g)+'</i>';}).join('');}
+function ibanBox(){
+  return '<div class="iban"><div class="iban-h"><s>رقم الآيبان</s>'+
+    '<button type="button" class="iban-cp" onclick="copyIban(this)">'+ic('copy','','ic-sm')+'<span>نسخ</span></button></div>'+
+    '<code dir="ltr">'+ibanHtml(BANK.iban)+'</code></div>';
+}
+function copyIban(btn){
+  var ok=function(){toast('نسخنا الآيبان');
+    if(btn){btn.classList.add('ok');btn.innerHTML=ic('check','','ic-sm')+'<span>تم النسخ</span>';
+      setTimeout(function(){btn.classList.remove('ok');btn.innerHTML=ic('copy','','ic-sm')+'<span>نسخ</span>';},2200);}};
   var fb=function(){
     var t=document.createElement('textarea');t.value=BANK.iban;t.setAttribute('readonly','');
     t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
@@ -2281,10 +2305,10 @@ function payCard(dep,o){
       (o&&rcptDone(o.id)?'':
       '<div class="pay-r"><s>البنك</s><b>'+esc(BANK.bank)+'</b></div>'+
       '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
-      '<div class="pay-iban"><div><s>الآيبان</s><button type="button" onclick="copyIban()">نسخ</button></div><code>'+esc(ibanFmt(BANK.iban))+'</code></div>')+
+      ibanBox())+
       (o&&rcptDone(o.id)?'<div class="rcpt-done">'+ic('check')+'<span>وصلنا إيصالك — نراجعه ونؤكد موعدك قريباً.</span></div>':'')+
       (o&&!rcptDone(o.id)?rcptBox(o.id):'')+
-      '<p class="pay-n">'+(o?(rcptDone(o.id)?'':'حوّل العربون وارفع صورة الإيصال — نؤكد موعدك بعد مراجعته.')
+      '<p class="pay-n">'+(o?(rcptDone(o.id)?'':'<b>حوّل العربون وارفع صورة الإيصال</b> — نؤكد موعدك بعد مراجعته.')
         :'بعد إرسال الطلب حوّل العربون وأرسل صورة الإيصال على واتساب. <b style="color:var(--tx)">الموعد ما يتثبت إلا بعد وصول العربون</b>، والباقي تدفعه بعد التنفيذ.')+'</p>'+
     '</div></div>';
 }
@@ -2352,8 +2376,12 @@ function bsOpt(dep){
     '<div class="bs-c bs-bank">'+
       '<div class="pay-r"><s>البنك</s><b>'+esc(BANK.bank)+'</b></div>'+
       '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
-      '<div class="pay-iban"><div><s>الآيبان</s><button type="button" onclick="copyIban()">نسخ</button></div><code>'+esc(ibanFmt(BANK.iban))+'</code></div>'+
-      '<p class="pay-n">حوّل العربون الحين، وارفع صورة الإيصال تحت. <b style="color:var(--tx)">نؤكد موعدك بعد مراجعة الإيصال</b>، والباقي تدفعه بعد التنفيذ.</p>'+
+      ibanBox()+
+      '<ol class="pay-steps">'+
+        '<li><span><b>حوّل '+dep.toLocaleString('en-US')+' ر.س</b> للحساب أعلاه</span></li>'+
+        '<li><span><b>ارفع صورة الإيصال</b> تحت وأرسل الطلب</span></li>'+
+        '<li><span><b>نؤكد موعدك</b> بعد مراجعة الإيصال، والباقي تدفعه بعد التنفيذ</span></li>'+
+      '</ol>'+
     '</div>'+
     '<h3 class="bs-t">إيصال التحويل</h3><div id="rcptHost">'+rcptBox()+'</div>';
 }
@@ -2381,7 +2409,6 @@ function stepConfirm(){
       (t.off?'<div class="bs-r cut"><span>خصم '+esc(discNames())+' '+pct(t.off)+'</span><b>− '+sar(t.cut)+'</b></div>':'')+
       '<div class="bs-r tot"><span>الإجمالي التقديري</span><b>'+sar(t.tot)+'</b></div>'+
     '</div>'+
-    '<p class="bs-terms" style="margin-top:10px">السعر تقديري — يعاين '+esc(BIZ.rep)+' المكان ويؤكد السعر النهائي، وتقدر تلغي الطلب قبل التأكيد.</p>'+
     (dep?bsOpt(dep):'')+
     bsNotes('فيه درج ضيق · الباب الجانبي · أي شي يفيد الفريق')+
     bsTail(dep,'أرسل الطلب');
