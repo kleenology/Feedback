@@ -70,5 +70,9 @@ await t('إيميل بجوال فاضي: طلب بجوال فاضي يُرفض',
 await t('إيميل بجوال فاضي: طلب بجوال أي أحد يُرفض',assertFails(be(ue3,'emOrd5','966511112222',N+1)));
 await t('جوال (PIN) ما يقدر يحفظ جوال فاضي',assertFails(setDoc(doc(ua,'customers/ph_'+A),{ph:''})));
 await t('دخول جوال (PIN) ما يقدر يدّعي أنه إيميل',assertFails(setDoc(doc(ua,'customers/ph_'+A),{ph:'966577776666'})));
+await t('عميل ما يكتب دفعة تاب بنفسه (pays)',assertFails((()=>{const b=writeBatch(ue);b.update(doc(ue,'counters/orders'),{n:N+1});b.set(doc(ue,'orders/tp1'),Object.assign({},base,{uid:'emU1',ph:'966511112222',no:1000+N+1},{pays:[{id:'chg_x',amt:999}]}));return b.commit();})()));
+await t('عميل ما يكتب حالة تاب بنفسه (tap)',assertFails((()=>{const b=writeBatch(ue);b.update(doc(ue,'counters/orders'),{n:N+1});b.set(doc(ue,'orders/tp2'),Object.assign({},base,{uid:'emU1',ph:'966511112222',no:1000+N+1},{tap:{st:'CAPTURED'}}));return b.commit();})()));
+await t('طريقة دفع غريبة تُرفض',assertFails((()=>{const b=writeBatch(ue);b.update(doc(ue,'counters/orders'),{n:N+1});b.set(doc(ue,'orders/tp3'),Object.assign({},base,{uid:'emU1',ph:'966511112222',no:1000+N+1},{pay:'cash'}));return b.commit();})()));
+await t('pay:tap ينقبل',assertSucceeds((()=>{const b=writeBatch(ue);b.update(doc(ue,'counters/orders'),{n:N+1});b.set(doc(ue,'orders/tp4'),Object.assign({},base,{uid:'emU1',ph:'966511112222',no:1000+N+1},{pay:'tap'}));return b.commit().then(r=>{N=N+1;return r;});})()));
 console.log('\n'+pass+' passed, '+fail+' failed');
 await env.cleanup();process.exit(fail?1:0);

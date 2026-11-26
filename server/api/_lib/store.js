@@ -130,5 +130,46 @@ async function updatePin(phone, patch) {
   await db().collection('pins').doc(phone).update(patch);
 }
 
-module.exports = { getPin, createPin, updatePin, markHook, findOrders, setOstaz, clearOstaz, setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
+/* ===== الدفع عبر «تاب» ===== */
+/* هوية العميل من رمز فايربيس — ما نثق بمعرّف يرسله المتصفح */
+async function userUid(idToken) {
+  if (!idToken) return '';
+  const t = await app().auth().verifyIdToken(idToken);
+  return t.uid || '';
+}
+async function setTapPending(id, tap) {
+  await db().collection('orders').doc(id).update({ tap });
+}
+/* تسجيل الدفعة مرة وحدة مهما تكرر التحقق (رجوع العميل + التنبيه): داخل معاملة، والمعرّف في pays يمنع التكرار.
+   paid = كل المستلم — نفس الحقل اللي يكتبه الفريق من اللوحة للتحويل البنكي */
+async function applyTapPayment(id, ch, method) {
+  const ref = db().collection('orders').doc(id);
+  return db().runTransaction(async tx => {
+    const s = await tx.get(ref);
+    if (!s.exists) return { ok: false, why: 'not_found' };
+    const o = s.data();
+    const pays = Array.isArray(o.pays) ? o.pays : [];
+    if (pays.some(p => p && p.id === ch.id)) return { ok: true, already: true, paid: Number(o.paid) || 0 };
+    const amt = Math.round(Number(ch.amount) * 100) / 100;
+    const now = new Date().toISOString();
+    const paid = Math.round(((Number(o.paid) || 0) + amt) * 100) / 100;
+    tx.update(ref, {
+      paid, paidAt: now,
+      pays: pays.concat([{ id: ch.id, amt, m: 'tap', src: method || '', at: now }]),
+      tap: { id: ch.id, amt, st: 'CAPTURED', at: now }
+    });
+    return { ok: true, paid, amt };
+  });
+}
+async function setTapStatus(id, chId, st) {
+  const ref = db().collection('orders').doc(id);
+  await db().runTransaction(async tx => {
+    const s = await tx.get(ref);
+    if (!s.exists) return;
+    const t = s.data().tap;
+    if (t && t.id === chId && t.st !== 'CAPTURED') tx.update(ref, { 'tap.st': String(st).slice(0, 20) });
+  });
+}
+
+module.exports = { userUid, setTapPending, applyTapPayment, setTapStatus, getPin, createPin, updatePin, markHook, findOrders, setOstaz, clearOstaz, setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
   adminUid, getOrder, lockInvoice, saveInvoice, unlockInvoice };

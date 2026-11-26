@@ -178,7 +178,9 @@ service cloud.firestore {
         (ownPhone(request.resource.data.ph) || profilePhone(request.resource.data.ph)) &&
         request.resource.data.st == 'new' &&
         // حقول يكتبها الفريق أو الخادم بس: السعر النهائي، المستلم، الفاتورة
-        !request.resource.data.keys().hasAny(['price', 'paid', 'paidAt', 'ostaz', 'ostazLock']) &&
+        !request.resource.data.keys().hasAny(['price', 'paid', 'paidAt', 'ostaz', 'ostazLock', 'pays', 'tap']) &&
+        // طريقة دفع العربون اللي اختارها العميل — للعرض بس، المدفوع الفعلي يكتبه الخادم بعد ما يتأكد من تاب
+        (!('pay' in request.resource.data) || request.resource.data.pay in ['tap', 'bank']) &&
         (!('dep' in request.resource.data) || (request.resource.data.dep is number &&
           request.resource.data.dep >= 0 && request.resource.data.dep <= request.resource.data.est)) &&
         (!('off' in request.resource.data) || (request.resource.data.off is number &&
