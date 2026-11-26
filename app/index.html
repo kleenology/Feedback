@@ -90,32 +90,36 @@ button{cursor:pointer;border:none;background:none}
 .pic{display:inline-block;width:46px;height:46px;flex:0 0 auto;background:var(--blue-d);
   -webkit-mask:var(--pic) center/contain no-repeat;mask:var(--pic) center/contain no-repeat}
 .pic-xl{width:76px;height:76px}
-/* ===== الرئيسية: الباقات وآراء العملاء — صفوف تنسحب يمين ويسار ===== */
-.hrow{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
-  margin:0 -18px;padding:4px 18px 12px}
-.hrow::-webkit-scrollbar{display:none}
-.hrow>*{scroll-snap-align:start;flex:0 0 auto}
+/* ===== الرئيسية: الباقات وآراء العملاء — نفس نظام بطاقات الخدمات (زوايا 26، نفس الظل والمسافات) ===== */
 .sec-h .more{font-size:13px;font-weight:700;color:var(--blue-d);display:flex;align-items:center;gap:4px}
-.hp{width:228px;background:var(--card);border-radius:22px;padding:16px;text-align:right;box-shadow:var(--sh);
-  display:flex;flex-direction:column;gap:6px;position:relative}
-.hp.top{box-shadow:0 0 0 2px var(--gold),var(--sh)}
-.hp .tag{position:absolute;top:14px;left:14px;background:var(--gold);color:#4A3200;font-size:10.5px;font-weight:700;
-  border-radius:999px;padding:3px 10px}
-.hp b{font-size:16px;font-weight:700;font-family:var(--dsp)}
-.hp .ev{font-size:12.5px;color:var(--mut)}
-.hp .pr{display:flex;align-items:baseline;gap:6px;margin-top:6px}
-.hp .pr strong{font-size:24px;font-weight:700;color:var(--blue-d);font-variant-numeric:tabular-nums;font-family:var(--dsp)}
-.hp .pr small{font-size:12px;color:var(--mut)}
-.hp .pr del{font-size:13px;color:var(--faint)}
-.hp .sv{align-self:flex-start;background:var(--okl);color:var(--ok);font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px}
-.rv{width:262px;background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:8px}
-.rv .rv-st{color:var(--gold);font-size:15px;letter-spacing:2px;direction:ltr;text-align:right}
-.rv p{font-size:14px;line-height:1.8;color:var(--tx);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;flex:1}
-.rv .who{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
-.rv .who i{width:30px;height:30px;border-radius:50%;background:var(--blue-l);color:var(--blue-d);font-style:normal;
+.hcard{background:var(--card);border-radius:26px;box-shadow:0 1px 2px rgba(21,60,80,.04),0 6px 18px rgba(21,60,80,.06)}
+.hps{display:flex;gap:10px}
+.hp{flex:1 1 0;min-width:0;padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  text-align:center;position:relative;transition:transform .14s}
+.hp:active{transform:scale(.96)}
+.hp{border:2px solid transparent}
+.hp.top{border-color:var(--gold)}
+.hp .tag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--gold);
+  color:#4A3200;font-size:10px;font-weight:700;border-radius:999px;padding:2px 9px}
+.hp b{font-size:13.5px;font-weight:700;line-height:1.35;font-family:var(--dsp);min-height:2.7em;display:flex;align-items:center}
+.hp strong{font-size:22px;font-weight:700;color:var(--blue-d);font-variant-numeric:tabular-nums;font-family:var(--dsp);line-height:1}
+.hp small{font-size:11px;color:var(--mut)}
+.hp del{font-size:12px;color:var(--faint)}
+.hp .sv{background:var(--okl);color:var(--ok);font-size:11px;font-weight:700;border-radius:999px;padding:3px 9px}
+.rvs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:10px}
+.rvs::-webkit-scrollbar{display:none}
+.rv{flex:0 0 100%;scroll-snap-align:center;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.rv-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.rv-rate{color:var(--gold);font-size:14px;letter-spacing:1px;direction:ltr}
+.rv p{font-size:14.5px;line-height:1.8;color:var(--tx);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.rv .who{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700}
+.rv .who i{width:32px;height:32px;border-radius:50%;background:var(--blue-l);color:var(--blue-d);font-style:normal;
   display:grid;place-items:center;font-size:13px}
-.rv-avg{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mut)}
-.rv-avg b{color:var(--tx);font-size:15px}
+.rv-dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.rv-dots i{width:6px;height:6px;border-radius:50%;background:var(--line);transition:width .2s,background .2s}
+.rv-dots i.on{width:18px;border-radius:99px;background:var(--blue)}
+.rv-avg{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mut)}
+.rv-avg b{color:var(--tx);font-size:14px}
 /* الخدمات: كل الأيقونات بأسلوب واحد مثل الأيقونات المرخّصة — خط واحد بلون الهوية، بلا تعبئة،
    وبنفس المقاس. الرسوم المدمجة تتحوّل لخطوط بس لين توصل بقية الملفات */
 .svc .il,.svc .pic{width:44px;height:44px}
@@ -1666,13 +1670,14 @@ function renderHomePkgs(){
   var el=$('homePkgs');if(!el)return;
   el.innerHTML='<div class="sec" style="padding-bottom:0"><div class="sec-h"><h2>الباقات الشهرية</h2>'+
       '<button class="more" onclick="go(\'scPkgs\');setTab(\'scPkgs\');renderPkgs()">الكل'+ic('back','','ic-sm')+'</button></div>'+
-    '<div class="hrow">'+PKGS.map(function(p,i){
+    '<div class="hps" style="padding-top:8px">'+PKGS.map(function(p,i){
       var pc=p.was?Math.round((p.was-p.p)/p.was*100):0;
-      return '<button class="hp'+(i===1?' top':'')+'" onclick="openPkg(\''+p.k+'\')">'+
+      return '<button class="hcard hp'+(i===1?' top':'')+'" onclick="openPkg(\''+p.k+'\')">'+
         (i===1?'<span class="tag">الأكثر طلباً</span>':'')+
-        '<b>'+esc(p.t)+'</b><span class="ev">'+esc(p.every)+'</span>'+
-        '<span class="pr"><strong>'+p.p.toLocaleString('en-US')+'</strong><small>ر.س / شهرياً</small>'+
-          (p.was?'<del class="mono">'+p.was.toLocaleString('en-US')+'</del>':'')+'</span>'+
+        '<b>'+esc(p.t)+'</b>'+
+        '<strong class="mono">'+p.p.toLocaleString('en-US')+'</strong>'+
+        '<small>ر.س / شهرياً</small>'+
+        (p.was?'<del class="mono">'+p.was.toLocaleString('en-US')+'</del>':'')+
         (pc?'<span class="sv">وفّر '+pct(pc)+'</span>':'')+'</button>';}).join('')+'</div></div>';
 }
 /* آراء العملاء: من public_reviews — اللي ينشرها الفريق من لوحة التحكم بس، مو كل تقييم.
@@ -1689,15 +1694,22 @@ function loadRevs(){
 }
 function renderHomeRevs(){
   var el=$('homeRevs');if(!el)return;
-  var L=(REVS||[]).filter(function(r){return r.o>=4&&String(r.nt).trim().length>=8;}).slice(0,10);
+  var L=(REVS||[]).filter(function(r){return r.o>=4&&String(r.nt).trim().length>=8;}).slice(0,8);
   if(!L.length){el.innerHTML='';return;}
   var all=(REVS||[]).filter(function(r){return r.o>0;}),avg=all.reduce(function(s,r){return s+r.o;},0)/all.length;
   el.innerHTML='<div class="sec"><div class="sec-h"><h2>آراء عملائنا</h2>'+
-      '<span class="rv-avg"><b class="mono">'+avg.toFixed(1)+'</b><span style="color:var(--gold)">★</span> من '+all.length+' تقييم</span></div>'+
-    '<div class="hrow">'+L.map(function(r){
+      '<span class="rv-avg"><b class="mono">'+avg.toFixed(1)+'</b><span style="color:var(--gold)">★</span> · '+all.length+' تقييم</span></div>'+
+    '<div class="rvs" id="rvRow">'+L.map(function(r){
       var nm=String(r.n||'عميل').trim().split(/\s+/)[0]||'عميل';
-      return '<div class="rv"><span class="rv-st">'+'★★★★★'.slice(0,Math.round(r.o))+'</span>'+
-        '<p>'+esc(r.nt)+'</p><span class="who"><i>'+esc(nm.charAt(0))+'</i>'+esc(nm)+'</span></div>';}).join('')+'</div></div>';
+      return '<div class="hcard rv"><div class="rv-top"><span class="who"><i>'+esc(nm.charAt(0))+'</i>'+esc(nm)+'</span>'+
+        '<span class="rv-rate">'+'★★★★★'.slice(0,Math.round(r.o))+'</span></div>'+
+        '<p>'+esc(r.nt)+'</p></div>';}).join('')+'</div>'+
+    (L.length>1?'<div class="rv-dots">'+L.map(function(_,i){return '<i class="'+(i?'':'on')+'"></i>';}).join('')+'</div>':'')+'</div>';
+  var row=$('rvRow');
+  if(row&&L.length>1)row.onscroll=function(){
+    var k=Math.round(Math.abs(row.scrollLeft)/row.clientWidth);
+    el.querySelectorAll('.rv-dots i').forEach(function(d,i){d.classList.toggle('on',i===k);});
+  };
 }
 function renderHome(){
   renderHomePkgs();renderHomeRevs();
