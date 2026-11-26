@@ -1426,7 +1426,8 @@ function appUsersHtml(){
     var c=r.c;
     h+='<div class="exp-item" style="border-right-color:'+(r.n?'#16a34a':'#f5a301')+'"><div class="exp-top"><div>'+
       '<div class="exp-nm">'+esc(c.n||'بلا اسم')+(c.ok?' <span style="color:#c026d3;font-size:10px">✓ عروض</span>':'')+'</div>'+
-      (c.ph?'<div style="font-size:10px;color:#9ab;margin-top:3px;direction:ltr;text-align:right">+'+esc(c.ph)+'</div>':'')+
+      (c.ph?'<div style="font-size:10px;color:#9ab;margin-top:3px;direction:ltr;text-align:right">+'+esc(c.ph)+'</div>'
+        :'<div style="font-size:10px;color:#b45309;margin-top:3px">⚠️ ما كمّل التسجيل — بدون جوال</div>')+
       (c.em?'<div style="font-size:10px;color:#9ab;margin-top:2px;direction:ltr;text-align:right;word-break:break-all">'+esc(c.em)+'</div>':'')+
       '<div style="font-size:10px;color:#9ab;margin-top:2px">'+
         (r.n?'<b style="color:#16a34a">'+r.n+' طلب</b>':'<b style="color:#b45309">ما طلب بعد</b>')+
