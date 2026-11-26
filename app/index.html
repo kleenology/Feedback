@@ -87,6 +87,9 @@ button{cursor:pointer;border:none;background:none}
 .il{width:46px;height:46px;flex:0 0 auto;color:var(--blue)}
 .il-sm{width:42px;height:42px}
 .il-sm .sp{display:none}.il-xl{width:76px;height:76px}
+.pic{display:inline-block;width:46px;height:46px;flex:0 0 auto;background:var(--blue-d);
+  -webkit-mask:var(--pic) center/contain no-repeat;mask:var(--pic) center/contain no-repeat}
+.pic-xl{width:76px;height:76px}
 .il .b{fill:currentColor;opacity:.18}
 .il .m{fill:currentColor;opacity:.42}
 .il .l{fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
@@ -1016,7 +1019,7 @@ var BIZ={name:'كلينولوجي',rep:'فريق كلينولوجي',wa:'9665375
 /* img: صور شغلكم الحقيقية — ضع الملفات في app/img/ واكتب مساراتها هنا.
    القائمة فاضية = ما يظهر معرض صور أصلاً (لا صور مزيفة للعميل) */
 var SVCS=[
- {k:'post',  ic:'post',  t:'النظافة التأهيلية', s:'بعد البناء أو الترميم', img:[],
+ {k:'post',  ic:'post',  pic:'img/svc-post.png', t:'النظافة التأهيلية', s:'بعد البناء أو الترميم', img:[],
   d:'التنظيف العام كامل، وفوقه إزالة مخلفات البناء والدهون الصعبة — وتسليم المكان جاهزاً للسكن.',
   tip:{a:'هذي للمكان بعد البناء أو الترميم. لو بيتك مسكون وما فيه أعمال بناء، ',k:'home',b:' يكفيك وأوفر.'},
   incl:['كل ما يشمله التنظيف العام',
@@ -1158,7 +1161,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.1200';
+var APP_VER='2026.11.27.1500';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1651,9 +1654,14 @@ function renderHome(){
 
 /* بطاقات الخدمات — تظهر في الرئيسية وفي تبويب «الخدمات»، وكلها تفتح صفحة الخدمة.
    كان فيه شاشتان باسم «الخدمات»: هذي، وكتالوج فيه نفس الأسعار بقاعدة اختيار مختلفة */
+/* أيقونة الخدمة: ملف مرخّص (pic) يتلوّن بلون الهوية عبر قناع CSS، وإلا رسمنا المدمج */
+function svcIc(s,sz){
+  if(s.pic)return '<span class="pic'+(sz?' pic-'+sz:'')+'" role="img" aria-hidden="true" style="--pic:url('+s.pic+')"></span>';
+  return sz?il(s.ic,'','il-'+sz):il(s.ic);
+}
 function svcCards(){
   return SVCS.map(function(s){
-    return '<button class="svc" onclick="openService(\''+s.k+'\')">'+il(s.ic)+
+    return '<button class="svc" onclick="openService(\''+s.k+'\')">'+svcIc(s)+
       '<span class="svc-t"><b>'+esc(s.t)+'</b><s>'+esc(s.s)+'</s></span></button>';}).join('');
 }
 /* ================= تفاصيل الخدمة ================= */
@@ -1696,7 +1704,7 @@ function renderService(){
       (gs.length>1?'<div class="fade-x"><div class="cats scrollx" id="svTabs" style="padding:0 0 12px;margin:0"></div></div>':'')+
       '<div class="rows-p" id="svRows"></div></div>';
   $('svBody').innerHTML=
-    '<div class="sec" style="border:none;padding-bottom:0"><div class="sv-head"><span class="ring">'+il(s.ic,'','il-xl')+'</span>'+
+    '<div class="sec" style="border:none;padding-bottom:0"><div class="sv-head"><span class="ring">'+svcIc(s,'xl')+'</span>'+
       '<div><h2>'+esc(s.t)+'</h2><p>'+esc(s.d)+'</p></div></div></div>'+
     gallery(s)+
     tip+
