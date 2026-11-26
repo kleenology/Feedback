@@ -30,9 +30,15 @@ function newCode() {
   return String(crypto.randomInt(0, 1000000)).padStart(6, '0');
 }
 
+/* الأصل = بروتوكول + نطاق بس. نتسامح مع «/» في الآخر أو مسار أو مسافات أو علامات تنصيص
+   — خطأ نسخ بسيط في إعدادات Vercel كان يرفض كل طلبات اللوحة بـ origin */
+function normOrigin(v) {
+  const t = String(v || '').trim().replace(/^["']+|["']+$/g, '');
+  try { const u = new URL(t); return (u.protocol + '//' + u.host).toLowerCase(); } catch (e) { return ''; }
+}
 const ORIGINS = (process.env.ALLOWED_ORIGINS ||
   'https://kleenology.github.io,http://localhost:8080,http://127.0.0.1:8080')
-  .split(',').map(s => s.trim()).filter(Boolean);
+  .split(/[,\s]+/).map(normOrigin).filter(Boolean);
 
 function cors(req, res) {
   const o = req.headers.origin || '';
@@ -84,4 +90,4 @@ function testNumbers() {
   return out;
 }
 
-module.exports = { normPhone, hashCode, sameHash, newCode, cors, json, readBody, clientIp, testNumbers };
+module.exports = { ORIGINS, normOrigin, normPhone, hashCode, sameHash, newCode, cors, json, readBody, clientIp, testNumbers };

@@ -148,6 +148,28 @@ const ORDER = {
     process.env.OSTAZ_TOKEN = u;
     eq(code, 'not_configured'); eq(calls.length, 0);
   });
+  await t('مشاركة: المسودة ما تنرسل، ولا يُطلب رابط', async () => {
+    calls.length = 0;
+    global.fetch = fake([[/\/invoices\/555$/, { j: { data: { id: 555, code: 'S-1-9', status: 'draft' } } }]]);
+    eq(await O.shareInvoice(555), { status: 'draft', code: 'S-1-9' });
+    eq(calls.some(c => /share/.test(c.url)), false);
+  });
+
+  await t('مشاركة: المعتمدة ترجع رابطها بقالب الفاتورة 2', async () => {
+    calls.length = 0;
+    global.fetch = fake([
+      [/\/invoices\/555$/, { j: { data: { id: 555, code: 'S-1-9', status: 'issued' } } }],
+      [/share\/invoice$/, { m: 'POST', j: { data: { link: 'https://kleenology.alostaz.io/s/abc' } } }]
+    ]);
+    const r = await O.shareInvoice(555);
+    eq(r.url, 'https://kleenology.alostaz.io/s/abc');
+    eq(calls.find(c => /share/.test(c.url)).body, { invoice_id: 555, document_template_design_id: 2, method: 'link' });
+  });
+
+  await t('firstUrl يلقى الرابط وين ما كان في الرد', async () => {
+    eq(O.firstUrl({ a: 1, b: { c: ['x', 'https://u.test/1'] } }), 'https://u.test/1');
+    eq(O.firstUrl({ a: 'ftp://x' }), '');
+  });
   global.fetch = F;
 
   /* الواجهة: أدمن فقط، مرة وحدة لكل طلب */
@@ -162,9 +184,12 @@ const ORDER = {
       return { ok: true, order: o };
     },
     async saveInvoice(id, x) { ORD[id].ostaz = x; },
+    async getOrder(id) { return ORD[id] || null; },
+    async setInvoiceStatus(id, st) { ORD[id].ostaz.status = st; },
     async unlockInvoice() {}
   } };
   require.cache[ostazPath] = { id: ostazPath, filename: ostazPath, loaded: true, exports: {
+    async shareInvoice(iid) { return iid === 7 ? { status: 'draft', code: 'S-7' } : { status: 'issued', code: 'S-8', url: 'https://x.test/inv' }; },
     async createInvoice() { if (FAILS) throw Object.assign(new Error('الأستاذ 422: x'), { code: 'ostaz_422' }); MADE++; return { id: 1, code: 'S-1', status: 'draft', partnerId: 2 }; }
   } };
   const handler = require('../api/invoice.js');
@@ -210,6 +235,23 @@ const ORDER = {
   await t('CORS يسمح بترويسة Authorization', async () => {
     const r = await call({}, '', 'OPTIONS');
     eq(r.status, 204); if (!/Authorization/.test(r.h['Access-Control-Allow-Headers'])) throw new Error(r.h['Access-Control-Allow-Headers']);
+  });
+
+  const share = require('../api/invoice-share.js');
+  const call2 = (body, tok) => new Promise(resolve => {
+    const req = { method: 'POST', headers: { origin: 'https://kleenology.github.io', authorization: tok ? 'Bearer ' + tok : '' }, body };
+    const res = { statusCode: 200, setHeader() {}, end(s) { resolve({ status: this.statusCode, body: s ? JSON.parse(s) : null }); } };
+    share(req, res);
+  });
+
+  await t('مشاركة الفاتورة: أدمن فقط، والمسودة 409، والمعتمدة رابط', async () => {
+    ORD = { d: { ostaz: { id: 7, status: 'draft' } }, i: { ostaz: { id: 8, status: 'draft' } }, n: {} };
+    eq((await call2({ order: 'i' })).status, 401);
+    eq((await call2({ order: 'd' }, 'good')).status, 409);
+    const r = await call2({ order: 'i' }, 'good');
+    eq([r.status, r.body.url], [200, 'https://x.test/inv']);
+    eq(ORD.i.ostaz.status, 'issued', 'ما حدّث حالة الفاتورة على الطلب');
+    eq((await call2({ order: 'n' }, 'good')).body.error, 'no_invoice');
   });
 
   console.log('\n' + (fail ? 'ERRORS: ' + fail : 'ERRORS: none'));

@@ -2,6 +2,7 @@
 /* GET /api/health — فحص الإعداد بعد النشر: يقول لك أي جزء ناقص بدون ما يكشف أي مفتاح.
    firebase: يتصل بقاعدة البيانات بحساب الخدمة. ostaz: يسأل «الأستاذ» عن هوية الرمز (قراءة بس). */
 const S = require('./_lib/store');
+const U = require('./_lib/util');
 const O = require('./_lib/ostaz');
 
 const has = k => !!String(process.env[k] || '').trim();
@@ -12,7 +13,8 @@ module.exports = async function handler(req, res) {
       ALLOWED_ORIGINS: has('ALLOWED_ORIGINS'), FB_PROJECT_ID: has('FB_PROJECT_ID'),
       FB_CLIENT_EMAIL: has('FB_CLIENT_EMAIL'), FB_PRIVATE_KEY: has('FB_PRIVATE_KEY'),
       OSTAZ_URL: has('OSTAZ_URL'), OSTAZ_TOKEN: has('OSTAZ_TOKEN'),
-      OTP_SECRET: has('OTP_SECRET'), SMS_PROVIDER: process.env.SMS_PROVIDER || '(none)'
+      OTP_SECRET: has('OTP_SECRET'),
+      origins_parsed: U.ORIGINS, SMS_PROVIDER: process.env.SMS_PROVIDER || '(none)'
     }
   };
   try {
