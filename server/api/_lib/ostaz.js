@@ -28,7 +28,8 @@ function cfg() {
     treasury: num(process.env.OSTAZ_TREASURY_ID, 2),
     status: process.env.OSTAZ_STATUS === 'issued' ? 'issued' : 'draft',
     products: Object.assign({ post: 5, sofa: 11, pkg: 31 }, map),
-    product: num(process.env.OSTAZ_PRODUCT_ID, 18)
+    product: num(process.env.OSTAZ_PRODUCT_ID, 18),
+    design: num(process.env.OSTAZ_DESIGN_ID, 2)       /* قالب الطباعة: 2 = «قالب فاتورة 1 عربي» */
   };
 }
 
@@ -162,4 +163,24 @@ async function createInvoice(order, c) {
   return { id: inv.id, code: inv.code || '', status: inv.status || c.status, partnerId };
 }
 
-module.exports = { cfg, phoneKey, buildInvoice, findOrCreatePartner, createInvoice, call };
+/* أول رابط http في الرد — شكل رد المشاركة غير موثّق، فنبحث عنه في أي حقل */
+function firstUrl(x) {
+  if (typeof x === 'string') return /^https?:\/\//.test(x) ? x : '';
+  if (x && typeof x === 'object') for (const k of Object.keys(x)) { const u = firstUrl(x[k]); if (u) return u; }
+  return '';
+}
+
+/* رابط مشاركة الفاتورة للعميل. المسودة ما تُرسل — لازم تُعتمد في الأستاذ أول (الاعتماد يرسلها للهيئة) */
+async function shareInvoice(invoiceId, c) {
+  c = c || cfg();
+  const v = await call('GET', '/invoices/' + encodeURIComponent(invoiceId), null, c);
+  const inv = (v && (v.data || v)) || {};
+  if (inv.status === 'draft') return { status: 'draft', code: inv.code || '' };
+  const j = await call('POST', '/helpers/share/invoice',
+    { invoice_id: Number(invoiceId), document_template_design_id: c.design, method: 'link' }, c);
+  const url = firstUrl(j);
+  if (!url) throw new Error('الأستاذ ما رجّع رابطاً للفاتورة');
+  return { status: inv.status || 'issued', code: inv.code || '', url };
+}
+
+module.exports = { cfg, phoneKey, buildInvoice, findOrCreatePartner, createInvoice, shareInvoice, firstUrl, call };

@@ -639,7 +639,7 @@ function friendCode(cp){return cp?'KLNF'+String(cp).slice(3):'';}
 function baseFromFriend(code){return code&&code.indexOf('KLNF')===0?'KLN'+code.slice(4):'';}
 function refCount(r){return r?(r.rcCount||(r.rcUsed?1:0)):0;}
 /* خادم الفواتير (مجلد server/ على Vercel) — نفس خادم رموز الدخول. فاضي = زر الفاتورة يشرح وش ناقص */
-var INV_API='';
+var INV_API='https://feedback-server-beige.vercel.app';
 var BIZ={name:'كلينولوجي',rep:'فريق كلينولوجي',phone:'0537519929',app:'',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','النظافة التأهيلية']};
 var WINBACK={off:'15%',valid:7}; /* عرض دعوة العملاء الغائبين — عدّل النسبة أو المدة من هنا */
 var LASTREV={o:0,n:'',cp:''};
@@ -1009,7 +1009,8 @@ function orCard(o){
       '<button onclick="orPrice(\''+o._id+'\')">'+(o.price?'عدّل السعر':'حدّد السعر')+'</button>'+
       (o.dep?'<button onclick="orRcpt(\''+o._id+'\')">🧾 الإيصال</button>':'')+
       (o.st!=='cancelled'?'<button onclick="orPaid(\''+o._id+'\')">💰 المستلم</button>':'')+
-      (o.ostaz&&o.ostaz.code?'<span class="or-inv">🧾 '+esc(o.ostaz.code)+(o.ostaz.status==='draft'?' (مسودة)':'')+'</span>':
+      (o.ostaz&&o.ostaz.code?'<span class="or-inv">🧾 '+esc(o.ostaz.code)+(o.ostaz.status==='draft'?' (مسودة)':'')+'</span>'+
+        (o.ph?'<button onclick="orShareInv(\''+o._id+'\',this)">📤 أرسل الفاتورة</button>':''):
         (o.st==='done'?'<button onclick="orInvoice(\''+o._id+'\',this)">🧾 فاتورة الأستاذ</button>':''))+
       (o.ph?'<a href="https://wa.me/'+esc(o.ph)+'?text='+encodeURIComponent(orMsg(o))+'" target="_blank" rel="noopener">واتساب</a>':'')+
       (orMap(o)?'<a href="'+orMap(o)+'" target="_blank" rel="noopener">الخريطة</a>':'')+
@@ -1098,6 +1099,30 @@ function orInvoice(id,btn){
     if(btn){btn.disabled=false;btn.textContent='🧾 فاتورة الأستاذ';}
     alert('تعذّر إصدار الفاتورة:\n'+((e&&e.message)||e));
   });
+}
+/* يطلب من الخادم رابط الفاتورة من «الأستاذ» ويفتح واتساب العميل والرسالة جاهزة.
+   نفتح النافذة قبل الانتظار — سفاري يمنع فتح نافذة بعد عملية غير متزامنة */
+function orShareInv(id,btn){
+  var o=OR.filter(function(x){return x._id===id;})[0];if(!o||!o.ostaz)return;
+  var u=auth.currentUser;if(!u){showToast('سجّل دخولك أول');return;}
+  var win=window.open('','_blank');
+  var lbl=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='جاري التجهيز…';}
+  function done(){if(btn){btn.disabled=false;btn.textContent=lbl;}}
+  u.getIdToken().then(function(tok){
+    return fetch(INV_API+'/api/invoice-share',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},
+      body:JSON.stringify({order:id})});
+  }).then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+  .then(function(x){
+    done();
+    if(x.s===409&&x.j.error==='draft'){if(win)win.close();o.ostaz.status='draft';rOr();
+      alert('الفاتورة '+(x.j.code||'')+' مسودة.\nاعتمدها في «الأستاذ» أول (الاعتماد يرسلها للهيئة)، وبعدها أرسلها للعميل.');return;}
+    if(x.s!==200||!x.j.url)throw new Error(x.j&&(x.j.message||x.j.error)||('خطأ '+x.s));
+    o.ostaz.status=x.j.status||o.ostaz.status;rOr();
+    var nm=o.n||'يا غالي';
+    var msg=greetAr()+' '+nm+' 🌟\nمعك '+BIZ.rep+'\n\nفاتورة طلبك'+(o.no?' رقم '+o.no:'')+' ('+(x.j.code||'')+'):\n'+x.j.url+'\n\nشكراً لثقتك ✨';
+    var wa='https://wa.me/'+o.ph+'?text='+encodeURIComponent(msg);
+    if(win)win.location.href=wa;else location.href=wa;
+  }).catch(function(e){done();if(win)win.close();alert('تعذّر جلب رابط الفاتورة:\n'+((e&&e.message)||e));});
 }
 function orPrice(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;

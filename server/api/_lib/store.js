@@ -93,5 +93,9 @@ async function unlockInvoice(id) {
   await db().collection('orders').doc(id).update({ ostazLock: F.delete() }).catch(() => {});
 }
 
-module.exports = { getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
+async function setInvoiceStatus(id, status) {
+  await db().collection('orders').doc(id).update({ 'ostaz.status': status });
+}
+
+module.exports = { setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
   adminUid, getOrder, lockInvoice, saveInvoice, unlockInvoice };
