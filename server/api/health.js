@@ -34,6 +34,19 @@ module.exports = async function handler(req, res) {
     out.ostaz = c === 'not_configured' ? 'OSTAZ_URL أو OSTAZ_TOKEN ناقص'
       : c === 'ostaz_401' ? 'OSTAZ_TOKEN غير صحيح أو محذوف' : 'خطأ: ' + String((e && e.message) || e).slice(0, 160);
   }
+  /* واتساب (رموز الدخول): نتأكد إن الرمز ورقم الهاتف صحيحين بقراءة بيانات الرقم من Meta — ما يرسل شي */
+  out.otp = { channels: process.env.OTP_CHANNELS || 'sms', OTP_SECRET: has('OTP_SECRET'), wa_provider: process.env.WA_PROVIDER || '(none)',
+    WA_PHONE_ID: has('WA_PHONE_ID'), WA_TOKEN: has('WA_TOKEN'), template: process.env.WA_TEMPLATE || 'kleenology_otp' };
+  if (process.env.WA_PROVIDER === 'meta' && has('WA_PHONE_ID') && has('WA_TOKEN')) {
+    try {
+      const ver = process.env.WA_API_VERSION || 'v21.0';
+      const r = await fetch('https://graph.facebook.com/' + ver + '/' + process.env.WA_PHONE_ID +
+        '?fields=display_phone_number,verified_name,quality_rating', { headers: { Authorization: 'Bearer ' + process.env.WA_TOKEN } });
+      const j = await r.json().catch(() => ({}));
+      out.otp.whatsapp = r.ok ? ('ok — ' + (j.verified_name || '') + ' ' + (j.display_phone_number || '')).trim()
+        : 'خطأ ' + r.status + ': ' + String((j.error && j.error.message) || '').slice(0, 140);
+    } catch (e) { out.otp.whatsapp = 'خطأ: ' + String((e && e.message) || e).slice(0, 120); }
+  }
   out.ok = out.firebase === 'ok' && String(out.ostaz).startsWith('ok');
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');

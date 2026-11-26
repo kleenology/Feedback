@@ -149,4 +149,10 @@ async function deliver(phone, code, via) {
   throw last || new Error('لا توجد قناة إرسال');
 }
 
-module.exports = { deliver, channels, sendSms, sendWhatsApp, smsText, PROVIDERS, WA, SENDERS };
+/* فيه SMS حقيقي؟ (قناة sms في OTP_CHANNELS ومزوّد مو mock). بدونه التطبيق يخفي زر «أرسله برسالة نصية» */
+function smsReady() {
+  const p = String(process.env.SMS_PROVIDER || '').toLowerCase();
+  return channels().includes('sms') && !!p && p !== 'mock' && !!PROVIDERS[p];
+}
+
+module.exports = { smsReady, deliver, channels, sendSms, sendWhatsApp, smsText, PROVIDERS, WA, SENDERS };

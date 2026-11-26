@@ -1201,7 +1201,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.1800';
+var APP_VER='2026.11.27.2000';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1216,7 +1216,10 @@ var DEP_PCT=0.5;
 var MIN_ORDER=250;
 var BANK={bank:'مصرف الإنماء',iban:'SA5405000068204621866000',name:'مؤسسة علم التنظيف التجارية'};
 /* خادم رموز التحقق (مجلد server/). فاضي = نرجع لرموز فايربيس */
-var OTP_API='';
+/* رموز الدخول على واتساب (الخادم). OTP_LIVE=true = للجميع. قبلها تقدر تجرّبها بنفسك بفتح
+   app.kleenology.me/app/?otp=1 — والعملاء يبقون على الرمز المؤقت (PIN) لين تتأكد */
+var OTP_SERVER='https://feedback-server-beige.vercel.app',OTP_LIVE=false;
+var OTP_API=(OTP_LIVE||/[?&]otp=1\b/.test(location.search))?OTP_SERVER:'';
 /* دخول مؤقت برمز من ٦ أرقام يختاره العميل (لين يتفعّل SMS أو واتساب). فاضي = رموز التحقق المعتادة.
    الخادم نفسه (server/api/pin) — والهوية نفسها ph_الجوال، فالتحويل لـSMS بعدين ما يغيّر حسابات العملاء */
 var PIN_API='https://feedback-server-beige.vercel.app';
@@ -1476,12 +1479,13 @@ function tickResend(){
 function resend(){if(RT>0)return;sendCode(true);}
 /* الخادم يرسل على واتساب أولاً. Meta ما تقول لنا فوراً إن الرقم بلا واتساب،
    فبعد ٢٠ ثانية نعرض للعميل يطلبه برسالة نصية */
-var OTPVIA='',SMT=0,SMTM=null;
+var OTPVIA='',OTPSMS=false,SMT=0,SMTM=null;
 function viaUI(){
   $('sentVia').textContent=OTPVIA==='whatsapp'?'أرسلنا الرمز على واتساب إلى':
     OTPVIA==='sms'?'أرسلنا الرمز برسالة نصية إلى':'أدخل رمز التحقق (6 أرقام) المرسل إلى';
   var b=$('btnSms');clearInterval(SMTM);
-  if(OTPVIA!=='whatsapp'){b.classList.add('hide');return;}
+  /* زر SMS بس لو فيه مزوّد رسائل فعلاً — وإلا يتظاهر بالإرسال وما يوصل شي */
+  if(OTPVIA!=='whatsapp'||!OTPSMS){b.classList.add('hide');return;}
   b.classList.remove('hide');SMT=20;
   function tick(){
     if(SMT>0){b.disabled=true;b.textContent='أرسله برسالة نصية بعد '+SMT+' ثانية';}
@@ -1524,6 +1528,8 @@ function sendCode(again,via){
       c==='otp/too-many'?'محاولات كثيرة — جرّب بعد ساعة':
       c==='otp/daily-cap'?'وصلنا حد الرسائل اليومي — تواصل معنا على واتساب':
       c==='otp/network'?'تعذّر الاتصال — تأكد من الإنترنت وحاول':
+      c==='otp/no-sms'?'الإرسال برسالة نصية غير متاح — تأكد إن رقمك عليه واتساب، أو تواصل معنا':
+      c==='otp/failed'?'تعذّر إرسال الكود على واتساب — تأكد إن رقمك عليه واتساب، أو تواصل معنا':
       'تعذّر إرسال الرمز'+(c?' ('+c+')':' — '+((e&&e.message)||'خطأ غير معروف')));
   }
   if(OTP_API){
@@ -1532,10 +1538,10 @@ function sendCode(again,via){
       body:JSON.stringify(via?{phone:p,via:via}:{phone:p})})
       .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
       .then(function(x){
-        if(x.s===200){OTPVIA=(x.j&&x.j.via)||'';ok();return;}
+        if(x.s===200){OTPVIA=(x.j&&x.j.via)||'';OTPSMS=!!(x.j&&x.j.sms);ok();return;}
         var e=x.j&&x.j.error;
         sendFail({code:e==='cooldown'?'otp/cooldown':e==='too_many'?'otp/too-many':
-          e==='daily_cap'?'otp/daily-cap':e==='bad_phone'?'auth/invalid-phone-number':'otp/failed',
+          e==='daily_cap'?'otp/daily-cap':e==='bad_phone'?'auth/invalid-phone-number':e==='no_sms'?'otp/no-sms':'otp/failed',
           wait:x.j&&x.j.wait});
       }).catch(function(){sendFail({code:'otp/network'});});
     return;
