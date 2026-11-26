@@ -59,4 +59,39 @@ async function customToken(phone) {
   return app().auth().createCustomToken(uidFor(phone), { ph: phone });
 }
 
-module.exports = { getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app };
+/* ===== الفواتير (لوحة التحكم) ===== */
+/* هوية الطالب من رمز فايربيس، والأدمن = له وثيقة في admins — نفس قاعدة firestore.rules */
+async function adminUid(idToken) {
+  if (!idToken) return '';
+  const t = await app().auth().verifyIdToken(idToken);
+  const a = await db().collection('admins').doc(t.uid).get();
+  return a.exists ? t.uid : '';
+}
+async function getOrder(id) {
+  const s = await db().collection('orders').doc(id).get();
+  return s.exists ? s.data() : null;
+}
+/* قفل بسيط ضد الضغط المزدوج: نحجز الطلب للفوترة داخل معاملة قبل ما نكلّم الأستاذ */
+async function lockInvoice(id) {
+  const ref = db().collection('orders').doc(id);
+  return db().runTransaction(async tx => {
+    const s = await tx.get(ref);
+    if (!s.exists) return { ok: false, why: 'not_found' };
+    const o = s.data();
+    if (o.ostaz && o.ostaz.id) return { ok: false, why: 'done', ostaz: o.ostaz, order: o };
+    if (o.ostazLock && Date.now() - o.ostazLock < 60000) return { ok: false, why: 'busy' };
+    tx.update(ref, { ostazLock: Date.now() });
+    return { ok: true, order: o };
+  });
+}
+async function saveInvoice(id, ostaz) {
+  const F = app().firestore.FieldValue;
+  await db().collection('orders').doc(id).update({ ostaz, ostazLock: F.delete() });
+}
+async function unlockInvoice(id) {
+  const F = app().firestore.FieldValue;
+  await db().collection('orders').doc(id).update({ ostazLock: F.delete() }).catch(() => {});
+}
+
+module.exports = { getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
+  adminUid, getOrder, lockInvoice, saveInvoice, unlockInvoice };

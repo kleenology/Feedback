@@ -320,6 +320,7 @@ body{font-family:'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif;background:#f5f5
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes scaleIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.or-inv{font-size:11px;font-weight:700;color:#16a34a;background:#f0fdf4;border-radius:8px;padding:7px 10px;align-self:center}
 </style>
 
 </head>
@@ -637,6 +638,8 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function friendCode(cp){return cp?'KLNF'+String(cp).slice(3):'';}
 function baseFromFriend(code){return code&&code.indexOf('KLNF')===0?'KLN'+code.slice(4):'';}
 function refCount(r){return r?(r.rcCount||(r.rcUsed?1:0)):0;}
+/* خادم الفواتير (مجلد server/ على Vercel) — نفس خادم رموز الدخول. فاضي = زر الفاتورة يشرح وش ناقص */
+var INV_API='';
 var BIZ={name:'كلينولوجي',rep:'فريق كلينولوجي',phone:'0537519929',app:'',tagline:'خدمات تنظيف احترافية',services:['تنظيف المنازل','تنظيف المكاتب','تنظيف السجاد والمفروشات','النظافة التأهيلية']};
 var WINBACK={off:'15%',valid:7}; /* عرض دعوة العملاء الغائبين — عدّل النسبة أو المدة من هنا */
 var LASTREV={o:0,n:'',cp:''};
@@ -1006,6 +1009,8 @@ function orCard(o){
       '<button onclick="orPrice(\''+o._id+'\')">'+(o.price?'عدّل السعر':'حدّد السعر')+'</button>'+
       (o.dep?'<button onclick="orRcpt(\''+o._id+'\')">🧾 الإيصال</button>':'')+
       (o.st!=='cancelled'?'<button onclick="orPaid(\''+o._id+'\')">💰 المستلم</button>':'')+
+      (o.ostaz&&o.ostaz.code?'<span class="or-inv">🧾 '+esc(o.ostaz.code)+(o.ostaz.status==='draft'?' (مسودة)':'')+'</span>':
+        (o.st==='done'?'<button onclick="orInvoice(\''+o._id+'\',this)">🧾 فاتورة الأستاذ</button>':''))+
       (o.ph?'<a href="https://wa.me/'+esc(o.ph)+'?text='+encodeURIComponent(orMsg(o))+'" target="_blank" rel="noopener">واتساب</a>':'')+
       (orMap(o)?'<a href="'+orMap(o)+'" target="_blank" rel="noopener">الخريطة</a>':'')+
       (orLive(o)?'<button class="x" onclick="orCancel(\''+o._id+'\')">إلغاء</button>':'')+
@@ -1072,6 +1077,27 @@ function orPaid(id){
   if(!isFinite(n)||n<0){alert('أدخل رقماً صحيحاً');return;}
   orSet(id,{paid:Math.round(n),paidAt:new Date().toISOString()}).then(function(){
     showToast(n>=T?'✓ مدفوع بالكامل':'حُفظ — المتبقي '+Math.max(0,T-Math.round(n))+' ر.س');});
+}
+/* فاتورة «الأستاذ»: الخادم يقرأ الطلب من Firestore ويصدرها — المتصفح يرسل معرّف الطلب ورمز دخول الأدمن بس.
+   رمز «الأستاذ» نفسه في إعدادات الخادم، وما يمر على هذي الصفحة أبداً */
+function orInvoice(id,btn){
+  var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
+  if(!INV_API){alert('ربط الأستاذ يحتاج نشر الخادم (server/) وضبط INV_API — شوف server/README.md');return;}
+  if(orRem(o)>0&&!confirm('المتبقي '+orRem(o)+' ر.س ما انسجّل مستلماً.\nتصدر الفاتورة كذا؟ (المدفوع فيها: '+(Number(o.paid)||0)+' ر.س)'))return;
+  var u=auth.currentUser;if(!u){showToast('سجّل دخولك أول');return;}
+  if(btn){btn.disabled=true;btn.textContent='جاري الإصدار…';}
+  u.getIdToken().then(function(tok){
+    return fetch(INV_API+'/api/invoice',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},
+      body:JSON.stringify({order:id})});
+  }).then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+  .then(function(x){
+    if(x.s===200&&x.j.ostaz){o.ostaz=x.j.ostaz;rOr();
+      showToast((x.j.already?'الفاتورة موجودة: ':'✓ صدرت ')+(x.j.ostaz.code||'')+(x.j.ostaz.status==='draft'?' — مسودة، اعتمدها من الأستاذ':''));return;}
+    throw new Error(x.j&&(x.j.message||x.j.error)||('خطأ '+x.s));
+  }).catch(function(e){
+    if(btn){btn.disabled=false;btn.textContent='🧾 فاتورة الأستاذ';}
+    alert('تعذّر إصدار الفاتورة:\n'+((e&&e.message)||e));
+  });
 }
 function orPrice(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;

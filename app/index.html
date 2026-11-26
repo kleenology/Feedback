@@ -1132,7 +1132,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.0300';
+var APP_VER='2026.11.27.0500';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2467,7 +2467,7 @@ function submitOrder(){
   var svs={};L.forEach(function(l){svs[l.sv]=1;});
   var o={uid:ME.uid,ph:ME.ph,n:ME.n||'',sub:false,
     svc:Object.keys(svs).map(function(k){return svcOf(k).t;}).join(' · '),
-    items:L.map(function(l){return {k:l.k,t:l.t,u:l.u,p:l.p,q:l.q};}),
+    items:L.map(function(l){return {k:l.k,sv:l.sv,t:l.t,u:l.u,p:l.p,q:l.q};}),
     subt:t.sub,off:t.off,est:t.tot,dep:depOf(t.tot),
     date:BK.date,slot:BK.slot,adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
     nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};

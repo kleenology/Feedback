@@ -39,7 +39,7 @@ function cors(req, res) {
   if (ORIGINS.includes(o)) res.setHeader('Access-Control-Allow-Origin', o);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Max-Age', '86400');
   if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return true; }
   if (o && !ORIGINS.includes(o)) { json(res, 403, { error: 'origin' }); return true; }
