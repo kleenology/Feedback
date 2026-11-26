@@ -39,6 +39,8 @@ function normOrigin(v) {
 const ORIGINS = (process.env.ALLOWED_ORIGINS ||
   'https://kleenology.github.io,http://localhost:8080,http://127.0.0.1:8080')
   .split(/[,\s]+/).map(normOrigin).filter(Boolean);
+/* الدومين الخاص للتطبيق واللوحة — مسموح دائماً عشان الانتقال ما يحتاج تعديل في Vercel */
+if (!ORIGINS.includes('https://app.kleenology.me')) ORIGINS.push('https://app.kleenology.me');
 
 function cors(req, res) {
   const o = req.headers.origin || '';
