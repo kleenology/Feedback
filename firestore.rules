@@ -168,6 +168,27 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // إيصالات العربون: مستند لكل طلب بنفس معرّفه. العميل يرفع إيصال طلبه هو فقط
+    // (ويقدر يستبدله)، والصورة مضغوطة بحد ~700KB. الأدمن يقرأ ويحذف.
+    match /receipts/{oid} {
+      function ownsOrder() {
+        return exists(/databases/$(database)/documents/orders/$(oid)) &&
+          get(/databases/$(database)/documents/orders/$(oid)).data.uid == request.auth.uid;
+      }
+      function validReceipt() {
+        return request.auth != null &&
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.img is string &&
+          request.resource.data.img.size() < 900000 &&
+          request.resource.data.keys().hasOnly(['uid', 'img', 'amt', 'at']) &&
+          ownsOrder();
+      }
+      allow read: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow create: if validReceipt();
+      allow update: if validReceipt() && resource.data.uid == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
     // أي مجموعة أخرى: ممنوعة بالكامل
     match /{document=**} {
       allow read, write: if false;

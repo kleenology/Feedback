@@ -520,6 +520,20 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .paybar .due s{display:block;text-decoration:none;font-size:12px;color:var(--mut)}
 .paybar .due b{font-size:24px;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums}
 .paybar .due b small{font-size:13px;font-weight:600;color:var(--mut)}
+/* إيصال التحويل */
+.rcpt{display:flex;align-items:center;gap:14px;background:var(--card);border:2px dashed var(--blue);border-radius:20px;
+  padding:16px;cursor:pointer;box-shadow:var(--sh)}
+.rcpt.ok{border-style:solid;border-color:var(--ok)}
+.rcpt .ri{width:52px;height:52px;border-radius:14px;background:var(--blue-l);color:var(--blue-d);display:grid;place-items:center;flex:0 0 auto;overflow:hidden}
+.rcpt.ok .ri{background:var(--okl);color:var(--ok)}
+.rcpt .ri img{width:100%;height:100%;object-fit:cover}
+.rcpt .rt{flex:1;min-width:0}
+.rcpt .rt b{display:block;font-size:15px;font-weight:700}
+.rcpt .rt s{display:block;text-decoration:none;font-size:12.5px;color:var(--mut);line-height:1.6;margin-top:2px}
+.rcpt.ok .rt b{color:var(--ok)}
+.rcpt-done{display:flex;gap:10px;align-items:flex-start;background:var(--okl);color:var(--ok);border-radius:var(--r3);
+  padding:12px 14px;font-size:13.5px;font-weight:600;line-height:1.7;margin:6px 0 8px}
+.rcpt-done .ic{width:18px;height:18px;flex:0 0 auto;margin-top:3px}
 /* بيانات التحويل */
 .pay{background:var(--card);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden;margin-top:16px}
 .pay-h{background:var(--blue);color:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -1109,7 +1123,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.26.2300';
+var APP_VER='2026.11.27.0100';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1319,6 +1333,10 @@ var API={
   addrs:function(){if(DEMO){ADR=LS.get('addrs',[]);return Promise.resolve();}
     return db.collection('customers').doc(ME.uid).collection('addresses').limit(20).get().then(function(s){
       ADR=[];s.forEach(function(d){var a=d.data();a.id=d.id;ADR.push(a);});}).catch(function(){ADR=[];});},
+  addRcpt:function(oid,img,amt){
+    var d={uid:ME.uid,img:img,amt:Number(amt)||0,at:new Date().toISOString()};
+    if(DEMO){var m=LS.get('rcptimg',{})||{};m[oid]=d;LS.set('rcptimg',m);return Promise.resolve();}
+    return db.collection('receipts').doc(oid).set(d);},
   addAddr:function(a){if(DEMO){a.id='a'+Date.now();ADR.push(a);LS.set('addrs',ADR);return Promise.resolve(a);}
     return db.collection('customers').doc(ME.uid).collection('addresses').add(a).then(function(r){a.id=r.id;ADR.push(a);saveSnap();return a;});},
   delAddr:function(a){ADR=ADR.filter(function(x){return x.id!==a.id;});
@@ -2241,19 +2259,66 @@ function payCard(dep,o){
   return '<div class="pay"><div class="pay-h"><span><b>عربون تثبيت الحجز</b>'+Math.round(DEP_PCT*100)+'% من الإجمالي التقديري</span>'+
       '<strong class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></strong></div>'+
     '<div class="pay-b">'+
+      (o&&rcptDone(o.id)?'':
       '<div class="pay-r"><s>البنك</s><b>'+esc(BANK.bank)+'</b></div>'+
       '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
-      '<div class="pay-iban"><div><s>الآيبان</s><button type="button" onclick="copyIban()">نسخ</button></div><code>'+esc(ibanFmt(BANK.iban))+'</code></div>'+
-      '<p class="pay-n">'+(o?'حوّل العربون وأرسل لنا صورة الإيصال — نؤكد موعدك أول ما يوصل.'
+      '<div class="pay-iban"><div><s>الآيبان</s><button type="button" onclick="copyIban()">نسخ</button></div><code>'+esc(ibanFmt(BANK.iban))+'</code></div>')+
+      (o&&rcptDone(o.id)?'<div class="rcpt-done">'+ic('check')+'<span>وصلنا إيصالك — نراجعه ونؤكد موعدك قريباً.</span></div>':'')+
+      (o&&!rcptDone(o.id)?rcptBox(o.id):'')+
+      '<p class="pay-n">'+(o?(rcptDone(o.id)?'':'حوّل العربون وارفع صورة الإيصال — نؤكد موعدك بعد مراجعته.')
         :'بعد إرسال الطلب حوّل العربون وأرسل صورة الإيصال على واتساب. <b style="color:var(--tx)">الموعد ما يتثبت إلا بعد وصول العربون</b>، والباقي تدفعه بعد التنفيذ.')+'</p>'+
-      (o?'<a class="btn btn-sm" style="margin:6px 0 6px;text-decoration:none" target="_blank" rel="noopener" href="'+depLink(o)+'">'+ic('chat','','ic-sm')+'<span>أرسل الإيصال على واتساب</span></a>':'')+
     '</div></div>';
 }
-function depLink(o){
-  return 'https://wa.me/'+BIZ.wa+'?text='+encodeURIComponent(
-    'السلام عليكم، حوّلت عربون طلبي'+(o.no?' رقم '+o.no:'')+' بقيمة '+o.dep+' ر.س — مرفق الإيصال.');
-}
 var BKBAR='';   /* شريط «المستحق الآن» أسفل الملخص — تملؤه خطوة التأكيد */
+/* ===== إيصال التحويل =====
+   الطلب ما يُرسَل إلا مع صورة الإيصال، والفريق يؤكد الموعد بعد مراجعتها من اللوحة.
+   الصورة تُصغَّر على الجهاز (أقصى ضلع 1280، JPEG) وتُحفظ في receipts/{رقم الطلب}
+   — مستند مستقل عن الطلب عشان قائمة الطلبات تبقى خفيفة */
+var RCPT=null;
+function rcptDone(id){return !!(LS.get('rcpts',{})||{})[id];}
+function rcptMark(id){var m=LS.get('rcpts',{})||{};m[id]=1;LS.set('rcpts',m);}
+function shrinkImg(file){
+  return new Promise(function(res,rej){
+    if(!file||!/^image\//.test(file.type||'image/')){rej(new Error('type'));return;}
+    var url=URL.createObjectURL(file),im=new Image();
+    im.onload=function(){
+      var M=1280,w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,M/Math.max(w,h));
+      var c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);
+      var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      /* حد مستند فايرستور 1MB — ننزّل الجودة لين يصير تحت 700KB */
+      var q=0.75,d=c.toDataURL('image/jpeg',q);
+      while(d.length>700000&&q>0.3){q-=0.1;d=c.toDataURL('image/jpeg',q);}
+      d.length>700000?rej(new Error('big')):res(d);
+    };
+    im.onerror=function(){URL.revokeObjectURL(url);rej(new Error('read'));};
+    im.src=url;
+  });
+}
+function rcptBox(oid){
+  var ok=!oid&&RCPT;
+  return '<label class="rcpt'+(ok?' ok':'')+'" for="rcptIn'+(oid||'')+'">'+
+    '<span class="ri">'+(ok?'<img src="'+RCPT+'" alt="">':ic('doc'))+'</span>'+
+    '<span class="rt"><b>'+(ok?'تم إرفاق الإيصال':'ارفع صورة إيصال التحويل')+'</b>'+
+      '<s>'+(ok?'اضغط لتغييره':'لقطة شاشة من تطبيق البنك تكفي — الطلب ما يُرسل بدونه')+'</s></span></label>'+
+    '<input type="file" accept="image/*" id="rcptIn'+(oid||'')+'" hidden onchange="pickRcpt(this'+(oid?",'"+oid+"'":'')+')">';
+}
+function pickRcpt(inp,oid){
+  var f=inp.files&&inp.files[0];if(!f)return;
+  shrinkImg(f).then(function(d){
+    if(oid){
+      toast('جاري رفع الإيصال…');
+      var o=ORD.filter(function(x){return x.id===oid;})[0];
+      API.addRcpt(oid,d,o&&o.dep).then(function(){rcptMark(oid);renderOrders();renderHome();toast('وصلنا الإيصال — نراجعه ونؤكد موعدك');})
+        .catch(function(){toast('تعذّر رفع الإيصال — حاول مرة ثانية');});
+      return;
+    }
+    RCPT=d;
+    var h=$('rcptHost');if(h)h.innerHTML=rcptBox();
+    var b=$('bkGo');if(b)b.disabled=false;
+  }).catch(function(e){toast(e&&e.message==='type'?'اختر صورة':'تعذّر قراءة الصورة — جرّب لقطة شاشة');});
+  inp.value='';
+}
 function bsAdr(){
   var a=BK.adr||{};
   return '<h3 class="bs-t">العنوان</h3><div class="bs-c bs-adr">'+ic('home')+
@@ -2269,11 +2334,12 @@ function bsOpt(dep){
       '<div class="pay-r"><s>البنك</s><b>'+esc(BANK.bank)+'</b></div>'+
       '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
       '<div class="pay-iban"><div><s>الآيبان</s><button type="button" onclick="copyIban()">نسخ</button></div><code>'+esc(ibanFmt(BANK.iban))+'</code></div>'+
-      '<p class="pay-n">بعد الإرسال حوّل العربون وأرسل صورة الإيصال من «طلباتي» — <b style="color:var(--tx)">الموعد يتثبّت بعد وصوله</b>.</p>'+
-    '</div>';
+      '<p class="pay-n">حوّل العربون الحين، وارفع صورة الإيصال تحت. <b style="color:var(--tx)">نؤكد موعدك بعد مراجعة الإيصال</b>، والباقي تدفعه بعد التنفيذ.</p>'+
+    '</div>'+
+    '<h3 class="bs-t">إيصال التحويل</h3><div id="rcptHost">'+rcptBox()+'</div>';
 }
 function bsTail(due,label){
-  BKBAR='<div class="paybar-in"><button class="btn" id="bkGo" onclick="submitOrder()">'+esc(label)+'</button>'+
+  BKBAR='<div class="paybar-in"><button class="btn" id="bkGo" onclick="submitOrder()"'+(due&&!RCPT?' disabled':'')+'>'+esc(label)+'</button>'+
     '<div class="due"><s>المبلغ المستحق الآن</s><b class="mono">'+due.toLocaleString('en-US')+' <small>ر.س</small></b></div></div>';
   return '<p class="bs-terms">بإرسال الطلب، أنت توافق على <button type="button" onclick="openTerms()">الشروط وسياسة الخصوصية</button>.</p>'+
     '<div style="height:70px"></div>';
@@ -2351,8 +2417,17 @@ function onSubmitErr(e){
   if(c==='unavailable'||c==='deadline-exceeded'){alert('الشبكة ضعيفة — حاول مرة ثانية.');return;}
   alert('تعذّر إرسال الطلب'+(c?' ('+c+')':'')+' — حاول مرة ثانية.');
 }
+/* بعد حفظ الطلب: نرفع الإيصال. لو فشل الرفع الطلب يبقى، وبطاقته في «طلباتي» فيها زر الرفع */
+function sendRcpt(o){
+  var d=RCPT;RCPT=null;
+  if(!d||!o||!o.id)return;
+  API.addRcpt(o.id,d,o.dep).then(function(){rcptMark(o.id);renderOrders();renderHome();})
+    .catch(function(){toast('تعذّر رفع الإيصال — ارفعه من بطاقة الطلب');renderOrders();});
+}
 function submitOrder(){
-  var b=$('bkGo');b.disabled=true;b.textContent='جاري الإرسال…';
+  var b=$('bkGo');
+  if(!BK.quote&&DEP_PCT&&!RCPT){toast('ارفع صورة إيصال التحويل أول');return;}
+  b.disabled=true;b.textContent='جاري الإرسال…';
   var now=new Date().toISOString();
   if(BK.quote){
     var qo={uid:ME.uid,ph:ME.ph,n:ME.n||'',svc:'زيارة تسعير — '+BK.quote.t,quote:true,
@@ -2374,6 +2449,7 @@ function submitOrder(){
       adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
     API.addOrder(po).then(function(){
+      sendRcpt(po);
       BK.pkg=null;renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(po.no?'وصلنا اشتراكك رقم '+po.no:'وصلنا اشتراكك');
     }).catch(function(e){b.disabled=false;b.textContent='اشترك الآن';onSubmitErr(e);});
     return;
@@ -2387,6 +2463,7 @@ function submitOrder(){
     date:BK.date,slot:BK.slot,adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
     nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
   API.addOrder(o).then(function(){
+    sendRcpt(o);
     CART={};LS.set('cart',{});
     renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(o.no?'وصلنا طلبك رقم '+o.no:'وصلنا طلبك — نتواصل معك قريب');
   }).catch(function(e){b.disabled=false;b.textContent='أرسل الطلب';onSubmitErr(e);});
