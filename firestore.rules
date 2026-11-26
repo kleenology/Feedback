@@ -10,6 +10,15 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     function isUser(uid) { return request.auth != null && request.auth.uid == uid; }
+    /* جوال العميل في المستند لازم يكون جواله هو: رمز الدخول (PIN/SMS عبر خادمنا) يحمل ph،
+       ودخول فايربيس بالجوال يحمل phone_number. بدونه يقدر عميل يكتب رقم غيره في طلبه */
+    function ownPhone(ph) {
+      return ph is string && ph.size() > 0 && (
+        request.auth.token.get('ph', '') == ph ||
+        request.auth.token.get('phone_number', '') == '+' + ph);
+    }
+    // معرّفات الطلبات تُعرض في أزرار اللوحة — نقصرها على حروف آمنة
+    function safeId(id) { return id.matches('^[A-Za-z0-9_-]{1,40}$'); }
 
     // قائمة معرّفات الأدمن — تُدار من Firebase Console فقط، ولا تُكتب من التطبيق أبداً
     match /admins/{uid} {
@@ -76,6 +85,7 @@ service cloud.firestore {
       allow create, update: if isUser(uid) &&
         request.resource.data.keys().hasOnly(['n','ph','at','seen','ok']) &&
         request.resource.data.ph is string && request.resource.data.ph.size() <= 20 &&
+        ownPhone(request.resource.data.ph) &&
         (!('n' in request.resource.data) ||
           (request.resource.data.n is string && request.resource.data.n.size() <= 60)) &&
         (!('ok' in request.resource.data) || request.resource.data.ok is bool) &&
@@ -148,16 +158,24 @@ service cloud.firestore {
     // الطلبات: العميل ينشئ طلبه ويقرأ طلباته ويلغيها قبل التأكيد. الأدمن يدير الكل.
     match /orders/{oid} {
       allow read: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
-      allow create: if request.auth != null &&
+      allow create: if request.auth != null && safeId(oid) &&
         request.resource.data.uid == request.auth.uid &&
+        ownPhone(request.resource.data.ph) &&
         request.resource.data.st == 'new' &&
+        // حقول يكتبها الفريق أو الخادم بس: السعر النهائي، المستلم، الفاتورة
+        !request.resource.data.keys().hasAny(['price', 'paid', 'paidAt', 'ostaz', 'ostazLock']) &&
+        (!('dep' in request.resource.data) || (request.resource.data.dep is number &&
+          request.resource.data.dep >= 0 && request.resource.data.dep <= request.resource.data.est)) &&
+        (!('off' in request.resource.data) || (request.resource.data.off is number &&
+          request.resource.data.off >= 0 && request.resource.data.off <= 100)) &&
         request.resource.data.svc is string && request.resource.data.svc.size() <= 120 &&
         request.resource.data.nt is string && request.resource.data.nt.size() <= 600 &&
         // السلة: قائمة أصناف بحد معقول، والإجمالي تقديري لا يُلزم الشركة
         request.resource.data.items is list && request.resource.data.items.size() <= 60 &&
         request.resource.data.est is number && request.resource.data.est >= 0 &&
-        // رقم الطلب التسلسلي: يُولَّد داخل نفس معاملة حجز الفترة من counters/orders
-        (!('no' in request.resource.data) || request.resource.data.no is int) &&
+        // رقم الطلب: نفس قيمة العدّاد بعد زيادته في نفس المعاملة — ما يقدر أحد يكرر رقم طلب غيره
+        (!('no' in request.resource.data) || (request.resource.data.no is int &&
+          request.resource.data.no == getAfter(/databases/$(database)/documents/counters/orders).data.n + 1000)) &&
         // السعر النهائي بيد الأدمن وحده — العميل ما يكتبه عند الإنشاء
         !('price' in request.resource.data);
       // العميل ما يعدّل إلا الإلغاء، والسعر والحالة بيد الأدمن وحده
@@ -176,7 +194,7 @@ service cloud.firestore {
           get(/databases/$(database)/documents/orders/$(oid)).data.uid == request.auth.uid;
       }
       function validReceipt() {
-        return request.auth != null &&
+        return request.auth != null && safeId(oid) &&
           request.resource.data.uid == request.auth.uid &&
           request.resource.data.img is string &&
           request.resource.data.img.size() < 900000 &&

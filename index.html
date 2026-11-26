@@ -1002,9 +1002,9 @@ function orCard(o){
       '<span>زيارة تسعير — '+(o.est?esc(o.est)+' ر.س (تُخصم من السعر)':'مجانية')+'</span>'+
       '<b>'+(o.price?esc(o.price)+' ر.س':'حدّد السعر بعد المعاينة')+'</b></div></div>':'')+
     (items.length?'<div class="or-it">'+items.map(function(i){
-      return '<div><span>'+esc(i.t)+' <span style="opacity:.7">'+esc(i.u)+' × '+i.q+'</span></span><b>'+(i.p*i.q)+' ر.س</b></div>';
+      return '<div><span>'+esc(i.t)+' <span style="opacity:.7">'+esc(i.u)+' × '+(Number(i.q)||0)+'</span></span><b>'+((Number(i.p)||0)*(Number(i.q)||0))+' ر.س</b></div>';
     }).join('')+'<div style="border-top:1px dashed #dde8ee;margin-top:5px;padding-top:6px"><span>'+
-      (isSub(o)?'شهرياً':'التقديري'+(o.off?' (بعد خصم '+o.off+'%)':''))+'</span><b>'+(o.est||0)+' ر.س</b></div>'+
+      (isSub(o)?'شهرياً':'التقديري'+(o.off?' (بعد خصم '+(Number(o.off)||0)+'%)':''))+'</span><b>'+(Number(o.est)||0)+' ر.س</b></div>'+
       (o.dep?'<div><span style="color:#b7791f">العربون المطلوب</span><b style="color:#b7791f">'+esc(o.dep)+' ر.س</b></div>':'')+
       (o.price?'<div><span style="color:#16a34a">السعر النهائي</span><b style="color:#16a34a">'+esc(o.price)+' ر.س</b></div>':'')+
       (o.paid?'<div><span style="color:#0f7cb8">المستلم</span><b style="color:#0f7cb8">'+esc(o.paid)+' ر.س</b></div>'+
@@ -1041,10 +1041,17 @@ function orRcpt(id){
     w.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(10,25,35,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px';
     w.innerHTML='<div style="color:#fff;font-weight:700;font-size:14px;text-align:center">إيصال طلب '+(o.no?'#'+esc(o.no):'')+' — '+esc(o.n||'')+
       '<br><span style="font-weight:400;opacity:.8">العربون المطلوب: '+esc(o.dep||r.amt||0)+' ر.س · '+esc(String(r.at||'').slice(0,16).replace('T',' '))+'</span></div>'+
-      '<img src="'+r.img+'" style="max-width:100%;max-height:72vh;border-radius:12px;background:#fff">'+
+      '<div id="rcImg"></div>'+
       '<div style="display:flex;gap:10px">'+(o.st==='new'?'<button id="rcOk" style="background:#16a34a;color:#fff;border:none;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700">العربون وصل — أكّد الطلب</button>':'')+
       '<button id="rcX" style="background:#fff;border:none;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700">إغلاق</button></div>';
     document.body.appendChild(w);
+    /* الصورة يرفعها العميل — ما تدخل HTML كنص أبداً، ولازم تكون صورة data: فعلاً */
+    var src=String(r.img||'');
+    if(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(src)){
+      var im=document.createElement('img');im.src=src;im.alt='إيصال';
+      im.style.cssText='max-width:100%;max-height:72vh;border-radius:12px;background:#fff';
+      w.querySelector('#rcImg').appendChild(im);
+    }else w.querySelector('#rcImg').textContent='⚠️ ملف الإيصال غير صالح';
     w.querySelector('#rcX').onclick=function(){w.remove();};
     /* تأكيد العربون = نسجّل المستلم ثم نأكد الطلب، فيشوف العميل «المدفوع والمتبقي» فوراً */
     var ok=w.querySelector('#rcOk');if(ok)ok.onclick=function(){w.remove();
@@ -1135,6 +1142,12 @@ function orShareInv(id,btn){
     var w=waOpen(o.ph,msg);
     if(w.t){var nw=window.open(w.h,'_blank');if(!nw)location.href=w.h;}else location.href=w.h;
   }).catch(function(e){done();alert('تعذّر جلب رابط الفاتورة:\n'+((e&&e.message)||e));});
+}
+/* خلية CSV: نص يبدأ بـ = + - @ يفتحه Excel كمعادلة (حقن صيغ) — نسبقه بـ ' . الأرقام تبقى أرقام */
+function csvCell(v){
+  var t=String(v==null?'':v);
+  if(typeof v!=='number'&&/^[=+\-@\t\r]/.test(t))t="'"+t;
+  return '"'+t.replace(/"/g,'""')+'"';
 }
 function orPrice(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
@@ -1773,7 +1786,7 @@ function pyCsv(){
     rows.push([pyMonName(PYM),e.n,e.r||'',e.s,pyDed(r),pyBon(r),r.nt||'',r.tr||0,r.trd||0,pyNet(e),r.pd?'مصروف':'لم يُصرف',r.pd&&r.at?pyDate(r.at):'']);
   });
   rows.push(['','','','','','','','','الإجمالي',pyTotal(),'','']);
-  var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+  var csv=rows.map(function(row){return row.map(csvCell).join(',');}).join('\r\n');
   ofDL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-payroll-'+PYM+'.csv');
 }
 function pySetDays(id,v){
@@ -2562,7 +2575,7 @@ function ofCsv(){
   var k=ofCamp();
   var rows=[['الاسم','الجوال','المصدر','الحملة','قيّمنا','أُضيف','آخر عرض','تاريخ آخر إرسال','أُرسل له '+k,'الحالة']];
   CT.forEach(function(c){rows.push([c.n||'','+'+c.p,SRC[ctKind(c)].t+(ctWon(c)?' (ليد تحوّل)':''),c.sn||'',ctRv()[c.p]?'نعم':'لا',c.at||'',c.lc||'',c.la||'',ofSentIn(c,k)?'نعم':'لا',c.st===0?'موقوف':'نشط']);});
-  var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+  var csv=rows.map(function(row){return row.map(csvCell).join(',');}).join('\r\n');
   ofDL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),'kleenology-contacts-'+new Date().toISOString().slice(0,10)+'.csv');
 }
 function orInit(){
@@ -3089,7 +3102,7 @@ function exportCSV(){
 if(!D.length)return;
 var rows=[['التاريخ','الاسم','الجوال','الفريق','التقييم العام','النظافة','الالتزام','التعامل','يرشح','الملاحظات','الكوبون','الكوبون مستخدم','تمت المعالجة']];
 D.forEach(function(r){rows.push([r.ts||'',r.n||'',r.ph||'',r.tm||'',r.o,r.c,r.p,r.tw,r.r?'نعم':'لا',r.nt||'',r.cp||'',r.used?'نعم':'لا',r.o<=2?(r.handled?'نعم':'لا'):'']);});
-var csv=rows.map(function(row){return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+var csv=rows.map(function(row){return row.map(csvCell).join(',');}).join('\r\n');
 var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
 var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='kleenology-reviews-'+new Date().toISOString().slice(0,10)+'.csv';
 document.body.appendChild(a);a.click();document.body.removeChild(a);

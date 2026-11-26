@@ -2,7 +2,6 @@
 /* GET /api/health — فحص الإعداد بعد النشر: يقول لك أي جزء ناقص بدون ما يكشف أي مفتاح.
    firebase: يتصل بقاعدة البيانات بحساب الخدمة. ostaz: يسأل «الأستاذ» عن هوية الرمز (قراءة بس). */
 const S = require('./_lib/store');
-const U = require('./_lib/util');
 const O = require('./_lib/ostaz');
 
 const has = k => !!String(process.env[k] || '').trim();
@@ -14,7 +13,6 @@ module.exports = async function handler(req, res) {
       FB_CLIENT_EMAIL: has('FB_CLIENT_EMAIL'), FB_PRIVATE_KEY: has('FB_PRIVATE_KEY'),
       OSTAZ_URL: has('OSTAZ_URL'), OSTAZ_TOKEN: has('OSTAZ_TOKEN'),
       OTP_SECRET: has('OTP_SECRET'),
-      origins_parsed: U.ORIGINS,
       OSTAZ_WEBHOOK_SECRET: has('OSTAZ_WEBHOOK_SECRET'),
       NODEJS_HELPERS_off: process.env.NODEJS_HELPERS === '0', SMS_PROVIDER: process.env.SMS_PROVIDER || '(none)'
     }
@@ -30,18 +28,11 @@ module.exports = async function handler(req, res) {
   }
   try {
     const me = await O.call('GET', '/me');
-    out.ostaz = me && me.id ? 'ok (' + (me.name || 'api') + ')' : 'رد غير متوقع';
+    out.ostaz = me && me.id ? 'ok' : 'رد غير متوقع';
   } catch (e) {
     const c = (e && e.code) || '';
     out.ostaz = c === 'not_configured' ? 'OSTAZ_URL أو OSTAZ_TOKEN ناقص'
       : c === 'ostaz_401' ? 'OSTAZ_TOKEN غير صحيح أو محذوف' : 'خطأ: ' + String((e && e.message) || e).slice(0, 160);
-  }
-  /* قوالب طباعة الفاتورة — نحتاج رقم القالب لرابط مشاركة الفاتورة مع العميل */
-  if (String(out.ostaz).startsWith('ok')) {
-    try {
-      const d = await O.call('GET', '/document-template-designs');
-      out.invoice_designs = ((d && d.data) || []).map(x => ({ id: x.id, name: x.name, type: x.type || x.document_type || x.template_type || '' }));
-    } catch (e) { out.invoice_designs = 'خطأ: ' + String((e && e.message) || e).slice(0, 120); }
   }
   out.ok = out.firebase === 'ok' && String(out.ostaz).startsWith('ok');
   res.statusCode = 200;
