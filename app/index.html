@@ -1598,7 +1598,7 @@ function sendCode(again,via){
 }
 /* ===== الدخول بالإيميل (مؤقتاً لين يتفعّل كود واتساب) =====
    حساب فايربيس بالإيميل وكلمة مرور، وبعده رقم الجوال مرة وحدة (للتواصل). العملاء اللي عندهم
-   رمز دخول برقم الجوال يدخلون من «عندي رمز دخول» وتبقى طلباتهم. EMAIL_LOGIN=false يرجّع الشاشة القديمة */
+   رمز دخول (PIN) سابق: الشاشة موجودة (showPinLogin) بس بلا رابط ظاهر. EMAIL_LOGIN=false يرجّع الشاشة القديمة *
 var EMAIL_LOGIN=true,EMMODE='in';
 function emailOn(){return EMAIL_LOGIN&&!OTP_API;}
 function emShow(){
