@@ -93,8 +93,10 @@ async function unlockInvoice(id) {
   await db().collection('orders').doc(id).update({ ostazLock: F.delete() }).catch(() => {});
 }
 
-async function setInvoiceStatus(id, status) {
-  await db().collection('orders').doc(id).update({ 'ostaz.status': status });
+async function setInvoiceStatus(id, status, url) {
+  const patch = { 'ostaz.status': status };
+  if (url) patch['ostaz.url'] = url;          /* رابط الفاتورة — العميل يشوفه في طلبه بالتطبيق */
+  await db().collection('orders').doc(id).update(patch);
 }
 
 module.exports = { setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,

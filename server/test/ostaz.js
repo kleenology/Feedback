@@ -195,7 +195,7 @@ const ORDER = {
     },
     async saveInvoice(id, x) { ORD[id].ostaz = x; },
     async getOrder(id) { return ORD[id] || null; },
-    async setInvoiceStatus(id, st) { ORD[id].ostaz.status = st; },
+    async setInvoiceStatus(id, st, url) { ORD[id].ostaz.status = st; if (url) ORD[id].ostaz.url = url; },
     async unlockInvoice() {}
   } };
   require.cache[ostazPath] = { id: ostazPath, filename: ostazPath, loaded: true, exports: {
@@ -261,6 +261,7 @@ const ORDER = {
     const r = await call2({ order: 'i' }, 'good');
     eq([r.status, r.body.url], [200, 'https://x.test/inv']);
     eq(ORD.i.ostaz.status, 'issued', 'ما حدّث حالة الفاتورة على الطلب');
+    eq(ORD.i.ostaz.url, 'https://x.test/inv', 'ما حفظ الرابط للعميل');
     eq((await call2({ order: 'n' }, 'good')).body.error, 'no_invoice');
   });
 

@@ -23,8 +23,12 @@ module.exports = async function handler(req, res) {
     if (!o) return U.json(res, 404, { error: 'not_found' });
     if (!o.ostaz || !o.ostaz.id) return U.json(res, 400, { error: 'no_invoice' });
     const r = await O.shareInvoice(o.ostaz.id);
-    if (r.status !== (o.ostaz.status || '')) await S.setInvoiceStatus(id, r.status).catch(() => {});
-    if (r.status === 'draft') return U.json(res, 409, { error: 'draft', code: r.code });
+    if (r.status === 'draft') {
+      if (o.ostaz.status !== 'draft') await S.setInvoiceStatus(id, 'draft').catch(() => {});
+      return U.json(res, 409, { error: 'draft', code: r.code });
+    }
+    /* نحفظ الرابط على الطلب: يظهر للعميل زر «الفاتورة» في تطبيقه */
+    await S.setInvoiceStatus(id, r.status, r.url).catch(e => console.error('save url:', e && e.message));
     return U.json(res, 200, { ok: true, url: r.url, code: r.code, status: r.status });
   } catch (e) {
     console.error('share:', (e && e.message) || e);
