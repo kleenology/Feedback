@@ -1409,23 +1409,24 @@ function appUsersHtml(){
   if(CUQ){
     var dq=CUQ.replace(/\D/g,'');
     L=L.filter(function(r){
-      var hay=String(r.c.n||'')+' '+String(r.c.ph||'');
-      return hay.indexOf(CUQ)>=0||(dq&&String(r.c.ph||'').indexOf(dq)>=0);});
+      var hay=String(r.c.n||'')+' '+String(r.c.ph||'')+' '+String(r.c.em||'').toLowerCase();
+      return hay.indexOf(CUQ.toLowerCase())>=0||(dq&&String(r.c.ph||'').indexOf(dq)>=0);});
   }
   h+='<div class="cc"><h3>📱 مستخدمو التطبيق ('+L.length+')</h3>'+
-    '<div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">أرقام موثّقة برسالة تحقق وصلت فعلاً — أنظف من أي قائمة حملة</div>'+
+    '<div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">كل من سجّل في التطبيق — بالجوال أو بالإيميل</div>'+
     '<div class="of-row" style="margin-bottom:9px">'+
       [['','الكل',rows.length],['no','ما طلبوا',noOrd.length],['ok','وافقوا على العروض',ok.length]]
       .map(function(f){return '<button type="button" class="of-tp'+(CUF===f[0]?' on':'')+
         '" onclick="CUF=\''+f[0]+'\';rCu()">'+f[1]+' ('+f[2]+')</button>';}).join('')+
     '</div>'+
-    '<input class="of-in" id="cuQ" style="margin-bottom:9px" placeholder="ابحث باسم أو رقم" value="'+esc(CUQ)+'">';
+    '<input class="of-in" id="cuQ" style="margin-bottom:9px" placeholder="ابحث باسم أو رقم أو إيميل" value="'+esc(CUQ)+'">';
   if(!L.length)h+='<div class="empty">'+(CUQ?'ما فيه نتيجة':'ما فيه أحد في هذا الفلتر')+'</div>';
   L.slice(0,40).forEach(function(r){
     var c=r.c;
     h+='<div class="exp-item" style="border-right-color:'+(r.n?'#16a34a':'#f5a301')+'"><div class="exp-top"><div>'+
       '<div class="exp-nm">'+esc(c.n||'بلا اسم')+(c.ok?' <span style="color:#c026d3;font-size:10px">✓ عروض</span>':'')+'</div>'+
-      '<div style="font-size:10px;color:#9ab;margin-top:3px;direction:ltr;text-align:right">+'+esc(c.ph||'')+'</div>'+
+      (c.ph?'<div style="font-size:10px;color:#9ab;margin-top:3px;direction:ltr;text-align:right">+'+esc(c.ph)+'</div>':'')+
+      (c.em?'<div style="font-size:10px;color:#9ab;margin-top:2px;direction:ltr;text-align:right;word-break:break-all">'+esc(c.em)+'</div>':'')+
       '<div style="font-size:10px;color:#9ab;margin-top:2px">'+
         (r.n?'<b style="color:#16a34a">'+r.n+' طلب</b>':'<b style="color:#b45309">ما طلب بعد</b>')+
         ' · أول دخول '+esc(cuDay(c.at))+' · آخر دخول '+esc(cuDay(c.seen))+'</div>'+
