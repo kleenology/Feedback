@@ -99,5 +99,22 @@ async function setInvoiceStatus(id, status, url) {
   await db().collection('orders').doc(id).update(patch);
 }
 
-module.exports = { setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
+/* ===== تنبيهات «الأستاذ» (webhook) ===== */
+/* كل تنبيه له معرّف ثابت حتى لو أعيد إرساله — نسجّله أول مرة ونتجاهل المكرر */
+async function markHook(hookId) {
+  try { await db().collection('ostaz_hooks').doc(String(hookId)).create({ at: Date.now() }); return true; }
+  catch (e) { if (e && (e.code === 6 || /already exists/i.test(e.message || ''))) return false; throw e; }
+}
+async function findOrders(field, value) {
+  const s = await db().collection('orders').where(field, '==', value).limit(20).get();
+  return s.docs.map(d => Object.assign({ _id: d.id }, d.data()));
+}
+async function setOstaz(id, ostaz) {
+  await db().collection('orders').doc(id).update({ ostaz });
+}
+async function clearOstaz(id) {
+  await db().collection('orders').doc(id).update({ ostaz: app().firestore.FieldValue.delete() });
+}
+
+module.exports = { markHook, findOrders, setOstaz, clearOstaz, setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
   adminUid, getOrder, lockInvoice, saveInvoice, unlockInvoice };
