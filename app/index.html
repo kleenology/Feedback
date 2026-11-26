@@ -1132,7 +1132,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.0500';
+var APP_VER='2026.11.27.0700';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2505,6 +2505,8 @@ function ordCard(o,live){
     (o.est?'<div class="tot'+(o.price?'':' big')+'" style="margin-top:6px"><span>'+(isSub(o)?'شهرياً':o.price?'التقديري':'الإجمالي التقديري')+'</span><b>'+sar(o.est)+'</b></div>':'')+
     (o.price?'<div class="tot big"><span>السعر النهائي</span><b>'+sar(o.price)+'</b></div>':'')+
     paidBox(o)+
+    (o.ostaz&&o.ostaz.url&&/^https:\/\//.test(o.ostaz.url)?'<a class="btn btn-2 btn-sm" style="margin-top:12px;text-decoration:none" target="_blank" rel="noopener" href="'+esc(o.ostaz.url)+'">'+
+      ic('doc','','ic-sm')+'<span>الفاتورة'+(o.ostaz.code?' <span class="mono" style="opacity:.7">'+esc(o.ostaz.code)+'</span>':'')+'</span></a>':'')+
     (o.st==='new'&&o.dep?payCard(o.dep,o):'')+
     timeline(o)+
     (o.st==='new'?'<button class="btn btn-x btn-sm" style="margin-top:15px" onclick="cancelOrder(\''+o.id+'\')">'+ic('trash','','ic-sm')+'<span>إلغاء الطلب</span></button>':'')+
