@@ -1060,6 +1060,9 @@ function orAdvance(id){
   if(nx==='done'&&orRem(o)>0&&confirm('استلمت المتبقي '+orRem(o)+' ر.س من العميل؟\n(إلغاء = يبقى المتبقي مسجّلاً عليه)')){
     patch.paid=orTotal(o);patch.paidAt=new Date().toISOString();}
   orSet(id,patch).then(function(){
+    /* إتمام الخدمة: الفاتورة مباشرة بدل ما تروح لقائمة «مكتملة» وتدوّر الطلب */
+    if(nx==='done'&&INV_API&&!(o.ostaz&&o.ostaz.id)&&confirm('تم التنفيذ ✓\nتطلع فاتورة الأستاذ الحين؟')){
+      orInvoice(id,null,true);return;}
     /* العميل ما يشوف التغيير إلا لو التطبيق مفتوح عنده — فنعرض الإبلاغ في نفس اللحظة */
     showToast(ORST[nx]+' ✓',o.ph?{t:'أبلغ العميل',
       href:'https://wa.me/'+o.ph+'?text='+encodeURIComponent(orMsg(o))}:null);
@@ -1081,10 +1084,12 @@ function orPaid(id){
 }
 /* فاتورة «الأستاذ»: الخادم يقرأ الطلب من Firestore ويصدرها — المتصفح يرسل معرّف الطلب ورمز دخول الأدمن بس.
    رمز «الأستاذ» نفسه في إعدادات الخادم، وما يمر على هذي الصفحة أبداً */
-function orInvoice(id,btn){
+function orInvoice(id,btn,asked){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
   if(!INV_API){alert('ربط الأستاذ يحتاج نشر الخادم (server/) وضبط INV_API — شوف server/README.md');return;}
-  if(orRem(o)>0&&!confirm('المتبقي '+orRem(o)+' ر.س ما انسجّل مستلماً.\nتصدر الفاتورة كذا؟ (المدفوع فيها: '+(Number(o.paid)||0)+' ر.س)'))return;
+  if(!btn)showToast('جاري إصدار الفاتورة…');
+  /* asked: جاي من «تم التنفيذ» وسؤال المتبقي انسأل للتو — ما نكرره */
+  if(!asked&&orRem(o)>0&&!confirm('المتبقي '+orRem(o)+' ر.س ما انسجّل مستلماً.\nتصدر الفاتورة كذا؟ (المدفوع فيها: '+(Number(o.paid)||0)+' ر.س)'))return;
   var u=auth.currentUser;if(!u){showToast('سجّل دخولك أول');return;}
   if(btn){btn.disabled=true;btn.textContent='جاري الإصدار…';}
   u.getIdToken().then(function(tok){
