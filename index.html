@@ -989,6 +989,15 @@ function rOrList(){
 }
 /* الاشتراك = sub:true أو فيه باقة — الطلبات القديمة حفظت المجموع في sub كرقم */
 function isSub(o){return o.sub===true||!!o.pkg;}
+/* دفعات تاب: يسجّلها الخادم بعد ما يتأكد من تاب — مؤكدة، ما تحتاج مراجعة إيصال */
+var TAPSRC={APPLE_PAY:'Apple Pay',MADA:'مدى',VISA:'Visa',MASTERCARD:'Mastercard',STC_PAY:'STC Pay'};
+function orTapLine(o){
+  var ps=(o.pays||[]).filter(function(p){return p&&p.m==='tap';});
+  if(ps.length)return ps.map(function(p){return '<div><span style="color:#16a34a">✓ دفع إلكتروني'+(p.src?' ('+esc(TAPSRC[p.src]||p.src)+')':'')+'</span><b style="color:#16a34a">'+esc(p.amt)+' ر.س</b></div>';}).join('');
+  if(o.pay==='tap'&&o.st==='new'&&!(Number(o.paid)>0))
+    return '<div><span style="color:#9ab">⏳ ما دفع العربون بعد'+(o.tap&&o.tap.st&&o.tap.st!=='INITIATED'?' ('+esc(o.tap.st)+')':'')+'</span><b></b></div>';
+  return '';
+}
 function orCard(o){
   var c=ORCOL[o.st]||ORCOL.new,items=o.items||[];
   var nx=ORNEXT[o.st];
@@ -1005,7 +1014,8 @@ function orCard(o){
       return '<div><span>'+esc(i.t)+' <span style="opacity:.7">'+esc(i.u)+' × '+(Number(i.q)||0)+'</span></span><b>'+((Number(i.p)||0)*(Number(i.q)||0))+' ر.س</b></div>';
     }).join('')+'<div style="border-top:1px dashed #dde8ee;margin-top:5px;padding-top:6px"><span>'+
       (isSub(o)?'شهرياً':'التقديري'+(o.off?' (بعد خصم '+(Number(o.off)||0)+'%)':''))+'</span><b>'+(Number(o.est)||0)+' ر.س</b></div>'+
-      (o.dep?'<div><span style="color:#b7791f">العربون المطلوب</span><b style="color:#b7791f">'+esc(o.dep)+' ر.س</b></div>':'')+
+      (o.dep?'<div><span style="color:#b7791f">العربون المطلوب'+(o.pay==='tap'?' · 💳 دفع إلكتروني':o.pay==='bank'?' · 🏦 تحويل':'')+'</span><b style="color:#b7791f">'+esc(o.dep)+' ر.س</b></div>':'')+
+      orTapLine(o)+
       (o.price?'<div><span style="color:#16a34a">السعر النهائي</span><b style="color:#16a34a">'+esc(o.price)+' ر.س</b></div>':'')+
       (o.paid?'<div><span style="color:#0f7cb8">المستلم</span><b style="color:#0f7cb8">'+esc(o.paid)+' ر.س</b></div>'+
         '<div><span style="color:'+(orRem(o)>0?'#b45309':'#16a34a')+'">'+(orRem(o)>0?'المتبقي':'✓ مدفوع بالكامل')+'</span><b style="color:'+(orRem(o)>0?'#b45309':'#16a34a')+'">'+(orRem(o)>0?orRem(o)+' ر.س':'')+'</b></div>':'')+

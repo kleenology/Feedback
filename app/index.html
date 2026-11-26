@@ -567,6 +567,15 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .bs-opt .o-b b{font-size:26px;font-weight:700;color:var(--gold-d);font-variant-numeric:tabular-nums}
 .bs-opt .o-b b small{font-size:13px;font-weight:600}
 .bs-bank{margin-top:12px;padding:6px 18px 10px}
+.bs-opt.pick{cursor:pointer;width:100%;font:inherit;color:inherit;text-align:inherit;margin-bottom:10px}
+.bs-opt.off{border-color:var(--line);box-shadow:none}
+.bs-opt.off .rd{border-color:#c9d6de}.bs-opt.off .rd i{display:none}
+.bs-opt.off .o-b b{color:var(--mut)}
+.pm-ic{display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+.pm-ic span{font-size:11px;font-weight:700;border:1px solid var(--line);border-radius:7px;padding:3px 8px;background:#fff;color:var(--tx)}
+.pm-ic .ap{background:#000;color:#fff;border-color:#000}
+.tap-go{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:4px 0 12px;
+  background:#000;color:#fff;border-radius:14px;padding:15px;font:inherit;font-weight:700;font-size:15px}
 .bs-terms{font-size:13px;color:var(--mut);line-height:1.8;margin:18px 2px 0}
 .bs-terms button{color:var(--blue-d);font:inherit;font-weight:600}
 .paybar{position:fixed;right:0;left:0;bottom:0;z-index:36;background:var(--card);border-radius:22px 22px 0 0;
@@ -1254,7 +1263,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.28.1500';
+var APP_VER='2026.11.28.1700';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1276,6 +1285,15 @@ var OTP_API=(OTP_LIVE||/[?&]otp=1\b/.test(location.search))?OTP_SERVER:'';
 /* دخول مؤقت برمز من ٦ أرقام يختاره العميل (لين يتفعّل SMS أو واتساب). فاضي = رموز التحقق المعتادة.
    الخادم نفسه (server/api/pin) — والهوية نفسها ph_الجوال، فالتحويل لـSMS بعدين ما يغيّر حسابات العملاء */
 var PIN_API='https://feedback-server-beige.vercel.app';
+/* الدفع بـ Apple Pay ومدى والبطاقات عبر «تاب» (server/api/pay). TAP_LIVE=true = للجميع.
+   قبلها تجرّبه بنفسك بفتح app.kleenology.me/app/?tap=1 (ينحفظ في جهازك) — والعملاء يبقون على التحويل البنكي */
+var PAY_API='https://feedback-server-beige.vercel.app',TAP_LIVE=false;
+var TAP_ON=TAP_LIVE||(function(){try{if(/[?&]tap=1\b/.test(location.search))localStorage.setItem('kln_tap','1');
+  return localStorage.getItem('kln_tap')==='1';}catch(e){return false;}})();
+var PAYM=TAP_ON?'tap':'bank';   /* طريقة دفع العربون في الطلب الحالي */
+/* رجوع من صفحة الدفع: تاب يضيف tap_id للرابط — نحفظه وننظّف الرابط، ونتحقق بعد الدخول */
+var PAYRET=(function(){var m=/[?&]tap_id=(chg_[A-Za-z0-9]+)/.exec(location.search);
+  if(m){try{history.replaceState(null,'',location.pathname);}catch(e){}}return m?m[1]:'';})();
 var BOOKED={};   /* {'2026-09-10':{am:1,pm:0,ev:0}} — كم محجوز في كل فترة */
 var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
@@ -1783,6 +1801,7 @@ function onSignedIn(uid){
     /* الرئيسية أول شي دائماً — والاسم يُطلب من بطاقة داخلها بدل ما نرمي العميل في «حسابي» */
     if(!ME.ph){askPhone();return;}
     $('tabBar').classList.remove('hide');
+    if(PAYRET){var c=PAYRET;PAYRET='';payVerify(c);return;}
     if(!shown){go('scHome');setTab('scHome');}
   }
   /* لو فشل تحميل الطلبات أو العناوين ما نعلّق العميل — نكمل بالموجود */
@@ -2589,9 +2608,14 @@ function copyIban(btn){
 }
 /* بطاقة التحويل — في مراجعة الطلب وفي بطاقة الطلب لين يتأكد */
 function payCard(dep,o){
+  var tap=o&&TAP_ON&&!rcptDone(o.id);
   return '<div class="pay"><div class="pay-h"><span><b>عربون تثبيت الحجز</b>'+Math.round(DEP_PCT*100)+'% من الإجمالي التقديري</span>'+
       '<strong class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></strong></div>'+
     '<div class="pay-b">'+
+      (tap?'<button type="button" class="tap-go" onclick="this.disabled=true;payStart(\''+o.id+'\','+(Number(o.no)||0)+')">ادفع العربون '+
+        dep.toLocaleString('en-US')+' ر.س</button>'+
+        '<div class="pm-ic" style="margin:-4px 0 12px"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div>'+
+        '<p class="pay-n" style="margin:0 0 10px;text-align:center">أو حوّل بنكياً وارفع الإيصال:</p>':'')+
       (o&&rcptDone(o.id)?'':
       '<div class="pay-r"><s>البنك</s><b>'+esc(BANK.bank)+'</b></div>'+
       '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
@@ -2658,12 +2682,18 @@ function bsAdr(){
     '<p>'+esc([a.t,a.d,a.c].filter(Boolean).join(' — '))+'</p></div>';
 }
 function bsOpt(dep){
-  return '<h3 class="bs-t">طريقة الحجز</h3>'+
-    '<div class="bs-opt" role="radio" aria-checked="true"><span class="rd"><i></i></span>'+
-      '<div class="o-a"><em>يثبّت موعدك</em><b>عربون '+Math.round(DEP_PCT*100)+'%</b>'+
-        '<s>تحويل بنكي الحين، والباقي بعد التنفيذ</s></div>'+
-      '<div class="o-b"><s>المستحق الآن</s><b class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></b></div></div>'+
-    '<div class="bs-c bs-bank">'+
+  var amt='<div class="o-b"><s>المستحق الآن</s><b class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></b></div>';
+  if(!TAP_ON)PAYM='bank';
+  return '<h3 class="bs-t">'+(TAP_ON?'طريقة دفع العربون':'طريقة الحجز')+'</h3>'+
+    (TAP_ON?'<button type="button" class="bs-opt pick'+(PAYM==='tap'?'':' off')+'" id="pmTap" role="radio" aria-checked="'+(PAYM==='tap')+'" onclick="payPick(\'tap\','+dep+')"><span class="rd"><i></i></span>'+
+      '<div class="o-a"><em>الأسرع — يتأكد على طول</em><b>دفع إلكتروني</b>'+
+        '<s>عربون '+Math.round(DEP_PCT*100)+'% الحين، والباقي بعد التنفيذ</s>'+
+        '<div class="pm-ic"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div></div>'+amt+'</button>':'')+
+    '<'+(TAP_ON?'button type="button"':'div')+' class="bs-opt'+(TAP_ON?' pick':'')+(PAYM==='bank'?'':' off')+'" id="pmBank" role="radio" aria-checked="'+(PAYM==='bank')+'"'+
+      (TAP_ON?' onclick="payPick(\'bank\','+dep+')"':'')+'><span class="rd"><i></i></span>'+
+      '<div class="o-a">'+(TAP_ON?'':'<em>يثبّت موعدك</em>')+'<b>'+(TAP_ON?'تحويل بنكي':'عربون '+Math.round(DEP_PCT*100)+'%')+'</b>'+
+        '<s>'+(TAP_ON?'تحوّل وترفع الإيصال، ونؤكد بعد المراجعة':'تحويل بنكي الحين، والباقي بعد التنفيذ')+'</s></div>'+amt+'</'+(TAP_ON?'button':'div')+'>'+
+    '<div id="bankBox"'+(PAYM==='bank'?'':' hidden')+'><div class="bs-c bs-bank">'+
       '<div class="pay-r"><s>البنك</s><b>'+esc(BANK.bank)+'</b></div>'+
       '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
       ibanBox()+
@@ -2673,10 +2703,19 @@ function bsOpt(dep){
         '<li><span><b>نؤكد موعدك</b> بعد مراجعة الإيصال، والباقي تدفعه بعد التنفيذ</span></li>'+
       '</ol>'+
     '</div>'+
-    '<h3 class="bs-t">إيصال التحويل</h3><div id="rcptHost">'+rcptBox()+'</div>';
+    '<h3 class="bs-t">إيصال التحويل</h3><div id="rcptHost">'+rcptBox()+'</div></div>';
+}
+/* اختيار طريقة الدفع بدون إعادة رسم الخطوة — عشان ما تضيع الملاحظات والاسم المكتوبة */
+function payPick(m,dep){
+  PAYM=m;
+  [['pmTap','tap'],['pmBank','bank']].forEach(function(x){var e=$(x[0]);if(e){e.classList.toggle('off',m!==x[1]);e.setAttribute('aria-checked',String(m===x[1]));}});
+  var bb=$('bankBox');if(bb)bb.hidden=m!=='bank';
+  var b=$('bkGo');if(b){b.disabled=m==='bank'&&!RCPT;b.textContent=m==='tap'?'ادفع '+Number(dep||0).toLocaleString('en-US')+' ر.س':(b.dataset.lb||b.textContent);}
 }
 function bsTail(due,label){
-  BKBAR='<div class="paybar-in"><button class="btn" id="bkGo" onclick="submitOrder()"'+(due&&!RCPT?' disabled':'')+'>'+esc(label)+'</button>'+
+  var tap=due&&TAP_ON&&PAYM==='tap';
+  BKBAR='<div class="paybar-in"><button class="btn" id="bkGo" data-lb="'+esc(label)+'" onclick="submitOrder()"'+(due&&!tap&&!RCPT?' disabled':'')+'>'+
+    esc(tap?'ادفع '+due.toLocaleString('en-US')+' ر.س':label)+'</button>'+
     '<div class="due"><s>المبلغ المستحق الآن</s><b class="mono">'+due.toLocaleString('en-US')+' <small>ر.س</small></b></div></div>';
   return '<p class="bs-terms">بإرسال الطلب، أنت توافق على <button type="button" onclick="openTerms()">الشروط وسياسة الخصوصية</button>.</p>'+
     '<div style="height:70px"></div>';
@@ -2759,6 +2798,42 @@ function onSubmitErr(e){
   if(c==='unavailable'||c==='deadline-exceeded'){alert('الشبكة ضعيفة — حاول مرة ثانية.');return;}
   alert('تعذّر إرسال الطلب'+(c?' ('+c+')':'')+' — حاول مرة ثانية.');
 }
+/* ===== الدفع الإلكتروني (تاب) ===== */
+/* نفتح صفحة الدفع: الخادم يحسب المبلغ من الطلب نفسه ويرجّع الرابط. لو فشل، الطلب محفوظ وزر الدفع في بطاقته */
+function payStart(oid,no){
+  if(DEMO){toast('وضع المعاينة — الدفع ما يشتغل هنا');renderAll();go('scOrders');setTab('scOrders');return;}
+  var u=auth&&auth.currentUser;
+  function fail(m){
+    toast(m||'تعذّر فتح صفحة الدفع — ادفع من بطاقة الطلب في «طلباتي»');
+    renderAll();ORQF='';go('scOrders');setTab('scOrders');
+  }
+  if(!u||!oid)return fail();
+  toast('نجهّز صفحة الدفع…');
+  u.getIdToken().then(function(tk){
+    return fetch(PAY_API+'/api/pay/start',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},
+      body:JSON.stringify({order:oid})});
+  }).then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
+    if(j&&j.paid){fail('العربون مدفوع ✓');return;}
+    if(j&&j.url&&/^https:\/\/[a-z0-9.-]*tap\.company\//.test(j.url)){LS.set('payo',{id:oid,no:no||0});location.href=j.url;return;}
+    fail();
+  }).catch(function(){fail();});
+}
+/* رجعنا من صفحة الدفع: نتحقق من الخادم (اللي يسأل تاب) ونوري العميل النتيجة */
+function payVerify(cid){
+  var u=auth&&auth.currentUser;if(!u||!cid)return;
+  ORQF='';go('scOrders');setTab('scOrders');toast('نتأكد من الدفع…');
+  u.getIdToken().then(function(tk){
+    return fetch(PAY_API+'/api/pay/verify',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},
+      body:JSON.stringify({tap_id:cid})});
+  }).then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
+    LS.set('payo',null);
+    if(j&&j.ok)toast('تم دفع العربون ✓'+(j.no?' — طلبك رقم '+j.no+' محجوز':'')+'، ونأكد موعدك قريب');
+    else toast('ما اكتمل الدفع — تقدر تحاول مرة ثانية من بطاقة الطلب');
+    API.orders().then(function(){renderAll();});
+  }).catch(function(){toast('ما قدرنا نتأكد من الدفع الحين — يتحدّث الطلب تلقائياً لما يوصلنا');});
+}
+/* كم باقي من العربون؟ */
+function depDue(o){return Math.max(0,(Number(o.dep)||0)-(Number(o.paid)||0));}
 /* بعد حفظ الطلب: نرفع الإيصال. لو فشل الرفع الطلب يبقى، وبطاقته في «طلباتي» فيها زر الرفع */
 function sendRcpt(o){
   var d=RCPT;RCPT=null;
@@ -2769,7 +2844,8 @@ function sendRcpt(o){
 function submitOrder(){
   var b=$('bkGo');
   if(!ME.ph){askPhone();return;}
-  if(!BK.quote&&DEP_PCT&&!RCPT){toast('ارفع صورة إيصال التحويل أول');return;}
+  var viaTap=!BK.quote&&DEP_PCT&&TAP_ON&&PAYM==='tap';
+  if(!BK.quote&&DEP_PCT&&!viaTap&&!RCPT){toast('ارفع صورة إيصال التحويل أول');return;}
   var nf=$('bkNm');
   if(nf){var nn=String(nf.value||'').trim().slice(0,60);
     if(!nn){toast('اكتب اسمك');nf.focus();return;}
@@ -2795,7 +2871,9 @@ function submitOrder(){
       off:0,est:p.p,dep:depOf(p.p),date:BK.date,slot:BK.slot,
       adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
+    if(po.dep)po.pay=viaTap?'tap':'bank';
     API.addOrder(po).then(function(){
+      if(viaTap&&po.dep){BK.pkg=null;payStart(po.id,po.no);return;}
       sendRcpt(po);
       BK.pkg=null;renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(po.no?'وصلنا اشتراكك رقم '+po.no:'وصلنا اشتراكك');
     }).catch(function(e){b.disabled=false;b.textContent='اشترك الآن';onSubmitErr(e);});
@@ -2809,9 +2887,11 @@ function submitOrder(){
     subt:t.sub,off:t.off,est:t.tot,dep:depOf(t.tot),
     date:BK.date,slot:BK.slot,adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
     nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
+  if(o.dep)o.pay=viaTap?'tap':'bank';
   API.addOrder(o).then(function(){
-    sendRcpt(o);
     CART={};LS.set('cart',{});
+    if(viaTap&&o.dep){payStart(o.id,o.no);return;}
+    sendRcpt(o);
     renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(o.no?'وصلنا طلبك رقم '+o.no:'وصلنا طلبك — نتواصل معك قريب');
   }).catch(function(e){b.disabled=false;b.textContent='أرسل الطلب';onSubmitErr(e);});
 }
@@ -2847,7 +2927,7 @@ function ordCard(o,live){
       '<span class="inv-i">'+ic('doc')+'</span>'+
       '<span class="inv-t"><b>فاتورتك جاهزة</b>'+(o.ostaz.code?'<s class="mono">'+esc(o.ostaz.code)+'</s>':'')+'</span>'+
       '<span class="inv-go">عرض الفاتورة</span></a>':'')+
-    (o.st==='new'&&o.dep?payCard(o.dep,o):'')+
+    (o.st==='new'&&o.dep&&depDue(o)?payCard(depDue(o),o):'')+
     timeline(o)+
     (o.st==='new'?'<button class="btn btn-x btn-sm" style="margin-top:15px" onclick="cancelOrder(\''+o.id+'\')">'+ic('trash','','ic-sm')+'<span>إلغاء الطلب</span></button>':'')+
     (o.st==='done'?'<a class="btn btn-2 btn-sm" style="margin-top:15px;text-decoration:none" target="_blank" rel="noopener" href="'+waLink(o)+'">'+ic('chat','','ic-sm')+'<span>تواصل معنا</span></a>':'')+
