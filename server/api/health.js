@@ -14,7 +14,9 @@ module.exports = async function handler(req, res) {
       FB_CLIENT_EMAIL: has('FB_CLIENT_EMAIL'), FB_PRIVATE_KEY: has('FB_PRIVATE_KEY'),
       OSTAZ_URL: has('OSTAZ_URL'), OSTAZ_TOKEN: has('OSTAZ_TOKEN'),
       OTP_SECRET: has('OTP_SECRET'),
-      origins_parsed: U.ORIGINS, SMS_PROVIDER: process.env.SMS_PROVIDER || '(none)'
+      origins_parsed: U.ORIGINS,
+      OSTAZ_WEBHOOK_SECRET: has('OSTAZ_WEBHOOK_SECRET'),
+      NODEJS_HELPERS_off: process.env.NODEJS_HELPERS === '0', SMS_PROVIDER: process.env.SMS_PROVIDER || '(none)'
     }
   };
   try {
