@@ -29,7 +29,7 @@ function cfg() {
     status: process.env.OSTAZ_STATUS === 'issued' ? 'issued' : 'draft',
     products: Object.assign({ post: 5, sofa: 11, pkg: 31 }, map),
     product: num(process.env.OSTAZ_PRODUCT_ID, 18),
-    design: num(process.env.OSTAZ_DESIGN_ID, 2)       /* قالب الطباعة: 2 = «قالب فاتورة 1 عربي» */
+    design: num(process.env.OSTAZ_DESIGN_ID, 6)       /* قالب الطباعة: 6 = القالب «t» */
   };
 }
 

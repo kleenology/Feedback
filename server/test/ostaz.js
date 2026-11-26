@@ -155,7 +155,7 @@ const ORDER = {
     eq(calls.some(c => /share/.test(c.url)), false);
   });
 
-  await t('مشاركة: المعتمدة ترجع رابطها بقالب الفاتورة 2', async () => {
+  await t('مشاركة: المعتمدة ترجع رابطها بالقالب t (6)', async () => {
     calls.length = 0;
     global.fetch = fake([
       [/\/invoices\/555$/, { j: { data: { id: 555, code: 'S-1-9', status: 'issued' } } }],
@@ -163,7 +163,7 @@ const ORDER = {
     ]);
     const r = await O.shareInvoice(555);
     eq(r.url, 'https://kleenology.alostaz.io/s/abc');
-    eq(calls.find(c => /share/.test(c.url)).body, { invoice_id: 555, document_template_design_id: 2, method: 'link' });
+    eq(calls.find(c => /share/.test(c.url)).body, { invoice_id: 555, document_template_design_id: 6, method: 'link' });
   });
 
   await t('firstUrl يلقى الرابط وين ما كان في الرد', async () => {
