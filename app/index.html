@@ -774,13 +774,14 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
       <small>بالمتابعة أنت توافق على <a href="#" onclick="openTerms();return false">الشروط وسياسة الخصوصية</a></small>
     </div>
     <div id="lgCode" class="hide">
-      <h1>تحقق من رقم الجوال</h1>
+      <h1 id="lgCodeT">تحقق من رقم الجوال</h1>
       <p id="sentVia">أدخل رمز التحقق (6 أرقام) المرسل إلى</p>
       <div class="sent mono" id="sentTo"></div>
       <div class="otp" id="otpRow"></div>
       <button class="btn" id="btnCode" onclick="verifyCode()">تحقق الآن</button>
       <button class="btn btn-2 btn-sm" style="margin-top:9px;color:#8FA9B6;border-color:#1F4256" id="btnResend" onclick="resend()"></button>
       <button class="btn btn-2 btn-sm hide" style="margin-top:9px" id="btnSms" onclick="sendSmsInstead()"></button>
+      <button class="lnk hide" style="width:100%;justify-content:center;margin-top:6px" onclick="pinForgot()" id="btnForgot">نسيت الرمز؟</button>
       <button class="lnk" style="width:100%;justify-content:center" onclick="backToPhone()" id="bkPh"></button>
     </div>
     <div class="err hide" id="lgErr"></div>
@@ -1157,7 +1158,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.1000';
+var APP_VER='2026.11.27.1200';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1173,6 +1174,9 @@ var MIN_ORDER=250;
 var BANK={bank:'مصرف الإنماء',iban:'SA5405000068204621866000',name:'مؤسسة علم التنظيف التجارية'};
 /* خادم رموز التحقق (مجلد server/). فاضي = نرجع لرموز فايربيس */
 var OTP_API='';
+/* دخول مؤقت برمز من ٦ أرقام يختاره العميل (لين يتفعّل SMS أو واتساب). فاضي = رموز التحقق المعتادة.
+   الخادم نفسه (server/api/pin) — والهوية نفسها ph_الجوال، فالتحويل لـSMS بعدين ما يغيّر حسابات العملاء */
+var PIN_API='https://feedback-server-beige.vercel.app';
 var BOOKED={};   /* {'2026-09-10':{am:1,pm:0,ev:0}} — كم محجوز في كل فترة */
 var DAYS_AHEAD=14;
 var STS={new:'بانتظار التأكيد',confirmed:'مؤكد',on_way:'في الطريق',done:'اكتمل',cancelled:'ملغي'};
@@ -1455,6 +1459,15 @@ function sendCode(again,via){
     var f=document.querySelector('#otpRow input');if(f)f.focus();
   }
   if(DEMO){setTimeout(function(){ok();toast('وضع المعاينة: أي 6 أرقام تمشّي');},450);return;}
+  if(PIN_API&&!OTP_API){
+    fetch(PIN_API+'/api/pin/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})})
+      .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+      .then(function(x){
+        if(x.s!==200){sendFail({code:x.j&&x.j.error==='bad_phone'?'auth/invalid-phone-number':'otp/failed'});return;}
+        ok();pinMode(!x.j.exists);
+      }).catch(function(){sendFail({code:'otp/network'});});
+    return;
+  }
   function sendFail(e){
     resetRecap();
     $('btnPh').disabled=false;$('btnPh').textContent='متابعة';tickResend();
@@ -1490,6 +1503,49 @@ function sendCode(again,via){
     auth.signInWithPhoneNumber('+'+p,recap()).then(function(c){CONF=c;resetRecap();ok();}).catch(sendFail);
   }catch(e){sendFail(e);}
 }
+/* ===== رمز الدخول المؤقت ===== */
+var PINNEW=false,PIN1='';
+function pinMode(isNew){
+  PINNEW=isNew;PIN1='';clearInterval(RTM);
+  $('btnResend').classList.add('hide');$('btnSms').classList.add('hide');
+  $('btnForgot').classList.toggle('hide',isNew);
+  pinHead(isNew?'أنشئ رمز دخول':'أدخل رمز الدخول',
+    isNew?'اختر 6 أرقام تتذكرها — تدخل فيها كل مرة لرقم':'الرمز اللي اخترته لرقم',
+    isNew?'التالي':'دخول');
+}
+function pinHead(t,sub,btn){
+  $('lgCodeT').textContent=t;$('sentVia').textContent=sub;$('btnCode').textContent=btn;
+  document.querySelectorAll('#otpRow input').forEach(function(i){i.value='';});
+  var f=document.querySelector('#otpRow input');if(f)f.focus();
+}
+function pinForgot(){
+  window.open('https://wa.me/'+BIZ.wa+'?text='+encodeURIComponent('السلام عليكم، نسيت رمز الدخول للتطبيق — رقمي '+ME.ph),'_blank');
+}
+function pinVerify(code){
+  var b=$('btnCode');
+  /* أول مرة: الرمز مرتين عشان غلطة إصبع ما تقفل العميل برا حسابه */
+  if(PINNEW&&!PIN1){PIN1=code;pinHead('أكّد الرمز','اكتب نفس الـ6 أرقام مرة ثانية','دخول');return;}
+  if(PINNEW&&code!==PIN1){pinMode(true);lgErr('الرمزين مختلفين — اختر رمزك من جديد');return;}
+  VERIFYING=true;b.disabled=true;b.textContent='جاري الدخول…';
+  function fail(m,again){VERIFYING=false;b.disabled=false;
+    if(again===true)pinMode(true);else if(again===false)pinMode(false);
+    else pinHead($('lgCodeT').textContent,$('sentVia').textContent,PINNEW?'دخول':'دخول');
+    lgErr(m);}
+  fetch(PIN_API+'/api/pin/login',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({phone:ME.ph,pin:code,create:PINNEW})})
+    .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+    .then(function(x){
+      var e=x.j&&x.j.error;
+      if(x.s===200&&x.j.token)return auth.signInWithCustomToken(x.j.token).then(function(r){
+        VERIFYING=false;b.disabled=false;onSignedIn(r.user.uid);});
+      if(e==='weak')return fail('هذا الرمز سهل التخمين — اختر غيره',true);
+      if(e==='exists')return fail('هذا الرقم له رمز من قبل — أدخله',false);
+      if(e==='no_pin')return fail('ما لقينا رمز لهذا الرقم — أنشئ رمزك',true);
+      if(e==='wrong')return fail('الرمز غير صحيح'+(x.j.left?' — باقي '+x.j.left+(x.j.left===1?' محاولة':' محاولات'):''));
+      if(e==='locked')return fail('محاولات كثيرة — جرّب بعد '+(x.j.wait||15)+' دقيقة، أو اضغط «نسيت الرمز؟»');
+      fail('تعذّر الدخول ('+(e||x.s)+')');
+    }).catch(function(){fail('تعذّر الاتصال — تأكد من الإنترنت وحاول');});
+}
 var VERIFYING=false;
 function verifyCode(){
   if(VERIFYING)return;
@@ -1501,6 +1557,7 @@ function verifyCode(){
     var f=document.querySelector('#otpRow input');if(f)f.focus();}
   if(DEMO){setTimeout(function(){VERIFYING=false;b.disabled=false;b.textContent='تحقق الآن';
     clearInterval(RTM);onSignedIn('demo-uid');},400);return;}
+  if(PIN_API&&!OTP_API){VERIFYING=false;b.disabled=false;pinVerify(code);return;}
   if(OTP_API){
     fetch(OTP_API+'/api/otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({phone:ME.ph,code:code})})
@@ -1525,7 +1582,9 @@ function verifyCode(){
     clearInterval(RTM);onSignedIn(r.user.uid);})
    .catch(function(e){fail((e&&e.code)==='auth/invalid-verification-code'?'الرمز غير صحيح':'تعذّر التحقق، حاول مرة ثانية');});
 }
-function backToPhone(){clearInterval(RTM);clearInterval(SMTM);OTPVIA='';$('lgCode').classList.add('hide');$('lgPhone').classList.remove('hide');lgErr('');}
+function backToPhone(){clearInterval(RTM);clearInterval(SMTM);OTPVIA='';PIN1='';
+  $('lgCodeT').textContent='تحقق من رقم الجوال';$('btnCode').textContent='تحقق الآن';
+  $('btnResend').classList.remove('hide');$('btnForgot').classList.add('hide');$('lgCode').classList.add('hide');$('lgPhone').classList.remove('hide');lgErr('');}
 /* لقطة من آخر بيانات العميل على جهازه: نعرض الرئيسية منها فوراً عند الفتح،
    والبيانات الحية من فايربيس تحلّ محلها أول ما توصل — بدل ما ينتظر أربع قراءات */
 function saveSnap(){
