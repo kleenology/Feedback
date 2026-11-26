@@ -1157,7 +1157,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.0900';
+var APP_VER='2026.11.27.1000';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2015,7 +2015,6 @@ function renderCart(){
       '<div class="tot"><span>المجموع</span><b>'+sar(t.sub)+'</b></div>'+
       (t.off?'<div class="tot"><span>خصم '+esc(discNames())+' '+pct(t.off)+'</span><b class="cut">− '+sar(t.cut)+'</b></div>':'')+
       '<div class="tot big"><span>الإجمالي التقديري</span><b>'+sar(t.tot)+'</b></div>'+
-      '<p class="note" style="margin-top:12px">السعر تقديري — يعاين '+esc(BIZ.rep)+' المكان ويؤكد لك السعر النهائي قبل بدء العمل.</p>'+
     '</div></div>'+
     (t.tot<MIN_ORDER?'<div class="sec" style="border:none;padding-bottom:0"><div class="note acc">الحد الأدنى للطلب <b>'+MIN_ORDER+' ر.س</b> — أضف <b>'+(MIN_ORDER-t.tot)+' ر.س</b> وتقدر تكمل الحجز.</div></div>':'')+
     '<div class="sec" style="border:none"><button class="btn" onclick="startBooking()"'+(t.tot<MIN_ORDER?' disabled':'')+'>أكمل الحجز</button>'+
