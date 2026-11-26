@@ -116,5 +116,19 @@ async function clearOstaz(id) {
   await db().collection('orders').doc(id).update({ ostaz: app().firestore.FieldValue.delete() });
 }
 
-module.exports = { markHook, findOrders, setOstaz, clearOstaz, setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
+/* ===== رمز الدخول المؤقت (PIN) — قبل تفعيل SMS/واتساب ===== */
+/* pins/{الجوال}: {hash, salt, fails, lockUntil, at}. ممنوعة على المتصفح بقاعدة «أي مجموعة أخرى» */
+async function getPin(phone) {
+  const s = await db().collection('pins').doc(phone).get();
+  return s.exists ? s.data() : null;
+}
+async function createPin(phone, rec) {
+  try { await db().collection('pins').doc(phone).create(rec); return true; }
+  catch (e) { if (e && (e.code === 6 || /already exists/i.test(e.message || ''))) return false; throw e; }
+}
+async function updatePin(phone, patch) {
+  await db().collection('pins').doc(phone).update(patch);
+}
+
+module.exports = { getPin, createPin, updatePin, markHook, findOrders, setOstaz, clearOstaz, setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
   adminUid, getOrder, lockInvoice, saveInvoice, unlockInvoice };

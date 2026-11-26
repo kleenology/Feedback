@@ -5,5 +5,5 @@
   "description": "خادم رموز التحقق: يرسل الرمز عبر مزوّد سعودي ويعيد رمز دخول لفايربيس",
   "engines": { "node": ">=18" },
   "dependencies": { "firebase-admin": "^12.7.0" },
-  "scripts": { "test": "node test/run.js && node test/ostaz.js && node test/webhook.js" }
+  "scripts": { "test": "node test/run.js && node test/ostaz.js && node test/webhook.js && node test/pin.js" }
 }
