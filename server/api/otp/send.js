@@ -1,7 +1,7 @@
 'use strict';
 const U = require('../_lib/util');
 const S = require('../_lib/store');
-const { deliver, channels } = require('../_lib/sms');
+const { deliver, channels, smsReady } = require('../_lib/sms');
 
 const COOLDOWN = 60 * 1000;        /* بين رسالتين لنفس الرقم */
 const WINDOW   = 60 * 60 * 1000;   /* نافذة العدّ */
@@ -19,8 +19,10 @@ module.exports = async function handler(req, res) {
     phone = U.normPhone(body && body.phone);
     /* via:'sms' = «ما وصلني على واتساب، أرسله برسالة نصية» */
     if (body && body.via === 'sms') via = 'sms';
+    if (via === 'sms' && !smsReady() && !U.testNumbers()[U.normPhone(body && body.phone)]) via = 'no_sms';
   } catch (e) { return U.json(res, 400, { error: 'bad_request' }); }
   if (!phone) return U.json(res, 400, { error: 'bad_phone' });
+  if (via === 'no_sms') return U.json(res, 400, { error: 'no_sms' });
 
   try {
     const now = Date.now();
@@ -66,7 +68,7 @@ module.exports = async function handler(req, res) {
     }
     /* نحفظ القناة: لو كانت واتساب، طلب SMS بعدها مهلته أقصر */
     await S.putOtp(phone, { ...rec, via: used });
-    return U.json(res, 200, { ok: true, via: used });
+    return U.json(res, 200, { ok: true, via: used, sms: smsReady() });
   } catch (e) {
     console.error('send:', (e && e.message) || e);
     return U.json(res, 500, { error: 'send_failed' });

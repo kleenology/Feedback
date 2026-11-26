@@ -8,7 +8,7 @@ const path = require('path');
 const storePath = require.resolve('../api/_lib/store.js');
 const smsPath   = require.resolve('../api/_lib/sms.js');
 
-let DB = {}, DAY = 0, SENT = [], FAIL_SMS = false, CH = 'sms';
+let DB = {}, DAY = 0, SENT = [], FAIL_SMS = false, CH = 'sms', SMS_OK = true;
 const store = {
   async getOtp(p) { return DB[p] ? { ...DB[p] } : null; },
   async putOtp(p, d) { DB[p] = { ...d }; },
@@ -19,6 +19,7 @@ const store = {
   uidFor: p => 'ph_' + p
 };
 const sms = {
+  smsReady() { return SMS_OK; },
   channels() { return [CH]; },
   async deliver(p, code, via) {
     if (FAIL_SMS) throw new Error('boom');
@@ -53,7 +54,7 @@ const t = async (name, fn) => {
   catch (e) { console.log('✗ ' + name + ' — ' + e.message); fail++; }
 };
 const eq = (a, b, m) => { if (a !== b) throw new Error((m || '') + ' ' + JSON.stringify(a) + ' ≠ ' + JSON.stringify(b)); };
-const reset = () => { DB = {}; DAY = 0; SENT = []; FAIL_SMS = false; CH = 'sms'; };
+const reset = () => { DB = {}; DAY = 0; SENT = []; FAIL_SMS = false; CH = 'sms'; SMS_OK = true; };
 
 (async () => {
   const PH = '966537519929';
@@ -225,6 +226,15 @@ const reset = () => { DB = {}; DAY = 0; SENT = []; FAIL_SMS = false; CH = 'sms';
     await call(send, { phone: PH });
     DB[PH].sentAt = Date.now() - 21000;
     eq((await call(send, { phone: PH, via: 'sms' })).status, 429);
+  });
+
+  await t('بلا مزوّد SMS: طلب «أرسله برسالة نصية» يُرفض، والرد يقول sms:false', async () => {
+    reset(); process.env.OTP_DAILY_CAP = '99'; CH = 'whatsapp'; SMS_OK = false;
+    const r = await call(send, { phone: PH });
+    eq(r.status, 200); eq(r.body.sms, false);
+    DB[PH].sentAt = Date.now() - 21000;
+    const s2 = await call(send, { phone: PH, via: 'sms' });
+    eq(s2.status, 400); eq(s2.body.error, 'no_sms'); eq(SENT.length, 1, 'تظاهر بإرسال SMS');
   });
 
   await t('via غير معروف يُتجاهل', async () => {
