@@ -186,23 +186,32 @@ button{cursor:pointer;border:none;background:none}
 .live-s b{display:block;font-size:14.5px;font-weight:700;font-family:var(--dsp)}
 .live-s s{display:block;text-decoration:none;font-size:12px;color:var(--mut);margin-top:2px}
 .live-s .ic{flex:0 0 auto;color:var(--faint);transform:scaleX(-1)}
-.svcs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.svc{background:var(--card);border-radius:var(--r2);padding:20px 16px;text-align:center;
-  box-shadow:var(--sh);transition:transform .14s}
-.svc:active{transform:scale(.975)}
-/* شاشات قصيرة (SE وما شابه): نضغط الحشو بدل ما نحذف خدمة من الشبكة */
+/* بطاقات الخدمات: ثلاث بالصف، زوايا دائرية كبيرة، أيقونة كبيرة واسم تحتها بس.
+   آخر صف ناقص يتوسّط بدل ما يلتصق بالطرف */
+.svcs{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.svc{flex:0 0 calc((100% - 20px) / 3);aspect-ratio:1 / 1.08;background:var(--card);border-radius:28px;
+  padding:18px 8px 12px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;
+  text-align:center;box-shadow:0 1px 2px rgba(21,60,80,.04),0 8px 24px rgba(21,60,80,.07);transition:transform .14s}
+.svc:active{transform:scale(.96)}
+.svc .il{width:62%;height:auto;max-width:76px;aspect-ratio:1}
+.svc-t{min-height:2.7em;display:flex;align-items:center}
+.svc-t b{display:block;font-size:14px;font-weight:700;line-height:1.35;font-family:var(--dsp)}
+.svc-t s{display:none}
+/* الرسوم: تعبئة مصمتة بدرجتين بدل خطوط رفيعة شفافة — شكل رسم مصمَّم مو أيقونة عامة */
+.svc .il{color:var(--blue-d)}
+.svc .il .b{fill:#BFE7F8;opacity:1}
+.svc .il .m{fill:#5EC3EC;opacity:1}
+.svc .il .l{stroke:#1682B4;stroke-width:2.2}
+.svc .il .a{fill:#F2B33D}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .svc .il .b{fill:#1D4E63}
+  :root:not([data-theme="light"]) .svc .il .m{fill:#2E86AB}:root:not([data-theme="light"]) .svc .il .l{stroke:#7FD4F6}}
+/* شاشات قصيرة (SE وما شابه) */
 @media (max-height:760px){
   .sec{padding:16px 0}
   .promo{padding:12px 15px}
-  .svc{padding:14px 12px}
-  .svc b{margin-top:7px;font-size:14px}
-  .svcs{gap:10px}
+  .svc-t b{font-size:13px}
   .chip{padding:8px 12px}
 }
-.svc b{display:block;font-size:14.5px;font-weight:700;margin-top:10px;font-family:var(--dsp)}
-.svc s{display:block;text-decoration:none;font-size:11.5px;color:var(--mut);margin-top:2px}
-/* عدد فردي من الخدمات: الأخيرة بنفس مقاس أخواتها، في منتصف الصف */
-.svcs .svc:last-child:nth-child(odd){grid-column:1 / -1;justify-self:center;width:calc(50% - 6px)}
 
 /* ===== سلّم الخصم ===== */
 /* مطوي افتراضياً: الكرت الكامل كان يأكل أول شاشة قبل ما يشوف العميل صنفاً واحداً */
@@ -1158,7 +1167,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.1200';
+var APP_VER='2026.11.27.1400';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
