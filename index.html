@@ -1012,7 +1012,7 @@ function orCard(o){
       (o.ostaz&&o.ostaz.code?'<span class="or-inv">🧾 '+esc(o.ostaz.code)+(o.ostaz.status==='draft'?' (مسودة)':'')+'</span>'+
         (o.ph?'<button onclick="orShareInv(\''+o._id+'\',this)">'+(o.ostaz.url?'📤 أرسلها مرة ثانية':'📤 أرسل الفاتورة')+'</button>':''):
         (o.st==='done'?'<button onclick="orInvoice(\''+o._id+'\',this)">🧾 فاتورة الأستاذ</button>':''))+
-      (o.ph?'<a href="https://wa.me/'+esc(o.ph)+'?text='+encodeURIComponent(orMsg(o))+'" target="_blank" rel="noopener">واتساب</a>':'')+
+      (o.ph?(function(w){return '<a href="'+esc(w.h)+'"'+w.t+'>واتساب</a>';})(waOpen(o.ph,orMsg(o))):'')+
       (orMap(o)?'<a href="'+orMap(o)+'" target="_blank" rel="noopener">الخريطة</a>':'')+
       (orLive(o)?'<button class="x" onclick="orCancel(\''+o._id+'\')">إلغاء</button>':'')+
     '</div></div>';
@@ -1064,8 +1064,7 @@ function orAdvance(id){
     if(nx==='done'&&INV_API&&!(o.ostaz&&o.ostaz.id)&&confirm('تم التنفيذ ✓\nتطلع فاتورة الأستاذ الحين؟')){
       orInvoice(id,null,true);return;}
     /* العميل ما يشوف التغيير إلا لو التطبيق مفتوح عنده — فنعرض الإبلاغ في نفس اللحظة */
-    showToast(ORST[nx]+' ✓',o.ph?{t:'أبلغ العميل',
-      href:'https://wa.me/'+o.ph+'?text='+encodeURIComponent(orMsg(o))}:null);
+    showToast(ORST[nx]+' ✓',o.ph?{t:'أبلغ العميل',wa:waOpen(o.ph,orMsg(o))}:null);
   });
 }
 /* المدفوعات: paid = كل اللي استلمته من العميل (عربون + باقي). العميل يشوف المستلم والمتبقي في تطبيقه */
@@ -1110,7 +1109,6 @@ function orInvoice(id,btn,asked){
 function orShareInv(id,btn){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o||!o.ostaz)return;
   var u=auth.currentUser;if(!u){showToast('سجّل دخولك أول');return;}
-  var win=window.open('','_blank');
   var lbl=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='جاري التجهيز…';}
   function done(){if(btn){btn.disabled=false;btn.textContent=lbl;}}
   u.getIdToken().then(function(tok){
@@ -1119,16 +1117,18 @@ function orShareInv(id,btn){
   }).then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
   .then(function(x){
     done();
-    if(x.s===409&&x.j.error==='draft'){if(win)win.close();o.ostaz.status='draft';rOr();
+    if(x.s===409&&x.j.error==='draft'){o.ostaz.status='draft';rOr();
       alert('الفاتورة '+(x.j.code||'')+' مسودة.\nاعتمدها في «الأستاذ» أول (الاعتماد يرسلها للهيئة)، وبعدها أرسلها للعميل.');return;}
     if(x.s!==200||!x.j.url)throw new Error(x.j&&(x.j.message||x.j.error)||('خطأ '+x.s));
     o.ostaz.status=x.j.status||o.ostaz.status;o.ostaz.url=x.j.url;rOr();
     showToast('✓ الفاتورة ظهرت للعميل في طلبه بالتطبيق');
     var nm=o.n||'يا غالي';
     var msg=greetAr()+' '+nm+' 🌟\nمعك '+BIZ.rep+'\n\nفاتورة طلبك'+(o.no?' رقم '+o.no:'')+' ('+(x.j.code||'')+'):\n'+x.j.url+'\n\nشكراً لثقتك ✨';
-    var wa='https://wa.me/'+o.ph+'?text='+encodeURIComponent(msg);
-    if(win)win.location.href=wa;else location.href=wa;
-  }).catch(function(e){done();if(win)win.close();alert('تعذّر جلب رابط الفاتورة:\n'+((e&&e.message)||e));});
+    /* واتساب للأعمال على أندرويد / التطبيق مباشرة على الآيفون — نفس إعداد صفحة العروض.
+       رابط خاص (intent:// أو whatsapp://) يفتح التطبيق من نفس الصفحة بلا نافذة جديدة */
+    var w=waOpen(o.ph,msg);
+    if(w.t){var nw=window.open(w.h,'_blank');if(!nw)location.href=w.h;}else location.href=w.h;
+  }).catch(function(e){done();alert('تعذّر جلب رابط الفاتورة:\n'+((e&&e.message)||e));});
 }
 function orPrice(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
@@ -1204,9 +1204,12 @@ function loadPub(){
 function showToast(m,act){
   var t=document.createElement('div');t.className='toast';
   t.appendChild(document.createTextNode(m));
-  if(act&&act.href){
+  if(act&&(act.href||act.wa)){
     var a=document.createElement('a');
-    a.className='toast-a';a.href=act.href;a.target='_blank';a.rel='noopener';a.textContent=act.t;
+    a.className='toast-a';a.textContent=act.t;
+    /* واتساب: نفس إعداد التطبيق (للأعمال على أندرويد، مباشر على الآيفون) — الروابط الخاصة ما تنفتح في تبويب */
+    if(act.wa){a.href=act.wa.h;if(act.wa.t)a.target='_blank';}else{a.href=act.href;a.target='_blank';}
+    a.rel='noopener';
     a.onclick=function(){t.remove();};
     t.appendChild(a);
   }
