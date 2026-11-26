@@ -838,8 +838,12 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
       <small>بالمتابعة أنت توافق على <a href="#" onclick="openTerms();return false">الشروط وسياسة الخصوصية</a></small>
     </div>
     <div id="lgAsk" class="hide">
-      <h1>رقم جوالك</h1>
-      <p>عشان نتواصل معك بخصوص مواعيدك وطلباتك.</p>
+      <h1>بياناتك</h1>
+      <p>عشان نناديك باسمك ونتواصل معك بخصوص مواعيدك وطلباتك.</p>
+      <div class="fld">
+        <label class="lb" for="inAskN">الاسم</label>
+        <input class="in" id="inAskN" maxlength="60" placeholder="اسمك" autocomplete="name">
+      </div>
       <div class="fld">
         <label class="lb" for="inAsk">رقم الجوال</label>
         <div class="phone-row">
@@ -1250,7 +1254,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.2300';
+var APP_VER='2026.11.28.1400';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1656,14 +1660,16 @@ function emForgot(){
 function askPhone(){
   go('scLogin');$('tabBar').classList.add('hide');
   ['lgPhone','lgCode','lgEmail'].forEach(function(id){$(id).classList.add('hide');});
-  $('lgAsk').classList.remove('hide');lgErr('');var f=$('inAsk');if(f)f.focus();
+  $('lgAsk').classList.remove('hide');lgErr('');var nf=$('inAskN');if(nf&&ME.n)nf.value=ME.n;var f=$(ME.n?'inAsk':'inAskN');if(f)f.focus();
 }
 function askSave(){
-  var p=norm($('inAsk').value);lgErr('');
+  var p=norm($('inAsk').value),n=String($('inAskN').value||'').trim().slice(0,60);lgErr('');
+  if(!n){lgErr('اكتب اسمك');return;}
   if(!p){lgErr('أدخل رقم جوال سعودي يبدأ بـ 5');return;}
   var b=$('btnAsk');b.disabled=true;b.textContent='جاري الحفظ…';
-  ME.ph=p;
-  API.saveMe().then(function(){b.disabled=false;b.textContent='حفظ ومتابعة';
+  ME.ph=p;ME.n=n;
+  /* loadMe بعد الحفظ يسجّل «أول دخول» و«آخر دخول» — حساب الإيميل ما كان له جوال وقت الدخول فما انكتبت */
+  API.saveMe().then(function(){API.loadMe();b.disabled=false;b.textContent='حفظ ومتابعة';
     $('lgAsk').classList.add('hide');$('tabBar').classList.remove('hide');
     renderAll();go('scHome');setTab('scHome');
   }).catch(function(){b.disabled=false;b.textContent='حفظ ومتابعة';ME.ph='';lgErr('تعذّر الحفظ — حاول مرة ثانية');});
@@ -2669,8 +2675,13 @@ function bsTail(due,label){
   return '<p class="bs-terms">بإرسال الطلب، أنت توافق على <button type="button" onclick="openTerms()">الشروط وسياسة الخصوصية</button>.</p>'+
     '<div style="height:70px"></div>';
 }
+/* الاسم إلزامي في الطلب: الفريق يناديه فيه، وما كل العملاء عبّوه في الرئيسية */
+function bsName(){
+  return ME.n?'':'<h3 class="bs-t">اسمك</h3>'+
+    '<input class="in" id="bkNm" maxlength="60" placeholder="عشان يناديك الفريق باسمك" autocomplete="name" style="margin-bottom:6px">';
+}
 function bsNotes(ph){
-  return '<h3 class="bs-t">ملاحظات للفريق <span style="font-weight:400;color:var(--mut);font-size:13px">(اختياري)</span></h3>'+
+  return bsName()+'<h3 class="bs-t">ملاحظات للفريق <span style="font-weight:400;color:var(--mut);font-size:13px">(اختياري)</span></h3>'+
     '<textarea class="in" id="bkNt" maxlength="600" placeholder="'+esc(ph)+'"></textarea>';
 }
 function stepConfirm(){
@@ -2700,6 +2711,7 @@ function stepConfirmQuote(){
     (QUOTE_FEE?'<div class="tot big" style="margin-top:4px"><span>قيمة المعاينة<s class="totn">تُخصم من قيمة الخدمة</s></span><b>'+sar(QUOTE_FEE)+'</b></div>':'')+
     '</div>'+
     quoteFields()+
+    (ME.n?'':'<div class="fld">'+bsName()+'</div>')+
     '<div class="fld"><label class="lb" for="bkNt">ملاحظات إضافية (اختياري)</label>'+
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="حالة المكان · متى تبي الخدمة · أي شي يفيد الفريق">'+esc(QW.nt||'')+'</textarea></div>'+
     '<div class="note acc">'+(QUOTE_FEE?'تدفع <b>'+QUOTE_FEE+' ر.س</b> للمعاينة، و<b>تُخصم كاملة من قيمة الخدمة</b> لو أكملت معنا. وإن ما ناسبك السعر ما تلزمك بشي.'
@@ -2751,6 +2763,10 @@ function sendRcpt(o){
 function submitOrder(){
   var b=$('bkGo');
   if(!BK.quote&&DEP_PCT&&!RCPT){toast('ارفع صورة إيصال التحويل أول');return;}
+  var nf=$('bkNm');
+  if(nf){var nn=String(nf.value||'').trim().slice(0,60);
+    if(!nn){toast('اكتب اسمك');nf.focus();return;}
+    ME.n=nn;API.saveMe().catch(function(){});}
   b.disabled=true;b.textContent='جاري الإرسال…';
   var now=new Date().toISOString();
   if(BK.quote){
