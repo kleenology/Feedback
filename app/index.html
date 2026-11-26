@@ -1254,7 +1254,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.28.1400';
+var APP_VER='2026.11.28.1500';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1388,8 +1388,9 @@ var API={
     return ref.get().then(function(d){
       var v=d.exists?d.data():null;
       if(v){ME.n=v.n||'';ME.ok=!!v.ok;if(!ME.ph&&v.ph)ME.ph=v.ph;}
-      if(!ME.ph)return;          /* دخول بالإيميل بلا جوال للحين — نطلبه بعد التحميل */
-      var patch={ph:ME.ph,seen:now};
+      /* دخول بالإيميل بلا جوال للحين: نسجّله بجواله فاضي عشان يظهر لك في اللوحة، والجوال نطلبه بعد التحميل */
+      if(!ME.ph&&!ME.em)return;
+      var patch={ph:ME.ph||'',seen:now};
       if(ME.em)patch.em=ME.em;
       if(!v||!v.at)patch.at=now;
       return ref.set(patch,{merge:true});
@@ -1764,23 +1765,28 @@ function saveSnap(){
   LS.set('snap',{uid:ME.uid,n:ME.n||'',ok:!!ME.ok,ph:ME.ph||'',ord:ORD.slice(0,20),adr:ADR});
 }
 function onSignedIn(uid){
-  ME.uid=uid;AUTHED=true;$('tabBar').classList.remove('hide');
+  ME.uid=uid;AUTHED=true;
   CART=LS.get('cart',{});
   var snap=DEMO?null:LS.get('snap',null),shown=false;
-  if(snap&&snap.uid===uid){
+  /* بلا جوال محفوظ ما نفتح التطبيق — لا تبويبات ولا رئيسية لين يكمّل بياناته */
+  if(snap&&snap.uid===uid&&(ME.ph||snap.ph)){
+    $('tabBar').classList.remove('hide');
     ME.n=snap.n||'';ME.ok=!!snap.ok;if(!ME.ph&&snap.ph)ME.ph=snap.ph;ORD=snap.ord||[];ADR=snap.adr||[];
     renderAll();go('scHome');setTab('scHome');shown=true;
   }
   loadRevs();
   /* المواعيد ما تلزم إلا عند الحجز — تتحمّل بالخلفية، ولو فتح الحجز قبلها نعيد رسمه */
   loadSlots().then(function(){var b=$('scBook');if(b&&b.classList.contains('on')&&BK.step===0)renderBook();});
-  Promise.all([API.loadMe(),API.orders(),API.addrs()]).then(function(){
+  function ready(){
     saveSnap();
     renderAll();
     /* الرئيسية أول شي دائماً — والاسم يُطلب من بطاقة داخلها بدل ما نرمي العميل في «حسابي» */
     if(!ME.ph){askPhone();return;}
+    $('tabBar').classList.remove('hide');
     if(!shown){go('scHome');setTab('scHome');}
-  });
+  }
+  /* لو فشل تحميل الطلبات أو العناوين ما نعلّق العميل — نكمل بالموجود */
+  Promise.all([API.loadMe(),API.orders(),API.addrs()]).then(ready,ready);
 }
 function logout(){
   if(!confirm('تسجيل الخروج؟'))return;
@@ -2762,6 +2768,7 @@ function sendRcpt(o){
 }
 function submitOrder(){
   var b=$('bkGo');
+  if(!ME.ph){askPhone();return;}
   if(!BK.quote&&DEP_PCT&&!RCPT){toast('ارفع صورة إيصال التحويل أول');return;}
   var nf=$('bkNm');
   if(nf){var nn=String(nf.value||'').trim().slice(0,60);

@@ -96,7 +96,9 @@ service cloud.firestore {
       allow create, update: if isUser(uid) &&
         request.resource.data.keys().hasOnly(['n','ph','at','seen','ok','em']) &&
         request.resource.data.ph is string && request.resource.data.ph.size() <= 20 &&
-        (ownPhone(request.resource.data.ph) || (emailUser() && saPhone(request.resource.data.ph))) &&
+        /* حساب الإيميل ينحفظ من أول دخول بجوال فاضي — عشان يظهر في اللوحة ولو ما كمّل. الطلب نفسه يشترط جوال صحيح (profilePhone) */
+        (ownPhone(request.resource.data.ph) ||
+          (emailUser() && (saPhone(request.resource.data.ph) || request.resource.data.ph == ''))) &&
         (!('em' in request.resource.data) ||
           (request.resource.data.em is string && request.resource.data.em.size() <= 120)) &&
         (!('n' in request.resource.data) ||
