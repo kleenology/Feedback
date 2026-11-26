@@ -76,8 +76,7 @@ function buildInvoice(order, partnerId, c, now) {
     partner_id: partnerId,
     issue_date: now, due_date: now,
     partner_reference_code: order.no ? 'APP-' + order.no : undefined,
-    notes: ['طلب من تطبيق كلينولوجي' + (order.no ? ' رقم ' + order.no : ''),
-            order.date ? 'الموعد: ' + order.date : ''].filter(Boolean).join('\n'),
+    /* بلا ملاحظات — تطلع في الفاتورة المطبوعة للعميل. الربط بالطلب عبر «مرجع العميل» APP-رقم الطلب */
     line_items: lines
   };
   /* الفرق بين مجموع الأسطر والإجمالي: خصم (سلّم الخصم) أو سعر نهائي أقل بعد المعاينة.
@@ -91,12 +90,9 @@ function buildInvoice(order, partnerId, c, now) {
 
   const paid = Math.min(SAR(order.paid), target);
   /* الأستاذ يرفض الدفعات على المسودة (422: payments محظور عندما يكون status هو draft).
-     المسودة: نكتب المستلم في الملاحظات وتسجّله وقت الاعتماد. المعتمدة: دفعة في الحساب البنكي */
+     المسودة: تسجّل الدفعة وقت الاعتماد (المبلغ في بطاقة الطلب باللوحة). المعتمدة: دفعة في الحساب البنكي */
   if (paid > 0 && c.status === 'issued')
     inv.payments = [{ amount: paid, treasury_id: c.treasury, description: 'تحويل بنكي — عربون/دفعات الطلب' }];
-  else if (paid > 0)
-    inv.notes += '\nالمستلم من العميل (تحويل بنكي): ' + (paid / 100) + ' ر.س' +
-      (paid >= target ? ' — مدفوع بالكامل' : ' — المتبقي ' + ((target - paid) / 100) + ' ر.س');
   if (!inv.partner_reference_code) delete inv.partner_reference_code;
   return inv;
 }
