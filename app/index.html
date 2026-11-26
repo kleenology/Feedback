@@ -90,6 +90,15 @@ button{cursor:pointer;border:none;background:none}
 .pic{display:inline-block;width:46px;height:46px;flex:0 0 auto;background:var(--blue-d);
   -webkit-mask:var(--pic) center/contain no-repeat;mask:var(--pic) center/contain no-repeat}
 .pic-xl{width:76px;height:76px}
+/* الخدمات: كل الأيقونات بأسلوب واحد مثل الأيقونات المرخّصة — خط واحد بلون الهوية، بلا تعبئة،
+   وبنفس المقاس. الرسوم المدمجة تتحوّل لخطوط بس لين توصل بقية الملفات */
+.svc .il,.svc .pic{width:60px;height:60px}
+.svc .il .b,.svc .il .m{fill:none;opacity:1;stroke:var(--blue-d);stroke-width:1.6;stroke-linejoin:round}
+.svc .il .l{stroke:var(--blue-d);stroke-width:1.6}
+.svc .il .a{fill:none;stroke:var(--blue-d);stroke-width:1.6;stroke-linejoin:round}
+.ring .il .b,.ring .il .m{fill:none;opacity:1;stroke:var(--blue-d);stroke-width:1.6;stroke-linejoin:round}
+.ring .il .l{stroke:var(--blue-d);stroke-width:1.6}
+.ring .il .a{fill:none;stroke:var(--blue-d);stroke-width:1.6;stroke-linejoin:round}
 .il .b{fill:currentColor;opacity:.18}
 .il .m{fill:currentColor;opacity:.42}
 .il .l{fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
@@ -1161,7 +1170,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.1500';
+var APP_VER='2026.11.27.1600';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
