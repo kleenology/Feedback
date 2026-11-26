@@ -32,6 +32,13 @@ module.exports = async function handler(req, res) {
     out.ostaz = c === 'not_configured' ? 'OSTAZ_URL أو OSTAZ_TOKEN ناقص'
       : c === 'ostaz_401' ? 'OSTAZ_TOKEN غير صحيح أو محذوف' : 'خطأ: ' + String((e && e.message) || e).slice(0, 160);
   }
+  /* قوالب طباعة الفاتورة — نحتاج رقم القالب لرابط مشاركة الفاتورة مع العميل */
+  if (String(out.ostaz).startsWith('ok')) {
+    try {
+      const d = await O.call('GET', '/document-template-designs');
+      out.invoice_designs = ((d && d.data) || []).map(x => ({ id: x.id, name: x.name, type: x.type || x.document_type || x.template_type || '' }));
+    } catch (e) { out.invoice_designs = 'خطأ: ' + String((e && e.message) || e).slice(0, 120); }
+  }
   out.ok = out.firebase === 'ok' && String(out.ostaz).startsWith('ok');
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
