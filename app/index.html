@@ -90,6 +90,14 @@ button{cursor:pointer;border:none;background:none}
 .pic{display:inline-block;width:46px;height:46px;flex:0 0 auto;background:var(--blue-d);
   -webkit-mask:var(--pic) center/contain no-repeat;mask:var(--pic) center/contain no-repeat}
 .pic-xl{width:76px;height:76px}
+/* دخول بالإيميل */
+.em-tabs{display:flex;gap:6px;background:var(--sunk);border-radius:999px;padding:4px;margin:18px 0 16px}
+.em-tabs button{flex:1;border-radius:999px;padding:10px;font-size:14.5px;font-weight:700;color:var(--mut)}
+.em-tabs button.on{background:var(--card);color:var(--blue-d);box-shadow:var(--sh)}
+.pw-row{position:relative}
+.pw-row .in{padding-left:48px}
+.pw-eye{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;color:var(--mut)}
+.em-hint{display:block;text-decoration:none;font-size:12px;color:var(--mut);margin-top:6px}
 /* ===== الرئيسية: الباقات وآراء العملاء — نفس نظام بطاقات الخدمات (زوايا 26، نفس الظل والمسافات) ===== */
 .sec-h .more{font-size:13px;font-weight:700;color:var(--blue-d);display:flex;align-items:center;gap:4px}
 .hcard{background:var(--card);border-radius:26px;box-shadow:0 1px 2px rgba(21,60,80,.04),0 6px 18px rgba(21,60,80,.06)}
@@ -801,6 +809,39 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
 <section class="scr" id="scLogin">
   <div class="lg">
     <div class="lg-m"><img src="../logo.png" alt="كلينولوجي"></div>
+    <div id="lgEmail" class="hide">
+      <h1>أهلاً بك في <em>كلينولوجي</em></h1>
+      <div class="em-tabs" role="tablist">
+        <button type="button" id="emTabIn" class="on" onclick="emMode('in')">دخول</button>
+        <button type="button" id="emTabUp" onclick="emMode('up')">حساب جديد</button>
+      </div>
+      <div class="fld">
+        <label class="lb" for="inEm">البريد الإلكتروني</label>
+        <input class="in" id="inEm" type="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="name@example.com" maxlength="120">
+      </div>
+      <div class="fld">
+        <label class="lb" for="inPw">كلمة المرور</label>
+        <div class="pw-row"><input class="in" id="inPw" type="password" autocomplete="current-password" dir="ltr" maxlength="64">
+          <button type="button" class="pw-eye" onclick="pwToggle()" aria-label="إظهار كلمة المرور" id="pwEye"></button></div>
+        <s class="em-hint" id="pwHint">6 أحرف أو أرقام على الأقل</s>
+      </div>
+      <button class="btn" id="btnEm" onclick="emSubmit()">دخول</button>
+      <button class="lnk" style="width:100%;justify-content:center;margin-top:6px" onclick="emForgot()" id="btnEmForgot">نسيت كلمة المرور؟</button>
+      <button class="lnk" style="width:100%;justify-content:center;color:var(--mut)" onclick="showPinLogin()">عندي رمز دخول برقم الجوال</button>
+      <small>بالمتابعة أنت توافق على <a href="#" onclick="openTerms();return false">الشروط وسياسة الخصوصية</a></small>
+    </div>
+    <div id="lgAsk" class="hide">
+      <h1>رقم جوالك</h1>
+      <p>عشان نتواصل معك بخصوص مواعيدك وطلباتك.</p>
+      <div class="fld">
+        <label class="lb" for="inAsk">رقم الجوال</label>
+        <div class="phone-row">
+          <span class="cc">+966</span>
+          <input class="in" id="inAsk" type="tel" inputmode="numeric" maxlength="20" placeholder="5X XXX XXXX" autocomplete="tel">
+        </div>
+      </div>
+      <button class="btn" id="btnAsk" onclick="askSave()">حفظ ومتابعة</button>
+    </div>
     <div id="lgPhone">
       <h1>أهلاً بك في <em>كلينولوجي</em></h1>
       <p>أدخل رقم جوالك ونرسل لك رمز التحقق.</p>
@@ -1045,6 +1086,7 @@ var IC={
  repeat:'<path d="M4 8.6A4 4 0 0 1 8 4.6h9.4M17.4 1.8l2.8 2.8-2.8 2.8M20 15.4a4 4 0 0 1-4 4H6.6M6.6 22.2 3.8 19.4l2.8-2.8"/>',
  out:'<path d="M9.4 20.6H5.2a2 2 0 0 1-2-2V5.4a2 2 0 0 1 2-2h4.2M15.6 16.6 20.6 12l-5-4.6M20.6 12H9.4"/>',
  dl:'<path d="M12 3.6v11.6M7 10.6l5 5 5-5M4.4 20.4h15.2"/>',
+ eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
  copy:'<rect x="8.6" y="8.6" width="12" height="12" rx="2.4"/><path d="M15.4 8.6V5.8a2.4 2.4 0 0 0-2.4-2.4H5.8a2.4 2.4 0 0 0-2.4 2.4V13a2.4 2.4 0 0 0 2.4 2.4h2.8"/>'
 };
 function ic(k,c,sz){return '<svg class="ic'+(sz?' '+sz:'')+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(IC[k]||'')+'</svg>';}
@@ -1201,7 +1243,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.27.2000';
+var APP_VER='2026.11.27.2200';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1233,7 +1275,7 @@ var DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','�
 var DAYS_S=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 
 var DEMO=/[?&]demo=1/.test(location.search)||location.protocol==='file:';
-var AUTHED=false,ME={uid:'',ph:'',n:'',ok:false},ORD=[],ADR=[],CONF=null,PREV='scMe';
+var AUTHED=false,ME={uid:'',ph:'',n:'',ok:false,em:''},ORD=[],ADR=[],CONF=null,PREV='scMe';
 var CART={},CTV='sofa',RT=0,RTM=null,ORUN=null,ORERR='';
 var LADX=false;                  /* هل سلّم الخصم مفتوح؟ — تُقرأ من التخزين بعد تعريف LS */
 var ORX={};                      /* أي الطلبات مفتوح مسارها */
@@ -1260,7 +1302,7 @@ function $(id){return document.getElementById(id);}
 /* العميل يدخل برقم جواله. حساب بلا رقم = حساب لوحة الإدارة، ما يُعامل كعميل. */
 /* دخول فايربيس يعطي phoneNumber، وخادمنا يعطي معرّفاً يبدأ بـ ph_ — كلاهما عميل.
    والأدمن يدخل بالبريد فما ينطبق عليه أيٌّ منهما */
-function isCustomer(u){return !!(u&&(u.phoneNumber||String(u.uid||'').indexOf('ph_')===0));}
+function isCustomer(u){return !!(u&&(u.phoneNumber||String(u.uid||'').indexOf('ph_')===0||u.email));}
 function backTo(t){return '<span class="bk-i">'+ic('back')+'</span><span>'+esc(t)+'</span>';}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function hideSplash(){
@@ -1326,15 +1368,18 @@ var LS={get:function(k,d){try{var v=localStorage.getItem('kln_'+k);
 LADX=LS.get('ladx',false);
 var API={
   saveMe:function(){if(DEMO){LS.set('me',ME);return Promise.resolve();}
-    return db.collection('customers').doc(ME.uid).set({n:ME.n,ph:ME.ph,ok:!!ME.ok},{merge:true}).then(function(r){saveSnap();return r;});},
+    var d={n:ME.n,ph:ME.ph,ok:!!ME.ok};if(ME.em)d.em=ME.em;
+    return db.collection('customers').doc(ME.uid).set(d,{merge:true}).then(function(r){saveSnap();return r;});},
   /* نسجّل الدخول في ملف العميل حتى لو ما كتب اسمه — عشان تعرف مين فتح التطبيق
      وما طلب. `at` تُكتب مرة واحدة فقط، و`seen` تتحدّث كل دخول. */
   loadMe:function(){if(DEMO){var m=LS.get('me',null);if(m){ME.n=m.n||'';ME.ok=!!m.ok;}return Promise.resolve();}
     var ref=db.collection('customers').doc(ME.uid),now=new Date().toISOString();
     return ref.get().then(function(d){
       var v=d.exists?d.data():null;
-      if(v){ME.n=v.n||'';ME.ok=!!v.ok;}
+      if(v){ME.n=v.n||'';ME.ok=!!v.ok;if(!ME.ph&&v.ph)ME.ph=v.ph;}
+      if(!ME.ph)return;          /* دخول بالإيميل بلا جوال للحين — نطلبه بعد التحميل */
       var patch={ph:ME.ph,seen:now};
+      if(ME.em)patch.em=ME.em;
       if(!v||!v.at)patch.at=now;
       return ref.set(patch,{merge:true});
     }).catch(function(){});},
@@ -1552,6 +1597,71 @@ function sendCode(again,via){
     auth.signInWithPhoneNumber('+'+p,recap()).then(function(c){CONF=c;resetRecap();ok();}).catch(sendFail);
   }catch(e){sendFail(e);}
 }
+/* ===== الدخول بالإيميل (مؤقتاً لين يتفعّل كود واتساب) =====
+   حساب فايربيس بالإيميل وكلمة مرور، وبعده رقم الجوال مرة وحدة (للتواصل). العملاء اللي عندهم
+   رمز دخول برقم الجوال يدخلون من «عندي رمز دخول» وتبقى طلباتهم. EMAIL_LOGIN=false يرجّع الشاشة القديمة */
+var EMAIL_LOGIN=true,EMMODE='in';
+function emailOn(){return EMAIL_LOGIN&&!OTP_API;}
+function emShow(){
+  ['lgPhone','lgCode','lgAsk'].forEach(function(id){$(id).classList.add('hide');});
+  $('lgEmail').classList.remove('hide');lgErr('');
+  if(!$('pwEye').innerHTML)$('pwEye').innerHTML=ic('eye')||'👁';
+  emMode(EMMODE);
+}
+function emMode(m){
+  EMMODE=m;$('emTabIn').classList.toggle('on',m==='in');$('emTabUp').classList.toggle('on',m==='up');
+  $('btnEm').textContent=m==='in'?'دخول':'إنشاء الحساب';
+  $('btnEmForgot').classList.toggle('hide',m!=='in');$('pwHint').classList.toggle('hide',m!=='up');
+  $('inPw').autocomplete=m==='in'?'current-password':'new-password';lgErr('');
+}
+function pwToggle(){var i=$('inPw');i.type=i.type==='password'?'text':'password';}
+function showPinLogin(){$('lgEmail').classList.add('hide');$('lgPhone').classList.remove('hide');lgErr('');
+  var f=$('inPh');if(f)f.focus();}
+function emErr(e){
+  var c=(e&&e.code)||'';
+  return c==='auth/invalid-email'?'البريد الإلكتروني غير صحيح':
+    c==='auth/invalid-credential'||c==='auth/wrong-password'||c==='auth/user-not-found'?'البريد أو كلمة المرور غير صحيحة — أو ما عندك حساب؟ اضغط «حساب جديد»':
+    c==='auth/email-already-in-use'?'هذا البريد له حساب من قبل — اضغط «دخول»':
+    c==='auth/weak-password'?'كلمة المرور قصيرة — 6 أحرف أو أرقام على الأقل':
+    c==='auth/too-many-requests'?'محاولات كثيرة — انتظر شوي وحاول':
+    c==='auth/network-request-failed'?'تعذّر الاتصال — تأكد من الإنترنت':
+    'تعذّر الدخول'+(c?' ('+c+')':'');
+}
+function emSubmit(){
+  var em=String($('inEm').value||'').trim(),pw=String($('inPw').value||'');lgErr('');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){lgErr('اكتب بريدك الإلكتروني صحيح');return;}
+  if(pw.length<6){lgErr('كلمة المرور 6 أحرف أو أرقام على الأقل');return;}
+  var b=$('btnEm');b.disabled=true;b.textContent='لحظة…';
+  function done(){b.disabled=false;b.textContent=EMMODE==='in'?'دخول':'إنشاء الحساب';}
+  if(DEMO){setTimeout(function(){done();ME.em=em;onSignedIn('demo-uid');},400);return;}
+  (EMMODE==='in'?auth.signInWithEmailAndPassword(em,pw):auth.createUserWithEmailAndPassword(em,pw))
+    .then(function(){done();}) /* onAuthStateChanged يكمل */
+    .catch(function(e){done();lgErr(emErr(e));});
+}
+function emForgot(){
+  var em=String($('inEm').value||'').trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){lgErr('اكتب بريدك فوق، وبعدها اضغط «نسيت كلمة المرور؟»');return;}
+  if(DEMO){toast('وضع المعاينة');return;}
+  auth.sendPasswordResetEmail(em).then(function(){lgErr('');toast('أرسلنا رابط تغيير كلمة المرور لبريدك — شيّك الوارد والرسائل غير المرغوبة');})
+    .catch(function(e){lgErr(emErr(e));});
+}
+/* بعد الدخول بالإيميل: رقم الجوال مرة وحدة */
+function askPhone(){
+  go('scLogin');$('tabBar').classList.add('hide');
+  ['lgPhone','lgCode','lgEmail'].forEach(function(id){$(id).classList.add('hide');});
+  $('lgAsk').classList.remove('hide');lgErr('');var f=$('inAsk');if(f)f.focus();
+}
+function askSave(){
+  var p=norm($('inAsk').value);lgErr('');
+  if(!p){lgErr('أدخل رقم جوال سعودي يبدأ بـ 5');return;}
+  var b=$('btnAsk');b.disabled=true;b.textContent='جاري الحفظ…';
+  ME.ph=p;
+  API.saveMe().then(function(){b.disabled=false;b.textContent='حفظ ومتابعة';
+    $('lgAsk').classList.add('hide');$('tabBar').classList.remove('hide');
+    renderAll();go('scHome');setTab('scHome');
+  }).catch(function(){b.disabled=false;b.textContent='حفظ ومتابعة';ME.ph='';lgErr('تعذّر الحفظ — حاول مرة ثانية');});
+}
+
 /* ===== رمز الدخول المؤقت ===== */
 var PINNEW=false,PIN1='';
 function pinMode(isNew){
@@ -1638,14 +1748,14 @@ function backToPhone(){clearInterval(RTM);clearInterval(SMTM);OTPVIA='';PIN1='';
    والبيانات الحية من فايربيس تحلّ محلها أول ما توصل — بدل ما ينتظر أربع قراءات */
 function saveSnap(){
   if(DEMO||!ME.uid||ORERR)return;
-  LS.set('snap',{uid:ME.uid,n:ME.n||'',ok:!!ME.ok,ord:ORD.slice(0,20),adr:ADR});
+  LS.set('snap',{uid:ME.uid,n:ME.n||'',ok:!!ME.ok,ph:ME.ph||'',ord:ORD.slice(0,20),adr:ADR});
 }
 function onSignedIn(uid){
   ME.uid=uid;AUTHED=true;$('tabBar').classList.remove('hide');
   CART=LS.get('cart',{});
   var snap=DEMO?null:LS.get('snap',null),shown=false;
   if(snap&&snap.uid===uid){
-    ME.n=snap.n||'';ME.ok=!!snap.ok;ORD=snap.ord||[];ADR=snap.adr||[];
+    ME.n=snap.n||'';ME.ok=!!snap.ok;if(!ME.ph&&snap.ph)ME.ph=snap.ph;ORD=snap.ord||[];ADR=snap.adr||[];
     renderAll();go('scHome');setTab('scHome');shown=true;
   }
   loadRevs();
@@ -1655,6 +1765,7 @@ function onSignedIn(uid){
     saveSnap();
     renderAll();
     /* الرئيسية أول شي دائماً — والاسم يُطلب من بطاقة داخلها بدل ما نرمي العميل في «حسابي» */
+    if(!ME.ph){askPhone();return;}
     if(!shown){go('scHome');setTab('scHome');}
   });
 }
@@ -1662,8 +1773,8 @@ function logout(){
   if(!confirm('تسجيل الخروج؟'))return;
   function done(){
     if(ORUN){ORUN();ORUN=null;}ORERR='';
-    AUTHED=false;ME={uid:'',ph:'',n:'',ok:false};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
-    $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';go('scLogin');}
+    AUTHED=false;ME={uid:'',ph:'',n:'',ok:false,em:''};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
+    $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';go('scLogin');if(emailOn())emShow();}
   if(DEMO){done();return;}
   auth.signOut().then(done).catch(done);
 }
@@ -2874,7 +2985,7 @@ function doDelAccount(){
   API.delAccount().then(function(){
     closeSheet();
     if(ORUN){ORUN();ORUN=null;}
-    AUTHED=false;ME={uid:'',ph:'',n:'',ok:false};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
+    AUTHED=false;ME={uid:'',ph:'',n:'',ok:false,em:''};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
     $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';go('scLogin');
     toast('انحذف حسابك');
   }).catch(function(e){
@@ -2984,9 +3095,11 @@ else if(!auth){
   var pb=$('btnPh');if(pb)pb.disabled=true;
 }else auth.onAuthStateChanged(function(u){
   if(isCustomer(u)){if(u.phoneNumber)ME.ph=String(u.phoneNumber).replace('+','');
-    else ME.ph=String(u.uid).slice(3);
+    else if(String(u.uid).indexOf('ph_')===0)ME.ph=String(u.uid).slice(3);
+    else{ME.ph='';ME.em=u.email||'';}   /* إيميل: الجوال من ملفه، أو نطلبه */
     onSignedIn(u.uid);}
-  else go('scLogin');});
+  else{go('scLogin');if(emailOn())emShow();}});
+if(DEMO&&emailOn())emShow();
 </script>
 </body>
 </html>

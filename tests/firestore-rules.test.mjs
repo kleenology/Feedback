@@ -53,5 +53,17 @@ await t('قراءة الإعدادات/الموظفين لغير الأدمن م
 await t('تقييم بحقل زائد يُرفض',assertFails(setDoc(doc(anon,'reviews/r1'),{n:'a',ph:'0500000000',o:5,c:5,p:5,tw:5,r:true,nt:'',cp:'ABCDEFGHI',ts:'x',used:false,admin:true})));
 await t('تقييم سليم من زائر ينقبل',assertSucceeds(setDoc(doc(anon,'reviews/r2'),{n:'a',ph:'0500000000',o:5,c:5,p:5,tw:5,r:true,nt:'',cp:'ABCDEFGHI',ts:'x',used:false})));
 await t('زائر ما يقرأ التقييمات الخاصة',assertFails(getDoc(doc(anon,'reviews/r2'))));
+/* ===== دخول بالإيميل ===== */
+const E='ph_email_user_x';
+const ue=env.authenticatedContext('emU1',{email:'a@b.c',firebase:{sign_in_provider:'password'}}).firestore();
+const ue2=env.authenticatedContext('emU2',{email:'z@b.c',firebase:{sign_in_provider:'password'}}).firestore();
+await t('إيميل: يحفظ جواله في ملفه',assertSucceeds(setDoc(doc(ue,'customers/emU1'),{ph:'966511112222',n:'x',em:'a@b.c'})));
+await t('إيميل: جوال بصيغة غلط يُرفض',assertFails(setDoc(doc(ue2,'customers/emU2'),{ph:'12345',n:'x'})));
+await t('إيميل: ملف عميل ثاني يُرفض',assertFails(setDoc(doc(ue2,'customers/emU1'),{ph:'966511112222'})));
+const be=(db,id,ph,n)=>{const b=writeBatch(db);b.update(doc(db,'counters/orders'),{n:n});b.set(doc(db,'orders/'+id),Object.assign({},base,{uid:db===ue?'emU1':'emU2',ph:ph,no:1000+n}));return b.commit();};
+await t('إيميل: طلب بجوال ملفه ينقبل',assertSucceeds(be(ue,'emOrd1','966511112222',N+1).then(r=>{N=N+1;return r;})));
+await t('إيميل: طلب بجوال غير اللي في ملفه يُرفض',assertFails(be(ue,'emOrd2','966599998888',N+1)));
+await t('إيميل بلا ملف: طلب يُرفض',assertFails(be(ue2,'emOrd3','966511112222',N+1)));
+await t('دخول جوال (PIN) ما يقدر يدّعي أنه إيميل',assertFails(setDoc(doc(ua,'customers/ph_'+A),{ph:'966577776666'})));
 console.log('\n'+pass+' passed, '+fail+' failed');
 await env.cleanup();process.exit(fail?1:0);

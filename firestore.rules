@@ -17,6 +17,17 @@ service cloud.firestore {
         request.auth.token.get('ph', '') == ph ||
         request.auth.token.get('phone_number', '') == '+' + ph);
     }
+    /* دخول بالإيميل: الجوال ما يتأكد (مثل الرمز المؤقت) — يكتبه العميل مرة في ملفه بصيغة سعودية،
+       وطلباته لازم تحمل نفس الجوال اللي في ملفه */
+    function emailUser() {
+      return request.auth != null && request.auth.token.get('firebase', {}).get('sign_in_provider', '') == 'password';
+    }
+    function saPhone(ph) { return ph is string && ph.matches('^9665[0-9]{8}$'); }
+    function profilePhone(ph) {
+      return emailUser() && saPhone(ph) &&
+        exists(/databases/$(database)/documents/customers/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/customers/$(request.auth.uid)).data.ph == ph;
+    }
     // معرّفات الطلبات تُعرض في أزرار اللوحة — نقصرها على حروف آمنة
     function safeId(id) { return id.matches('^[A-Za-z0-9_-]{1,40}$'); }
 
@@ -83,9 +94,11 @@ service cloud.firestore {
       allow read: if isUser(uid) || isAdmin();
       /* يُنشأ من أول دخول ولو بلا اسم — الاسم يُضاف لاحقاً، و ok موافقة العروض */
       allow create, update: if isUser(uid) &&
-        request.resource.data.keys().hasOnly(['n','ph','at','seen','ok']) &&
+        request.resource.data.keys().hasOnly(['n','ph','at','seen','ok','em']) &&
         request.resource.data.ph is string && request.resource.data.ph.size() <= 20 &&
-        ownPhone(request.resource.data.ph) &&
+        (ownPhone(request.resource.data.ph) || (emailUser() && saPhone(request.resource.data.ph))) &&
+        (!('em' in request.resource.data) ||
+          (request.resource.data.em is string && request.resource.data.em.size() <= 120)) &&
         (!('n' in request.resource.data) ||
           (request.resource.data.n is string && request.resource.data.n.size() <= 60)) &&
         (!('ok' in request.resource.data) || request.resource.data.ok is bool) &&
@@ -160,7 +173,7 @@ service cloud.firestore {
       allow read: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
       allow create: if request.auth != null && safeId(oid) &&
         request.resource.data.uid == request.auth.uid &&
-        ownPhone(request.resource.data.ph) &&
+        (ownPhone(request.resource.data.ph) || profilePhone(request.resource.data.ph)) &&
         request.resource.data.st == 'new' &&
         // حقول يكتبها الفريق أو الخادم بس: السعر النهائي، المستلم، الفاتورة
         !request.resource.data.keys().hasAny(['price', 'paid', 'paidAt', 'ostaz', 'ostazLock']) &&
