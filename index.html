@@ -2,6 +2,12 @@
 
 <html lang="ar" dir="rtl">
 <head>
+<script>
+/* app.kleenology.me بدون أي إضافة = تطبيق الطلب. صفحة التقييم صارت روابطها ‎?r،
+   ولوحة التحكم ‎?admin (أو أي رابط فيه ؟ أو #) — فما ينحوّلون */
+if(location.hostname==='app.kleenology.me'&&!location.search&&!location.hash&&/^\/(index\.html)?$/.test(location.pathname))
+  location.replace('/app/');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>كلينولوجي - تقييم الخدمة</title>
@@ -1356,7 +1362,8 @@ function cuKind(c){return c.count?'cu':(c.sr==='ld'?'ld':c.sr==='cu'?'cu':'');}
 function cuWon(c){return !!(c.sr==='ld'&&c.count);}
 /* دعوة عميل من القائمة ما قيّمنا بعد */
 function inviteWaLink(c){
-  var url=location.protocol==='https:'?(location.origin+location.pathname):'';
+  /* ?r: على app.kleenology.me الرابط الفاضي يفتح تطبيق الطلب، فرابط التقييم لازم يتميّز */
+  var url=location.protocol==='https:'?(location.origin+location.pathname.replace(/index\.html$/,'')+'?r'):'';
   var t=greetAr()+' '+(c.n&&c.n!=='عميل'?c.n:'يا غالي')+' 🌟\nمعك '+BIZ.rep+
     '\n\nكيف كانت آخر خدمة قدمناها لك؟ رأيك يهمنا ويرفع مستوانا 🙏'+
     (url?'\nقيّمنا من هنا: '+url:'')+
@@ -2206,6 +2213,7 @@ function ofDur(d){return d===1?'اليوم فقط':d===2?'يومين':d<=10?d+' 
 /* رابط تطبيق العميل — يُبنى من عنوان اللوحة، وBIZ.app يتجاوزه لو استضفته مكاناً آخر */
 function appUrl(){
   if(BIZ.app)return BIZ.app;
+  if(location.hostname==='app.kleenology.me')return 'https://app.kleenology.me/';
   if(location.protocol!=='https:')return 'https://kleenology.github.io/Feedback/app/';
   return location.origin+location.pathname.replace(/[^/]*$/,'')+'app/';
 }
