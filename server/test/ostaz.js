@@ -51,12 +51,13 @@ const ORDER = {
     eq(last.description, 'فرق السعر بعد المعاينة'); eq(last.unit_price, 7000);
   });
 
-  await t('المسودة: بلا دفعات (الأستاذ يرفضها) والمستلم في الملاحظات', async () => {
+  await t('المسودة: بلا دفعات (الأستاذ يرفضها)، والملاحظات فاضية دائماً', async () => {
     const inv = O.buildInvoice(ORDER, 1, O.cfg(), 'x');
     eq(inv.payments, undefined);
-    if (!inv.notes.includes('المستلم من العميل (تحويل بنكي): 149 ر.س — المتبقي 148 ر.س')) throw new Error(inv.notes);
-    const full = O.buildInvoice(Object.assign({}, ORDER, { paid: 297 }), 1, O.cfg(), 'x');
-    if (!full.notes.includes('مدفوع بالكامل')) throw new Error(full.notes);
+    eq('notes' in inv, false, 'فيه ملاحظات');
+    process.env.OSTAZ_STATUS = 'issued';
+    eq('notes' in O.buildInvoice(ORDER, 1, O.cfg(), 'x'), false, 'ملاحظات في المعتمدة');
+    delete process.env.OSTAZ_STATUS;
   });
 
   await t('المعتمدة: المستلم دفعة في الحساب البنكي، وما يتجاوز الإجمالي', async () => {
