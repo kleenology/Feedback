@@ -1273,7 +1273,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.28.2000';
+var APP_VER='2026.11.28.2100';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2053,10 +2053,15 @@ function dayKeys(){
 function loadSlots(){
   var ks=dayKeys(),from=ks[0],to=ks[ks.length-1];
   if(DEMO){BOOKED=LS.get('booked',{});return Promise.resolve();}
-  return db.collection('slots').orderBy(firebase.firestore.FieldPath.documentId())
+  /* قبل ما نعرض المواعيد: الخادم يلغي الطلبات اللي ما انْدفعت خلال ساعة ويحرّر مواعيدها.
+     ما ننتظره أكثر من ثانيتين — لو تأخر نعرض المواعيد عادي */
+  var sw=TAP_ON&&PAY_API?Promise.race([
+    fetch(PAY_API+'/api/pay/sweep',{method:'POST'}).catch(function(){}),
+    new Promise(function(r){setTimeout(r,2000);})]):Promise.resolve();
+  return sw.then(function(){return db.collection('slots').orderBy(firebase.firestore.FieldPath.documentId())
     .startAt(from).endAt(to).get().then(function(sn){
       BOOKED={};sn.forEach(function(d){BOOKED[d.id]=d.data()||{};});
-    }).catch(function(e){console.log('slots:',e&&e.code);BOOKED={};});
+    }).catch(function(e){console.log('slots:',e&&e.code);BOOKED={};});});
 }
 function taken(date,slot){var d=BOOKED[date];return d&&d[slot]?d[slot]:0;}
 function slotLeft(date,slot){return Math.max(0,SLOT_CAP-taken(date,slot));}
@@ -2862,6 +2867,7 @@ function payVerify(cid){
   }).catch(function(){toast('ما قدرنا نتأكد من الدفع الحين — يتحدّث الطلب تلقائياً لما يوصلنا');});
 }
 /* كم باقي من العربون؟ */
+function autoCut(o){var h=o.hist||[],l=h[h.length-1];return !!(l&&l.by==='auto'&&l.why==='unpaid');}
 function depDue(o){return Math.max(0,(Number(o.dep)||0)-(Number(o.paid)||0));}
 /* بعد حفظ الطلب: نرفع الإيصال. لو فشل الرفع الطلب يبقى، وبطاقته في «طلباتي» فيها زر الرفع */
 function sendRcpt(o){
@@ -2952,6 +2958,7 @@ function ordCard(o,live){
     (o.est?'<div class="tot'+(o.price?'':' big')+'" style="margin-top:6px"><span>'+(isSub(o)?'شهرياً':o.price?'التقديري':'الإجمالي التقديري')+'</span><b>'+sar(o.est)+'</b></div>':'')+
     (o.price?'<div class="tot big"><span>السعر النهائي</span><b>'+sar(o.price)+'</b></div>':'')+
     paidBox(o)+
+    (o.st==='cancelled'&&autoCut(o)?'<p class="pay-n" style="margin-top:10px;color:var(--mut)">أُلغي تلقائياً لأن الدفع ما اكتمل خلال ساعة، والموعد رجع متاح. تقدر تطلب من جديد.</p>':'')+
     (o.ostaz&&o.ostaz.url&&/^https:\/\//.test(o.ostaz.url)?'<a class="inv-c" target="_blank" rel="noopener" href="'+esc(o.ostaz.url)+'">'+
       '<span class="inv-i">'+ic('doc')+'</span>'+
       '<span class="inv-t"><b>فاتورتك جاهزة</b>'+(o.ostaz.code?'<s class="mono">'+esc(o.ostaz.code)+'</s>':'')+'</span>'+

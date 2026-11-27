@@ -3,8 +3,12 @@
 process.env.TAP_SECRET_KEY = 'sk_test_x';
 
 const storePath = require.resolve('../api/_lib/store.js');
-let ORD = {}, TOK = {}, CH = {}, N = 0;
+let ORD = {}, TOK = {}, CH = {}, N = 0, GATE = true, SLOTFREED = [];
 require.cache[storePath] = { id: storePath, filename: storePath, loaded: true, exports: {
+  async sweepGate() { return GATE; },
+  async staleTapOrders(cut) { return Object.keys(ORD).map(k => Object.assign({ _id: k }, ORD[k]))
+    .filter(o => o.pay === 'tap' && o.st === 'new' && !(o.paid > 0) && String(o.at || '') < cut); },
+  async cancelUnpaid(id) { const o = ORD[id]; if (o.st !== 'new' || o.paid > 0) return false; o.st = 'cancelled'; SLOTFREED.push(id); return true; },
   async adminUid(t) { return t === 'adm' ? 'a1' : ''; },
   async userUid(t) { if (!TOK[t]) throw new Error('bad token'); return TOK[t]; },
   async getOrder(id) { return ORD[id] ? JSON.parse(JSON.stringify(ORD[id])) : null; },
@@ -41,6 +45,7 @@ const start = require('../api/pay/start');
 const verify = require('../api/pay/verify');
 const hook = require('../api/pay/hook');
 const ptest = require('../api/pay/test');
+const sweep = require('../api/pay/sweep');
 
 function call(fn, body, tok) {
   const req = { method: 'POST', headers: { host: 'srv.test', origin: 'https://app.kleenology.me' }, body, rawBody: JSON.stringify(body) };
@@ -129,6 +134,38 @@ const reset = () => {
   await t('تجربة الريال: ما تقرأ عمليات الطلبات الحقيقية', async () => {
     reset(); await call(start, { order: 'o1' }, 'tk1'); const id = ORD.o1.tap.id;
     eq((await call(ptest, { tap_id: id }, 'adm')).status, 404);
+  });
+  const old = new Date(Date.now() - 2 * 3600e3).toISOString(), fresh = new Date().toISOString();
+  await t('إلغاء تلقائي: طلب ما انْدفع من ساعتين يتلغى ويتحرّر موعده', async () => {
+    reset(); GATE = true; SLOTFREED = [];
+    Object.assign(ORD.o1, { pay: 'tap', at: old });
+    Object.assign(ORD.o2, { pay: 'tap', at: fresh });
+    const r = await call(sweep, {});
+    eq([r.body.cancelled, ORD.o1.st, ORD.o2.st, SLOTFREED], [1, 'cancelled', 'new', ['o1']]);
+  });
+  await t('إلغاء تلقائي: دفع ووصل التنبيه متأخر — ينحسب مدفوع ما يتلغى', async () => {
+    reset(); GATE = true; SLOTFREED = [];
+    await call(start, { order: 'o1' }, 'tk1'); const id = ORD.o1.tap.id; CH[id].status = 'CAPTURED';
+    Object.assign(ORD.o1, { pay: 'tap', at: old }); ORD.o1.tap.at = old;
+    const r = await call(sweep, {});
+    eq([r.body.paid, r.body.cancelled, ORD.o1.st, ORD.o1.paid], [1, 0, 'new', 200]);
+  });
+  await t('إلغاء تلقائي: العميل للحين في صفحة الدفع (بدأ قبل دقائق) — ننتظره', async () => {
+    reset(); GATE = true;
+    Object.assign(ORD.o1, { pay: 'tap', at: old });
+    await call(start, { order: 'o1' }, 'tk1');
+    const r = await call(sweep, {});
+    eq([r.body.kept, ORD.o1.st], [1, 'new']);
+  });
+  await t('إلغاء تلقائي: التحويل البنكي والطلبات المدفوعة ما تنلمس', async () => {
+    reset(); GATE = true;
+    Object.assign(ORD.o1, { pay: 'bank', at: old }); Object.assign(ORD.o2, { pay: 'tap', at: old, paid: 150 });
+    const r = await call(sweep, {});
+    eq([r.body.cancelled, ORD.o1.st, ORD.o2.st], [0, 'new', 'new']);
+  });
+  await t('إلغاء تلقائي: يشتغل مرة كل ٥ دقائق بس', async () => {
+    reset(); GATE = false; Object.assign(ORD.o1, { pay: 'tap', at: old });
+    const r = await call(sweep, {}); eq([r.body.skipped, ORD.o1.st], [true, 'new']);
   });
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
