@@ -41,11 +41,11 @@ global.fetch = async (url, opt) => {
 };
 
 const T = require('../api/_lib/tap');
-const start = require('../api/pay/start');
-const verify = require('../api/pay/verify');
-const hook = require('../api/pay/hook');
-const ptest = require('../api/pay/test');
-const sweep = require('../api/pay/sweep');
+const start = require('../api/_pay/start');
+const verify = require('../api/_pay/verify');
+const hook = require('../api/_pay/hook');
+const ptest = require('../api/_pay/test');
+const sweep = require('../api/_pay/sweep');
 
 function call(fn, body, tok) {
   const req = { method: 'POST', headers: { host: 'srv.test', origin: 'https://app.kleenology.me' }, body, rawBody: JSON.stringify(body) };
