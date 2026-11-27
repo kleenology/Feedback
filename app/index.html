@@ -80,6 +80,11 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
+/* بدون تحديد ونسخ بالضغط المطوّل، ولا قائمة «حفظ الصورة» — شكل تطبيق، مو صفحة ويب.
+   خانات الكتابة تبقى قابلة للتحديد واللصق */
+html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img{-webkit-user-drag:none;user-drag:none}
 button,a,input,textarea,select,label,[onclick]{touch-action:manipulation}
 body{font-family:var(--sf);background:var(--paper);color:var(--tx);min-height:100vh;
   font-size:15px;line-height:1.75;font-weight:400;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
