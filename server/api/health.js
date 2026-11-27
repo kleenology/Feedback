@@ -52,7 +52,8 @@ module.exports = async function handler(req, res) {
   out.tap = { mode: T.mode() || '(no key)' };
   if (T.mode()) {
     try { await T.call('POST', '/charges/list', { period: { date: { from: Date.now() - 86400000, to: Date.now() } }, limit: 1 }); out.tap.status = 'ok'; }
-    catch (e) { out.tap.status = /401|403/.test(String(e && e.message)) ? 'TAP_SECRET_KEY غير صحيح' : 'خطأ: ' + String((e && e.message) || e).slice(0, 140); }
+    catch (e) { out.tap.status = /not found/i.test(String(e && e.message)) ? 'ok (ما فيه عمليات بعد)'
+      : /401|403/.test(String(e && e.message)) ? 'TAP_SECRET_KEY غير صحيح' : 'خطأ: ' + String((e && e.message) || e).slice(0, 140); }
   }
   out.ok = out.firebase === 'ok' && String(out.ostaz).startsWith('ok');
   res.statusCode = 200;
