@@ -928,7 +928,7 @@ function needContacts(){
   return CTP;
 }
 function needTab(t){
-  if(t==='customers'){if(!CUUN)startCust();needContacts();}
+  if(t==='customers'){if(!CUUN)startCust();needContacts();loadWallets();}
   if(t==='offers')needContacts();
 }
 document.querySelectorAll('.adm-tb').forEach(function(t){t.onclick=function(){needTab(t.dataset.t);document.querySelectorAll('.adm-tb').forEach(function(x){x.classList.remove('on');});document.querySelectorAll('.tc').forEach(function(x){x.classList.remove('on');});t.classList.add('on');document.getElementById('tc'+t.dataset.t.charAt(0).toUpperCase()+t.dataset.t.slice(1)).classList.add('on');clBarSync();};});
@@ -1480,7 +1480,7 @@ function cuOrders(c){
 }
 function appUsersHtml(){
   if(!CU.length)return '<div class="cc"><h3>📱 مستخدمو التطبيق</h3>'+
-    '<div class="empty">ما دخل أحد التطبيق بعد — أو قواعد <b>customers</b> ما انحدّثت</div></div>';
+    '<div class="empty">ما دخل أحد التطبيق بعد — أو قواعد <b>customers</b> ما انحدّثت</div></div>'+codesHtml();
   var rows=CU.map(function(c){var n=cuOrders(c);return {c:c,n:n};});
   var noOrd=rows.filter(function(r){return !r.n;});
   var ok=rows.filter(function(r){return r.c.ok;});
@@ -1516,13 +1516,76 @@ function appUsersHtml(){
       '<div style="font-size:10px;color:#9ab;margin-top:2px">'+
         (r.n?'<b style="color:#16a34a">'+r.n+' طلب</b>':'<b style="color:#b45309">ما طلب بعد</b>')+
         ' · أول دخول '+esc(cuDay(c.at))+' · آخر دخول '+esc(cuDay(c.seen))+'</div>'+
+      (WALS[c._id]?'<div style="font-size:10.5px;color:#0f7cb8;margin-top:3px;font-weight:600">💰 رصيد المحفظة: '+WALS[c._id]+' ر.س</div>':'')+
       '</div></div>'+
-      (c.ph?'<a class="exp-wa" target="_blank" rel="noopener" href="'+appWaLink(c)+'">💬 '+(r.n?'راسله':'اسأله وش يحتاج')+'</a>':'')+'</div>';
+      '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+      (c.ph?'<a class="exp-wa" target="_blank" rel="noopener" href="'+appWaLink(c)+'">💬 '+(r.n?'راسله':'اسأله وش يحتاج')+'</a>':'')+
+      '<button type="button" class="exp-wa" style="background:#e6f4fb;color:#0f7cb8;border:none;font-family:inherit;cursor:pointer" onclick="admCredit(\''+esc(c._id)+'\',\''+esc(String(c.n||'العميل').replace(/[\'\\]/g,''))+'\')">💰 رصيد</button>'+
+      '</div></div>';
   });
   if(L.length>40)h+='<div style="font-size:10px;color:#9ab;text-align:center;margin-top:8px">… و'+(L.length-40)+' غيرهم — استخدم البحث</div>';
   h+='</div>';
+  h+=codesHtml();
   if(ok.length)h+='<div class="of-note" style="margin-bottom:12px">💡 <b>'+ok.length+'</b> عميلاً فعّلوا «عروض وتخفيضات» في التطبيق — هؤلاء وحدهم من يجوز ترسل لهم عروضاً، والباقي تواصل معهم بخصوص طلباتهم فقط.</div>';
   return h;
+}
+/* ===== المحفظة من اللوحة: رصيد العملاء، إضافة رصيد، وأكواد الرصيد =====
+   القراءة من Firestore (للأدمن)، وأي تغيير يمر بالخادم /api/pay/wallet عشان يتسجّل في سجل العميل */
+var WALS={},CODES=[],WALP=null;
+function loadWallets(){
+  if(WALP)return WALP;
+  WALP=Promise.all([
+    db.collection('wallets').limit(1000).get().then(function(sn){WALS={};sn.forEach(function(d){var b=Number((d.data()||{}).bal)||0;if(b)WALS[d.id]=Math.round(b*100)/100;});}),
+    db.collection('codes').limit(300).get().then(function(sn){CODES=[];sn.forEach(function(d){var x=d.data()||{};x.id=d.id;CODES.push(x);});
+      CODES.sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});})
+  ]).then(function(){WALP=null;if(document.querySelector('.adm-tb.on[data-t="customers"]'))rCu();}).catch(function(e){WALP=null;console.log('wallets:',e&&e.code);});
+  return WALP;
+}
+function walApi(body){
+  var u=auth.currentUser;if(!u)return Promise.reject(new Error('login'));
+  return u.getIdToken().then(function(tk){return fetch(INV_API+'/api/pay/wallet',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify(body)});})
+    .then(function(r){return r.json().catch(function(){return {};});});
+}
+function admCredit(uid,nm){
+  var v=prompt('رصيد لـ '+nm+'\nاكتب المبلغ بالريال (بالسالب للخصم، مثل -50):'+(WALS[uid]?'\nرصيده الحالي: '+WALS[uid]:''),'50');
+  if(v==null)return;var a=Number(String(v).replace(/[٠-٩]/g,function(c){return c.charCodeAt(0)-1632;}));
+  if(!a||Math.abs(a)>5000){alert('مبلغ غير صحيح (حتى 5000)');return;}
+  var note=prompt('سبب يظهر للعميل في سجل محفظته (اختياري):',a>0?'رصيد من كلينولوجي':'تعديل من الإدارة');if(note==null)return;
+  walApi({op:'credit',uid:uid,amt:a,note:note}).then(function(j){
+    if(j&&j.ok){WALS[uid]=j.bal;rCu();showToast('✓ رصيد '+nm+' صار '+j.bal+' ر.س');}
+    else alert(j&&j.error==='insufficient'?'الخصم أكبر من رصيده':'تعذّر: '+((j&&j.error)||''));
+  }).catch(function(){alert('تعذّر الاتصال بالخادم');});
+}
+function codesHtml(){
+  var h='<div class="cc"><h3>🎟️ أكواد الرصيد</h3><div style="font-size:10px;color:#9ab;text-align:center;margin:-6px 0 10px">العميل يكتب الكود في محفظته وتنضاف قيمته لرصيده — مرة وحدة لكل عميل</div>'+
+    '<button type="button" class="of-tp" style="width:100%;margin-bottom:10px" onclick="admCode()">➕ كود جديد</button>';
+  if(!CODES.length)h+='<div class="empty">ما فيه أكواد للحين</div>';
+  CODES.slice(0,30).forEach(function(k){
+    var done=k.on===false||(Number(k.used)||0)>=(Number(k.uses)||1)||(k.exp&&k.exp<new Date().toISOString().slice(0,10));
+    h+='<div class="exp-item" style="border-right-color:'+(done?'#cbd5e1':'#0f7cb8')+'"><div class="exp-top"><div>'+
+      '<div class="exp-nm" style="direction:ltr;text-align:right;letter-spacing:1px">'+esc(k.id)+'</div>'+
+      '<div style="font-size:10.5px;color:#9ab;margin-top:3px">'+esc(k.amt)+' ر.س · استُخدم '+(Number(k.used)||0)+' من '+(Number(k.uses)||1)+
+        (k.exp?' · ينتهي '+esc(k.exp):'')+(k.note?' · '+esc(k.note):'')+(k.on===false?' · <b style="color:#b91c1c">موقوف</b>':'')+'</div></div></div>'+
+      '<div style="display:flex;gap:6px"><button type="button" class="exp-wa" style="background:#f1f5f9;color:#334155;border:none;font-family:inherit;cursor:pointer" onclick="copyTxt(\''+esc(k.id)+'\')">📋 نسخ</button>'+
+      (k.on!==false?'<button type="button" class="exp-wa" style="background:#fdecec;color:#b91c1c;border:none;font-family:inherit;cursor:pointer" onclick="admCodeOff(\''+esc(k.id)+'\')">إيقاف</button>':'')+'</div></div>';
+  });
+  return h+'</div>';
+}
+function copyTxt(t){try{navigator.clipboard.writeText(t).then(function(){showToast('نسخنا '+t);});}catch(e){prompt('انسخ:',t);}}
+function admCode(){
+  var a=prompt('قيمة الكود بالريال:','50');if(a==null)return;a=Number(a);if(!(a>0&&a<=5000)){alert('قيمة غير صحيحة');return;}
+  var u=prompt('كم عميل يقدر يستخدمه؟ (كل عميل مرة وحدة)','1');if(u==null)return;
+  var e=prompt('تاريخ الانتهاء (مثل 2026-12-31) — فاضي = بدون انتهاء:','');if(e==null)return;
+  var c=prompt('الكود نفسه (حروف إنجليزية وأرقام) — فاضي = نولّده لك:','');if(c==null)return;
+  var n=prompt('ملاحظة تظهر للعميل (اختياري) — مثل «هدية رمضان»:','');if(n==null)return;
+  walApi({op:'code',amt:a,uses:Number(u)||1,exp:String(e).trim(),code:String(c).trim(),note:n}).then(function(j){
+    if(j&&j.ok){WALP=null;loadWallets();copyTxt(j.code);alert('✓ الكود: '+j.code+'\nقيمته '+j.amt+' ر.س — انسخناه لك، أرسله للعميل');}
+    else alert(j&&j.error==='exists'?'الكود موجود من قبل — اختر اسم ثاني':'تعذّر: '+((j&&j.error)||''));
+  }).catch(function(){alert('تعذّر الاتصال بالخادم');});
+}
+function admCodeOff(c){
+  if(!confirm('إيقاف الكود '+c+'؟ ما عاد أحد يقدر يستخدمه.'))return;
+  walApi({op:'codeoff',code:c}).then(function(j){if(j&&j.ok){WALP=null;loadWallets();showToast('أُوقف الكود');}else alert('تعذّر');});
 }
 /* نسخة احتياطية عندك: كل مستخدمي التطبيق في ملف يفتحه Excel. كلمات المرور ما تُحفظ عندنا أصلاً */
 function cuCsv(){

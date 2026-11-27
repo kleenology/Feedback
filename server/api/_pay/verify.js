@@ -6,6 +6,7 @@ const U = require('../_lib/util');
 const S = require('../_lib/store');
 const T = require('../_lib/tap');
 const A = require('../_lib/autoinv');
+const W = require('../_lib/wallet');
 
 module.exports = async function handler(req, res) {
   if (U.cors(req, res)) return;
@@ -23,6 +24,15 @@ module.exports = async function handler(req, res) {
 
   try {
     const ch = await T.getCharge(cid);
+    /* شحن المحفظة: الرصيد للعميل نفسه بس، ونفس العملية ما تنحسب مرتين (tap-رقمها) */
+    if (ch.metadata && ch.metadata.kind === 'topup') {
+      if (ch.metadata.wuid !== uid) return U.json(res, 404, { error: 'not_found' });
+      if (ch.status === 'CAPTURED' && ch.currency === 'SAR' && Number(ch.amount) > 0) {
+        const r = await W.credit(uid, Number(ch.amount), 'topup', ch.id, 'شحن الرصيد', 'tap-' + ch.id);
+        return U.json(res, 200, { ok: true, status: 'CAPTURED', topup: true, amt: Number(ch.amount), bal: r.bal });
+      }
+      return U.json(res, 200, { ok: false, status: ch.status || 'UNKNOWN', topup: true });
+    }
     const oid = T.oidOf(ch);
     const o = oid ? await S.getOrder(oid) : null;
     if (!o || o.uid !== uid) return U.json(res, 404, { error: 'not_found' });

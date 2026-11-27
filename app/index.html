@@ -467,6 +467,46 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
    قناع بلون النص وحجمه: يطلع على كل الأجهزة حتى اللي خطوطها ما تدعم الرمز بعد */
 .rs{display:inline-block;width:.78em;height:.86em;vertical-align:-.08em;background:currentColor;font-style:normal;
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%2740 0 1145 1270%27%3E%3Cpath d=%27M750,1119 C730,1163,716,1211,711,1262 C711,1262,1136,1172,1136,1172 C1156,1127,1169,1079,1174,1028 C1174,1028,750,1119,750,1119Z M1136,901 C1136,901,1136,901,1136,901 C1156,857,1169,809,1174,758 C1174,758,843,828,843,828 C843,828,843,693,843,693 C843,693,1136,631,1136,631 C1156,587,1169,538,1174,488 C1174,488,843,558,843,558 C843,558,843,72,843,72 C793,100,748,138,711,183 C711,183,711,586,711,586 C711,586,579,614,579,614 C579,614,579,6,579,6 C528,34,483,72,447,117 C447,117,447,642,447,642 C447,642,151,705,151,705 C131,750,117,798,112,849 C112,849,447,777,447,777 C447,777,447,948,447,948 C447,948,88,1024,88,1024 C68,1068,55,1117,50,1167 C50,1167,425,1088,425,1088 C456,1081,482,1063,499,1038 C499,1038,568,936,568,936 C568,936,568,936,568,936 C575,926,579,913,579,899 C579,899,579,749,579,749 C579,749,711,721,711,721 C711,721,711,992,711,992 C711,992,1136,901,1136,901Z%27/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%2740 0 1145 1270%27%3E%3Cpath d=%27M750,1119 C730,1163,716,1211,711,1262 C711,1262,1136,1172,1136,1172 C1156,1127,1169,1079,1174,1028 C1174,1028,750,1119,750,1119Z M1136,901 C1136,901,1136,901,1136,901 C1156,857,1169,809,1174,758 C1174,758,843,828,843,828 C843,828,843,693,843,693 C843,693,1136,631,1136,631 C1156,587,1169,538,1174,488 C1174,488,843,558,843,558 C843,558,843,72,843,72 C793,100,748,138,711,183 C711,183,711,586,711,586 C711,586,579,614,579,614 C579,614,579,6,579,6 C528,34,483,72,447,117 C447,117,447,642,447,642 C447,642,151,705,151,705 C131,750,117,798,112,849 C112,849,447,777,447,777 C447,777,447,948,447,948 C447,948,88,1024,88,1024 C68,1068,55,1117,50,1167 C50,1167,425,1088,425,1088 C456,1081,482,1063,499,1038 C499,1038,568,936,568,936 C568,936,568,936,568,936 C575,926,579,913,579,899 C579,899,579,749,579,749 C579,749,711,721,711,721 C711,721,711,992,711,992 C711,992,1136,901,1136,901Z%27/%3E%3C/svg%3E") center/contain no-repeat}
+.wal-card{position:relative;overflow:hidden;border-radius:26px;padding:22px 22px 20px;color:#fff;
+  background:linear-gradient(135deg,#29ABE2,#1680B8);box-shadow:0 12px 28px rgba(22,128,184,.28)}
+.wal-card::after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;left:-60px;top:-70px;background:rgba(255,255,255,.12)}
+.wal-card s{text-decoration:none;font-size:13px;opacity:.85}
+.wal-card b{display:block;font-size:40px;font-weight:700;font-family:var(--dsp);margin-top:4px;font-variant-numeric:tabular-nums}
+.wal-card b .rs{width:.62em;height:.7em;margin-inline-start:6px;opacity:.9}
+.wal-card p{font-size:12px;opacity:.85;margin-top:8px}
+.wal-add{position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;padding:7px 16px 7px 7px;border-radius:999px;
+  background:#16324a;color:#fff;font:inherit;font-weight:600;font-size:14px;box-shadow:0 6px 16px rgba(0,0,0,.18);margin-bottom:14px}
+.wal-add i{width:30px;height:30px;border-radius:50%;background:#fff;color:#16324a;display:grid;place-items:center;font-style:normal;font-size:20px;font-weight:700;line-height:1}
+.wal-card .wc-l{position:relative;z-index:1}
+.seg{display:flex;background:var(--card);border-radius:999px;padding:5px;box-shadow:var(--sh);margin-bottom:18px}
+.seg button{flex:1;padding:11px;border-radius:999px;font:inherit;font-weight:600;font-size:15px;color:var(--mut);background:none}
+.seg button.on{background:var(--blue);color:#fff}
+.amt-in{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:22px;padding:6px 18px;box-shadow:var(--sh)}
+.amt-in input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:22px;font-weight:600;padding:14px 0;outline:none;color:var(--tx)}
+.amt-in .rs{width:22px;height:24px;color:var(--tx);flex:0 0 auto}
+.w-empty{text-align:center;padding:34px 0 10px}
+.w-empty .ic{width:64px;height:64px;color:var(--faint);margin:0 auto 14px;display:block}
+.w-empty b{display:block;font-size:18px;font-weight:700;font-family:var(--dsp)}
+.w-empty s{display:block;text-decoration:none;font-size:13px;color:var(--mut);margin-top:6px}
+.wal-act{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 18px}
+.wal-act button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:18px;background:var(--card);
+  box-shadow:var(--sh);font:inherit;font-weight:600;font-size:13.5px;color:var(--tx)}
+.wal-act .ic{width:24px;height:24px;color:var(--blue)}
+.wtx{display:flex;align-items:center;gap:12px;padding:13px 16px}
+.wtx+.wtx{border-top:1px solid var(--line)}
+.wtx .wi{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:var(--blue-l);color:var(--blue)}
+.wtx .wi.neg{background:var(--sunk);color:var(--mut)}
+.wtx .wt{flex:1;min-width:0}.wtx .wt b{display:block;font-size:14px;font-weight:600}
+.wtx .wt s{display:block;text-decoration:none;font-size:12px;color:var(--mut);margin-top:2px}
+.wtx .wa{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wtx .wa.pos{color:#16a34a}
+.amts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.amts button{padding:13px 4px;border-radius:14px;background:var(--card);border:1.5px solid var(--line);font:inherit;font-weight:700;font-size:15px;color:var(--tx)}
+.amts button.on{border-color:var(--blue);background:var(--blue-l);color:var(--blue-d)}
+.wal-use{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:var(--sh);margin:0 0 4px;width:100%;font:inherit;text-align:inherit;color:inherit}
+.wal-use .ic{color:var(--blue);width:24px;height:24px}
+.wal-use .wt{flex:1}.wal-use .wt b{display:block;font-size:14px;font-weight:600}.wal-use .wt s{display:block;text-decoration:none;font-size:12px;color:var(--mut);margin-top:2px}
+.wal-use .wa{font-weight:700;color:#16a34a;white-space:nowrap}
 .olist{background:var(--card);border-radius:24px;box-shadow:var(--sh);overflow:hidden}
 .orow{display:flex;align-items:center;gap:14px;width:100%;padding:16px 18px;background:none;font:inherit;color:inherit;text-align:right;position:relative}
 .orow+.orow::before{content:"";position:absolute;top:0;right:18px;left:18px;border-top:1px solid var(--line)}
@@ -1057,6 +1097,13 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
 </section>
 
 <!-- ===== طلباتي ===== -->
+<section class="scr" id="scWallet">
+  <header class="top"><div class="top-in">
+    <button class="bk" onclick="go('scHome');setTab('scHome')" id="walBack"></button>
+  </div>
+  <div class="top-in big-t"><h1>المحفظة</h1></div></header>
+  <div class="wrap"><div class="sec" id="walBody"></div></div>
+</section>
 <section class="scr" id="scOrders">
   <header class="top"><div class="top-in">
     <button class="bk" onclick="go('scHome');setTab('scHome')" id="ordBack"></button>
@@ -1096,6 +1143,7 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
   <button class="tab" role="tab" aria-selected="true" data-s="scHome" data-i="home">الرئيسية</button>
   <button class="tab" role="tab" aria-selected="false" data-s="scPkgs" data-i="repeat">الباقات</button>
   <button class="tab" role="tab" aria-selected="false" data-s="scOrders" data-i="list">طلباتي</button>
+  <button class="tab" role="tab" aria-selected="false" data-s="scWallet" data-i="wallet">المحفظة</button>
   <button class="tab" role="tab" aria-selected="false" data-s="scMe" data-i="user">حسابي</button>
 </nav>
 
@@ -1167,6 +1215,8 @@ var IC={
  home:'<path d="M3 10.4 12 3l9 7.4V20a1 1 0 0 1-1 1h-5v-6.2H9V21H4a1 1 0 0 1-1-1z"/>',
  grid:'<path d="M4 4h6.4v6.4H4zM13.6 4H20v6.4h-6.4zM4 13.6h6.4V20H4zM13.6 13.6H20V20h-6.4z"/>',
  list:'<path d="M8.6 6.2h12.2M8.6 12h12.2M8.6 17.8h12.2M3.4 6.2h.02M3.4 12h.02M3.4 17.8h.02"/>',
+ wallet:'<path d="M19.4 7.2V5.4a1.8 1.8 0 0 0-1.8-1.8H5.2a2.4 2.4 0 0 0 0 4.8h14.2a1.4 1.4 0 0 1 1.4 1.4v9.6a1.4 1.4 0 0 1-1.4 1.4H5.2a2.4 2.4 0 0 1-2.4-2.4V6M16.4 14.2h.02"/>',
+ gift:'<path d="M20 12v8.4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V12M2.8 7.6h18.4v4.4H2.8zM12 21.4V7.6M12 7.6H7.8a2.4 2.4 0 1 1 0-4.8C11 2.8 12 7.6 12 7.6zM12 7.6h4.2a2.4 2.4 0 1 0 0-4.8C13 2.8 12 7.6 12 7.6z"/>',
  user:'<path d="M19.6 21a7.6 7.6 0 0 0-15.2 0M12 11.4a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4"/>',
  cart:'<path d="M2.6 3.4h2.2l2.4 12a1.4 1.4 0 0 0 1.4 1.1h9.2a1.4 1.4 0 0 0 1.4-1.1l1.6-8.2H5.6M9.4 20.6h.02M17.6 20.6h.02"/>',
  check:'<path d="M20 6.5 9.2 17.3 4 12.1"/>',
@@ -1360,7 +1410,7 @@ var AREA_MSG='حالياً نخدم مدينة الرياض فقط — وقري�
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.1700';
+var APP_VER='2026.11.29.1900';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1912,6 +1962,7 @@ function saveSnap(){
 }
 function onSignedIn(uid){
   ME.uid=uid;AUTHED=true;GUEST=false;
+  walWatch();
   var w=$('lgWhy');if(w)w.classList.add('hide');
   CART=LS.get('cart',{});
   var snap=DEMO?null:LS.get('snap',null);
@@ -1939,6 +1990,93 @@ function onSignedIn(uid){
   /* ننتقل أول ما نعرف بيانات العميل (هل عنده جوال؟) — الطلبات والعناوين تتحمّل بالخلفية وتتحدّث الشاشة لحالها */
   API.loadMe().then(ready,ready);
   Promise.all([API.orders(),API.addrs()]).then(function(){saveSnap();renderAll();},function(){});
+}
+/* ===== المحفظة =====
+   الرصيد والسجل يقرأها العميل من Firestore (قراءة بس)، وأي تغيير يمر بالخادم: شحن بالدفع، كود، أو الدفع من الرصيد.
+   الشروط: الرصيد يدفع حتى WAL_PCT٪ من قيمة الطلب (والخادم يطبّق نفس الحد) */
+var WAL={bal:0,tx:[],ok:false},WUN=null,WTUN=null,WAL_PCT=50,USEWAL=true,TOPAMT=200;
+function walWatch(){
+  walStop();if(DEMO){WAL=LS.get('wal',{bal:0,tx:[],ok:true});return;}
+  if(!db||!ME.uid)return;
+  var w=db.collection('wallets').doc(ME.uid);
+  WUN=w.onSnapshot(function(d){WAL.bal=Number((d.exists&&d.data().bal)||0);WAL.ok=true;walRefresh();},function(){});
+  WTUN=w.collection('tx').orderBy('at','desc').limit(40).onSnapshot(function(sn){
+    WAL.tx=[];sn.forEach(function(d){var x=d.data()||{};x.id=d.id;WAL.tx.push(x);});walRefresh();},function(){});
+}
+function walStop(){if(WUN){WUN();WUN=null;}if(WTUN){WTUN();WTUN=null;}WAL={bal:0,tx:[],ok:false};}
+function walRefresh(){var sc=$('scWallet');if(sc&&sc.classList.contains('on'))renderWallet();}
+function walUse(total,due){return USEWAL&&WAL.bal>0?Math.max(0,Math.min(WAL.bal,Math.floor(total*WAL_PCT/100),due)):0;}
+var WTX={topup:['شحن الرصيد','wallet'],code:['كود هدية','gift'],admin:['رصيد من كلينولوجي','gift'],spend:['دفع طلب','cart'],refund:['استرجاع لطلب ملغي','repeat']};
+function renderWallet(){
+  var ob=$('walBack');if(ob&&!ob.innerHTML)ob.innerHTML=backTo('الرئيسية');
+  var h='<div class="wal-card"><button type="button" class="wal-add" onclick="addSheet()"><i>+</i><span>إضافة رصيد</span></button>'+
+      '<div class="wc-l"><b class="mono">'+WAL.bal.toLocaleString('en-US')+'<i class="rs" role="img" aria-label="ريال"></i></b>'+
+      '<s>رصيد المحفظة</s><p>تقدر تدفع فيه حتى '+WAL_PCT+'٪ من قيمة أي طلب</p></div></div>';
+  h+='<h3 class="bs-t" style="margin-top:22px">العمليات</h3>';
+  if(!WAL.tx.length)h+=(WAL.ok||DEMO)?'<div class="w-empty">'+ic('list')+'<b>لا توجد عمليات</b><s>أول ما تضيف رصيد أو تستخدمه، يطلع هنا.</s></div>'
+    :'<div class="empty" style="padding:22px 0">جاري التحميل…</div>';
+  else h+='<div class="olist">'+WAL.tx.map(function(x){
+    var m=WTX[x.type]||['عملية','wallet'],pos=Number(x.amt)>0;
+    var t=m[0]+(x.type==='code'&&x.ref?' · '+x.ref:'');
+    var sub=(x.note&&x.type!=='topup'?x.note+' · ':'')+(x.at?stamp(x.at):'');
+    return '<div class="wtx"><span class="wi'+(pos?'':' neg')+'">'+ic(m[1],'','ic-sm')+'</span>'+
+      '<span class="wt"><b>'+esc(t)+'</b><s>'+esc(sub)+'</s></span>'+
+      '<span class="wa'+(pos?' pos':'')+'"><span dir="ltr">'+(pos?'+':'−')+Math.abs(Number(x.amt)||0).toLocaleString('en-US')+'</span> <i class="rs"></i></span></div>';
+  }).join('')+'</div>';
+  $('walBody').innerHTML=h;
+}
+/* إضافة رصيد: تبويبين — «المبلغ» شحن بالدفع، و«قسيمة» كود من كلينولوجي */
+var ADDTAB='amt';
+function addSheet(tab){
+  ADDTAB=tab||ADDTAB||'amt';
+  var seg='<div class="seg"><button type="button" class="'+(ADDTAB==='amt'?'on':'')+'" onclick="addSheet(\'amt\')">المبلغ</button>'+
+    '<button type="button" class="'+(ADDTAB==='code'?'on':'')+'" onclick="addSheet(\'code\')">قسيمة</button></div>';
+  var body=ADDTAB==='amt'
+    ?'<div class="amt-in"><input id="topIn" type="tel" inputmode="numeric" maxlength="4" dir="rtl" style="text-align:right" placeholder="أدخل المبلغ" oninput="var v=digits(this.value);this.value=v;TOPAMT=+v||0;"><i class="rs" role="img" aria-label="ريال"></i></div>'+
+      '<div class="amts" style="margin-top:12px">'+[100,200,500,1000].map(function(a){
+        return '<button type="button" onclick="TOPAMT='+a+';$(\'topIn\').value='+a+'">'+a+'</button>';}).join('')+'</div>'+
+      '<button class="btn ap-btn tap-go" style="margin-top:6px" onclick="walletTopup(this)">'+apBtn()+'</button>'+
+      '<p class="pay-n" style="text-align:center;margin-top:8px">من 20 إلى 5000 ريال — ينضاف لرصيدك أول ما يكتمل الدفع</p>'
+    :'<div class="amt-in"><input id="codeIn" maxlength="24" dir="ltr" autocapitalize="characters" autocomplete="off" placeholder="أدخل رمز القسيمة" style="text-align:right;letter-spacing:1px">'+ic('gift')+'</div>'+
+      '<button class="btn" style="margin-top:14px" onclick="redeemCode(this)">أضف للرصيد</button>'+
+      '<p class="pay-n" style="text-align:center;margin-top:8px">القسيمة تُستخدم مرة وحدة، وقيمتها تنضاف لرصيدك على طول</p>';
+  if($('sh').classList.contains('on')&&$('shT').textContent==='إضافة رصيد'){$('shB').innerHTML=seg+body;}
+  else openSheet('إضافة رصيد',seg+body);
+  TOPAMT=0;var f=$(ADDTAB==='amt'?'topIn':'codeIn');if(f)setTimeout(function(){try{f.focus();}catch(e){}},250);
+}
+function topupSheet(){addSheet('amt');}
+function codeSheet(){addSheet('code');}
+function walletTopup(b){
+  var a=Math.round(TOPAMT||0);if(a<20||a>5000){toast('المبلغ من 20 إلى 5000 ريال');return;}
+  if(DEMO){WAL.bal+=a;WAL.tx.unshift({type:'topup',amt:a,at:new Date().toISOString()});LS.set('wal',WAL);closeSheet();renderWallet();toast('تم شحن '+a+' ✓ (معاينة)');return;}
+  var u=auth&&auth.currentUser;if(!u)return;b.disabled=true;
+  u.getIdToken().then(function(tk){return fetch(PAY_API+'/api/pay/wallet',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({op:'topup',amount:a})});})
+   .then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
+     if(j&&j.url&&/^https:\/\/[a-z0-9.-]*tap\.company\//.test(j.url)){location.href=j.url;return;}
+     b.disabled=false;toast('تعذّر فتح صفحة الدفع — حاول مرة ثانية');
+   }).catch(function(){b.disabled=false;toast('تعذّر الاتصال');});
+}
+function redeemCode(b){
+  var c=String(($('codeIn')||{}).value||'').trim();if(c.length<3){toast('اكتب الكود');return;}
+  if(DEMO){toast('وضع المعاينة — الأكواد تشتغل في التطبيق الحقيقي');return;}
+  var u=auth&&auth.currentUser;if(!u)return;b.disabled=true;b.textContent='لحظة…';
+  u.getIdToken().then(function(tk){return fetch(PAY_API+'/api/pay/wallet',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({op:'redeem',code:c})});})
+   .then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
+     b.disabled=false;b.textContent='أضف للرصيد';
+     if(j&&j.ok){closeSheet();toast('انضاف '+j.amt+' ريال لرصيدك ✓');go('scWallet');setTab('scWallet');renderWallet();return;}
+     toast((j&&j.message)||'تعذّر استخدام الكود');
+   }).catch(function(){b.disabled=false;b.textContent='أضف للرصيد';toast('تعذّر الاتصال');});
+}
+/* الدفع: الرصيد أول (حتى الحد)، والباقي ببطاقة. لو الرصيد غطّى الكل ما نروح لصفحة الدفع */
+function payGo(oid,no,useW){
+  if(!useW||DEMO){payStart(oid,no);return;}
+  var u=auth&&auth.currentUser;if(!u){payStart(oid,no);return;}
+  toast('نخصم من رصيدك…');
+  u.getIdToken().then(function(tk){return fetch(PAY_API+'/api/pay/wallet',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({op:'apply',order:oid})});})
+   .then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
+     if(j&&j.ok&&j.amt>0&&j.due<=0){renderAll();ORQF='';go('scOrders');setTab('scOrders');toast('تم الدفع من رصيدك ✓'+(no?' — طلبك رقم '+no:''));return;}
+     payStart(oid,no);
+   }).catch(function(){payStart(oid,no);});
 }
 /* ===== التصفح بدون تسجيل =====
    الزائر يشوف الخدمات والأسعار والباقات ويضيف للسلة. الدخول يُطلب بس عند الحجز أو «طلباتي» و«حسابي»،
@@ -1968,19 +2106,19 @@ function needLogin(next){
   PENDING=next||'';
   go('scLogin');$('tabBar').classList.add('hide');syncCartUI();
   if(emailOn())emShow();
-  var w=$('lgWhy');if(w){w.textContent=/^sc/.test(next||'')?'سجّل دخولك عشان تشوف طلباتك وحسابك':'سجّل دخولك عشان تكمل حجزك — سلتك محفوظة';w.classList.remove('hide');}
+  var w=$('lgWhy');if(w){w.textContent=next==='scWallet'?'سجّل دخولك عشان تشوف رصيدك':/^sc/.test(next||'')?'سجّل دخولك عشان تشوف طلباتك وحسابك':'سجّل دخولك عشان تكمل حجزك — سلتك محفوظة';w.classList.remove('hide');}
   return true;
 }
 function runPending(){
   var p=PENDING;PENDING='';if(!p)return false;
-  if(/^sc/.test(p)){go(p);setTab(p);if(p==='scMe')renderMe();if(p==='scOrders')renderOrders();return true;}
+  if(/^sc/.test(p)){go(p);setTab(p);if(p==='scMe')renderMe();if(p==='scOrders')renderOrders();if(p==='scWallet')renderWallet();return true;}
   if(typeof window[p]==='function'){window[p]();return true;}
   return false;
 }
 function logout(){
   if(!confirm('تسجيل الخروج؟'))return;
   function done(){
-    if(ORUN){ORUN();ORUN=null;}ORERR='';
+    if(ORUN){ORUN();ORUN=null;}ORERR='';walStop();
     AUTHED=false;ME={uid:'',ph:'',n:'',ok:false,em:''};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
     backToPhone();$('inPh').value='';loginFirst();}
   if(DEMO){done();return;}
@@ -2922,7 +3060,7 @@ function bsAdr(){
 }
 function bsOpt(dep){
   if(TAP_ON&&!BANK_PAY){PAYM='tap';
-    return '<h3 class="bs-t">الدفع</h3>'+
+    return '<h3 class="bs-t">الدفع</h3>'+walRow(dep)+
       '<div class="bs-c pay-only">'+
         '<div class="po-r"><span>'+ic('check','','ic-sm')+'دفع آمن ومشفّر — يتأكد حجزك على طول</span></div>'+
         '<div class="pm-ic"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div>'+
@@ -2960,11 +3098,29 @@ function payPick(m,dep){
   var bb=$('bankBox');if(bb)bb.hidden=m!=='bank';
   var b=$('bkGo');if(b){b.disabled=m==='bank'&&!RCPT;b.classList.toggle('ap-btn',m==='tap');if(m==='tap')b.innerHTML=apBtn();else b.textContent=b.dataset.lb||'أرسل الطلب';}
 }
+/* صف «استخدم رصيد المحفظة» في الملخص — يطلع بس لو عنده رصيد */
+var BKDUE=0;
+function walRow(total){
+  if(!(WAL.bal>0))return '';
+  var cap=Math.min(WAL.bal,Math.floor(total*WAL_PCT/100),total);
+  return '<button type="button" class="wal-use" onclick="walToggle()" aria-pressed="'+USEWAL+'">'+ic('wallet')+
+    '<span class="wt"><b>استخدم رصيد المحفظة</b><s>رصيدك '+WAL.bal.toLocaleString('en-US')+' — حتى '+WAL_PCT+'٪ من الطلب</s></span>'+
+    '<span class="wa" id="walAmt">'+(USEWAL?'<span dir="ltr">−'+cap.toLocaleString('en-US')+'</span> <i class="rs"></i>':'')+'</span>'+
+    '<span class="sw" aria-pressed="'+USEWAL+'" style="pointer-events:none"><i></i></span></button>'+
+    '<div style="height:10px"></div>';
+}
+function walToggle(){
+  USEWAL=!USEWAL;
+  var b=document.querySelector('.wal-use');if(b){b.setAttribute('aria-pressed',String(USEWAL));var sw=b.querySelector('.sw');if(sw)sw.setAttribute('aria-pressed',String(USEWAL));}
+  var cap=walUse(BKDUE,BKDUE),w=$('walAmt');if(w)w.innerHTML=USEWAL&&cap?'<span dir="ltr">−'+cap.toLocaleString('en-US')+'</span> <i class="rs"></i>':'';
+  var d=$('bkDue');if(d)d.innerHTML=(BKDUE-cap).toLocaleString('en-US')+' <small><i class="rs" role="img" aria-label="ريال"></i></small>';
+}
 function bsTail(due,label){
-  var tap=due&&TAP_ON&&PAYM==='tap';
+  BKDUE=due;
+  var tap=due&&TAP_ON&&PAYM==='tap',wu=tap?walUse(due,due):0;
   BKBAR='<div class="paybar-in"><button class="btn'+(tap?' ap-btn':'')+'" id="bkGo" data-lb="'+esc(label)+'" onclick="submitOrder()"'+(due&&!tap&&!RCPT?' disabled':'')+'>'+
     (tap?apBtn():esc(label))+'</button>'+
-    '<div class="due"><s>المبلغ المستحق الآن</s><b class="mono">'+due.toLocaleString('en-US')+' <small><i class="rs" role="img" aria-label="ريال"></i></small></b></div></div>';
+    '<div class="due"><s>المبلغ المستحق الآن</s><b class="mono" id="bkDue">'+(due-wu).toLocaleString('en-US')+' <small><i class="rs" role="img" aria-label="ريال"></i></small></b></div></div>';
   return '<p class="bs-terms">بإرسال الطلب، أنت توافق على <button type="button" onclick="openTerms()">الشروط وسياسة الخصوصية</button>.</p>'+
     '<div style="height:70px"></div>';
 }
@@ -3079,6 +3235,7 @@ function payVerify(cid){
       body:JSON.stringify({tap_id:cid})});
   }).then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
     LS.set('payo',null);
+    if(j&&j.topup){go('scWallet');setTab('scWallet');renderWallet();toast(j.ok?'تم شحن '+j.amt+' ريال لرصيدك ✓':'ما اكتمل الشحن — ما انخصم شي');return;}
     if(j&&j.ok)toast('تم الدفع ✓'+(j.no?' — طلبك رقم '+j.no+' محجوز':'')+'، ونأكد موعدك قريب');
     else toast('ما اكتمل الدفع — طلبك محفوظ ساعة، ادفع عشان يتثبت موعدك');
     API.orders().then(function(){renderAll();if(!(j&&j.ok)&&j&&j.order)openOrd(j.order);});
@@ -3133,7 +3290,7 @@ function submitOrder(){
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
     if(po.dep)po.pay=viaTap?'tap':'bank';
     API.addOrder(po).then(function(){
-      if(viaTap&&po.dep){BK.pkg=null;payStart(po.id,po.no);return;}
+      if(viaTap&&po.dep){BK.pkg=null;payGo(po.id,po.no,walUse(po.dep,po.dep));return;}
       sendRcpt(po);
       BK.pkg=null;renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(po.no?'وصلنا اشتراكك رقم '+po.no:'وصلنا اشتراكك');
     }).catch(function(e){b.disabled=false;b.textContent='اشترك الآن';onSubmitErr(e);});
@@ -3150,7 +3307,7 @@ function submitOrder(){
   if(o.dep)o.pay=viaTap?'tap':'bank';
   API.addOrder(o).then(function(){
     CART={};LS.set('cart',{});
-    if(viaTap&&o.dep){payStart(o.id,o.no);return;}
+    if(viaTap&&o.dep){payGo(o.id,o.no,walUse(o.dep,o.dep));return;}
     sendRcpt(o);
     renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(o.no?'وصلنا طلبك رقم '+o.no:'وصلنا طلبك — نتواصل معك قريب');
   }).catch(function(e){b.disabled=false;b.textContent='أرسل الطلب';onSubmitErr(e);});
@@ -3234,7 +3391,16 @@ function waLink(o){
 }
 function cancelOrder(id){
   var o=ORD.filter(function(x){return x.id===id;})[0];if(!o)return;
-  if(!confirm('إلغاء هذا الطلب؟'))return;
+  var wp=(o.pays||[]).filter(function(p){return p&&p.m==='wallet';}).reduce(function(t,p){return t+(Number(p.amt)||0);},0);
+  if(!confirm('إلغاء هذا الطلب؟'+(wp?'\n'+wp+' ريال ترجع لرصيد محفظتك.':'')))return;
+  /* فيه دفعة من المحفظة: الإلغاء من الخادم عشان يرجّع الرصيد بنفس العملية */
+  if(wp&&!DEMO){var u=auth&&auth.currentUser;if(!u)return;
+    u.getIdToken().then(function(tk){return fetch(PAY_API+'/api/pay/wallet',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({op:'cancel',order:id})});})
+     .then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
+       if(j&&j.ok){closeSheet();toast('أُلغي الطلب ورجع '+j.refunded+' ريال لرصيدك');}
+       else toast(j&&j.error==='card_paid'?'الطلب مدفوع — تواصل معنا للإلغاء':'تعذّر الإلغاء');
+     }).catch(function(){toast('تعذّر الاتصال');});
+    return;}
   API.cancelOrder(o).then(function(){renderAll();toast('أُلغي الطلب');}).catch(function(){toast('تعذّر الإلغاء');});
 }
 function renderOrders(){
@@ -3338,7 +3504,9 @@ function ordDetail(o){
       (o.off?odr('الخصم',pct(o.off)):'')+
       (o.price?odr('التقديري',sar(o.est))+odr('السعر النهائي',sar(o.price),'tot'):
         (o.est&&!o.quote?odr(isSub(o)?'شهرياً':'الإجمالي',sar(o.est),'tot'):''))+
-      (P&&o.st!=='cancelled'?odr('المدفوع',sar(P),'ok')+(R?odr('المتبقي',sar(R),'rem'):''):'')+
+      (P&&o.st!=='cancelled'?odr('المدفوع',sar(P),'ok')+
+        ((o.pays||[]).some(function(p){return p&&p.m==='wallet';})?odr('منها من المحفظة',sar((o.pays||[]).filter(function(p){return p&&p.m==='wallet';}).reduce(function(t,p){return t+(Number(p.amt)||0);},0))):'')+
+        (R?odr('المتبقي',sar(R),'rem'):''):'')+
     '</div>';
   if(o.ostaz&&o.ostaz.url&&/^https:\/\//.test(o.ostaz.url))
     h+='<button type="button" class="od-inv" style="width:100%;font:inherit;text-align:inherit" onclick="invOpen(\''+o.id+'\')">'+ic('doc')+'<span>فاتورتك'+
@@ -3478,9 +3646,10 @@ function setTab(id){document.querySelectorAll('.tab').forEach(function(t){t.setA
 document.querySelectorAll('.tab').forEach(function(t){
   t.insertAdjacentHTML('afterbegin',ic(t.dataset.i));
   t.onclick=function(){
-    if(!AUTHED&&(t.dataset.s==='scOrders'||t.dataset.s==='scMe')){needLogin(t.dataset.s);return;}
+    if(!AUTHED&&(t.dataset.s==='scOrders'||t.dataset.s==='scMe'||t.dataset.s==='scWallet')){needLogin(t.dataset.s);return;}
     go(t.dataset.s);setTab(t.dataset.s);
     if(t.dataset.s==='scMe')renderMe();
+    if(t.dataset.s==='scWallet')renderWallet();
     if(t.dataset.s==='scPkgs')renderPkgs();
     if(t.dataset.s==='scHome')renderHome();
   };

@@ -203,6 +203,21 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // المحفظة: العميل يقرأ رصيده وسجلّه بس. أي تغيير (شحن، كود، خصم، استرجاع) من الخادم وحده
+    match /wallets/{uid} {
+      allow read: if isUser(uid) || isAdmin();
+      allow write: if false;
+      match /tx/{id} {
+        allow read: if isUser(uid) || isAdmin();
+        allow write: if false;
+      }
+    }
+    // أكواد الرصيد: الأدمن يشوفها في اللوحة، والإنشاء والصرف من الخادم وحده
+    match /codes/{code} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // إيصالات العربون: مستند لكل طلب بنفس معرّفه. العميل يرفع إيصال طلبه هو فقط
     // (ويقدر يستبدله)، والصورة مضغوطة بحد ~700KB. الأدمن يقرأ ويحذف.
     match /receipts/{oid} {

@@ -74,5 +74,14 @@ await t('عميل ما يكتب دفعة تاب بنفسه (pays)',assertFails((
 await t('عميل ما يكتب حالة تاب بنفسه (tap)',assertFails((()=>{const b=writeBatch(ue);b.update(doc(ue,'counters/orders'),{n:N+1});b.set(doc(ue,'orders/tp2'),Object.assign({},base,{uid:'emU1',ph:'966511112222',no:1000+N+1},{tap:{st:'CAPTURED'}}));return b.commit();})()));
 await t('طريقة دفع غريبة تُرفض',assertFails((()=>{const b=writeBatch(ue);b.update(doc(ue,'counters/orders'),{n:N+1});b.set(doc(ue,'orders/tp3'),Object.assign({},base,{uid:'emU1',ph:'966511112222',no:1000+N+1},{pay:'cash'}));return b.commit();})()));
 await t('pay:tap ينقبل',assertSucceeds((()=>{const b=writeBatch(ue);b.update(doc(ue,'counters/orders'),{n:N+1});b.set(doc(ue,'orders/tp4'),Object.assign({},base,{uid:'emU1',ph:'966511112222',no:1000+N+1},{pay:'tap'}));return b.commit().then(r=>{N=N+1;return r;});})()));
+await env.withSecurityRulesDisabled(async c=>{const d=c.firestore();await setDoc(doc(d,'wallets/ph_'+A),{bal:100});await setDoc(doc(d,'wallets/ph_'+A+'/tx/t1'),{amt:100});await setDoc(doc(d,'codes/GIFT1'),{amt:50,uses:1});});
+await t('محفظة: العميل يقرأ رصيده',assertSucceeds(getDoc(doc(ua,'wallets/ph_'+A))));
+await t('محفظة: ويقرأ سجلّه',assertSucceeds(getDoc(doc(ua,'wallets/ph_'+A+'/tx/t1'))));
+await t('محفظة: ما يقرأ رصيد غيره',assertFails(getDoc(doc(ub,'wallets/ph_'+A))));
+await t('محفظة: ما يعدّل رصيده بنفسه',assertFails(setDoc(doc(ua,'wallets/ph_'+A),{bal:99999})));
+await t('محفظة: ما يضيف حركة بنفسه',assertFails(setDoc(doc(ua,'wallets/ph_'+A+'/tx/x'),{amt:999})));
+await t('أكواد: العميل ما يقرأها',assertFails(getDoc(doc(ua,'codes/GIFT1'))));
+await t('أكواد: الأدمن يقرأها',assertSucceeds(getDoc(doc(adm,'codes/GIFT1'))));
+await t('أكواد: ولا أحد يكتبها من المتصفح',assertFails(setDoc(doc(adm,'codes/NEW'),{amt:999})));
 console.log('\n'+pass+' passed, '+fail+' failed');
 await env.cleanup();process.exit(fail?1:0);
