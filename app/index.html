@@ -1302,7 +1302,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.0200';
+var APP_VER='2026.11.29.0300';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2357,7 +2357,8 @@ function syncCartUI(){
 /* ================= السلة ================= */
 function renderCart(){
   $('caBack').innerHTML=backTo('أكمل التسوق');
-  var L=cartLines(),t=cartTotals(),nx=nextTier(t.sub);
+  /* تلميح الخصم للأصناف المشمولة بس (الأثاث والمفروشات) — سلة فيها نظافة تأهيلية وحدها ما يطلع لها */
+  var L=cartLines(),t=cartTotals(),nx=t.base>0?nextTier(t.base):null;
   if(!L.length){
     $('cartBody').innerHTML='<div class="empty">'+il('cart')+'<p>سلتك فاضية</p>'+
       '<button class="btn" style="margin-top:20px;max-width:240px;margin-inline:auto" onclick="go(\'scHome\');setTab(\'scHome\')">تصفّح الخدمات</button></div>';
