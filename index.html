@@ -995,7 +995,7 @@ function orTapLine(o){
   var ps=(o.pays||[]).filter(function(p){return p&&p.m==='tap';});
   if(ps.length)return ps.map(function(p){return '<div><span style="color:#16a34a">✓ دفع إلكتروني'+(p.src?' ('+esc(TAPSRC[p.src]||p.src)+')':'')+'</span><b style="color:#16a34a">'+esc(p.amt)+' ر.س</b></div>';}).join('');
   if(o.pay==='tap'&&o.st==='new'&&!(Number(o.paid)>0))
-    return '<div><span style="color:#9ab">⏳ ما دفع العربون بعد'+(o.tap&&o.tap.st&&o.tap.st!=='INITIATED'?' ('+esc(o.tap.st)+')':'')+'</span><b></b></div>';
+    return '<div><span style="color:#9ab">⏳ ما دفع بعد'+(o.tap&&o.tap.st&&o.tap.st!=='INITIATED'?' ('+esc(o.tap.st)+')':'')+'</span><b></b></div>';
   return '';
 }
 function orCard(o){
@@ -1014,7 +1014,7 @@ function orCard(o){
       return '<div><span>'+esc(i.t)+' <span style="opacity:.7">'+esc(i.u)+' × '+(Number(i.q)||0)+'</span></span><b>'+((Number(i.p)||0)*(Number(i.q)||0))+' ر.س</b></div>';
     }).join('')+'<div style="border-top:1px dashed #dde8ee;margin-top:5px;padding-top:6px"><span>'+
       (isSub(o)?'شهرياً':'التقديري'+(o.off?' (بعد خصم '+(Number(o.off)||0)+'%)':''))+'</span><b>'+(Number(o.est)||0)+' ر.س</b></div>'+
-      (o.dep?'<div><span style="color:#b7791f">العربون المطلوب'+(o.pay==='tap'?' · 💳 دفع إلكتروني':o.pay==='bank'?' · 🏦 تحويل':'')+'</span><b style="color:#b7791f">'+esc(o.dep)+' ر.س</b></div>':'')+
+      (o.dep?'<div><span style="color:#b7791f">المطلوب مقدماً'+(o.pay==='tap'?' · 💳 دفع إلكتروني':o.pay==='bank'?' · 🏦 تحويل':'')+'</span><b style="color:#b7791f">'+esc(o.dep)+' ر.س</b></div>':'')+
       orTapLine(o)+
       (o.price?'<div><span style="color:#16a34a">السعر النهائي</span><b style="color:#16a34a">'+esc(o.price)+' ر.س</b></div>':'')+
       (o.paid?'<div><span style="color:#0f7cb8">المستلم</span><b style="color:#0f7cb8">'+esc(o.paid)+' ر.س</b></div>'+
@@ -1050,7 +1050,7 @@ function orRcpt(id){
     var r=d.data()||{},w=document.createElement('div');
     w.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(10,25,35,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px';
     w.innerHTML='<div style="color:#fff;font-weight:700;font-size:14px;text-align:center">إيصال طلب '+(o.no?'#'+esc(o.no):'')+' — '+esc(o.n||'')+
-      '<br><span style="font-weight:400;opacity:.8">العربون المطلوب: '+esc(o.dep||r.amt||0)+' ر.س · '+esc(String(r.at||'').slice(0,16).replace('T',' '))+'</span></div>'+
+      '<br><span style="font-weight:400;opacity:.8">المطلوب مقدماً: '+esc(o.dep||r.amt||0)+' ر.س · '+esc(String(r.at||'').slice(0,16).replace('T',' '))+'</span></div>'+
       '<div id="rcImg"></div>'+
       '<div style="display:flex;gap:10px">'+(o.st==='new'?'<button id="rcOk" style="background:#16a34a;color:#fff;border:none;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700">العربون وصل — أكّد الطلب</button>':'')+
       '<button id="rcX" style="background:#fff;border:none;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700">إغلاق</button></div>';
@@ -1096,7 +1096,7 @@ function orRem(o){return Math.max(0,orTotal(o)-(Number(o.paid)||0));}
 function orPaid(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
   var T=orTotal(o),P=Number(o.paid)||0;
-  var v=prompt('كم استلمت من العميل إجمالاً؟ (ر.س)\nالإجمالي: '+T+' · المستلم حالياً: '+P+(o.dep?' · العربون: '+o.dep:''),
+  var v=prompt('كم استلمت من العميل إجمالاً؟ (ر.س)\nالإجمالي: '+T+' · المستلم حالياً: '+P+(o.dep?' · المطلوب مقدماً: '+o.dep:''),
     String(o.st==='done'?T:(P||o.dep||'')));
   if(v===null)return;
   var n=parseFloat(String(v).replace(/[^\d.]/g,''));

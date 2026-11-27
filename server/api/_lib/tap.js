@@ -58,7 +58,7 @@ function chargeBody(o, oid, amount, urls) {
     customer_initiated: true,
     threeDSecure: true,
     save_card: false,
-    description: ('عربون طلب كلينولوجي' + (o.no ? ' رقم ' + o.no : '')).slice(0, 120),
+    description: ('طلب كلينولوجي' + (o.no ? ' رقم ' + o.no : '')).slice(0, 120),
     statement_descriptor: 'KLEENOLOGY',
     metadata: { oid: oid },
     reference: { transaction: 'KLN-' + oid, order: o.no ? String(o.no) : oid },

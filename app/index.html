@@ -1263,7 +1263,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.28.1700';
+var APP_VER='2026.11.28.1800';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1272,8 +1272,8 @@ var SLOT_CAP=1;
 var ORD_BASE=1000;
 /* قيمة زيارة المعاينة بالريال. صفر = مجانية، ويرجع النص «مجانية» تلقائياً. */
 var QUOTE_FEE=29;
-/* العربون: نسبة من الإجمالي التقديري تُحوَّل لتثبيت الحجز. صفر = بلا عربون */
-var DEP_PCT=0.5;
+/* المبلغ المقدّم: نسبة من الإجمالي التقديري تُدفع لتثبيت الحجز. 1 = القيمة كاملة مقدماً، صفر = بلا دفع مقدّم */
+var DEP_PCT=1;
 /* الحد الأدنى لقيمة الطلب بعد الخصم (من الشروط والأحكام). صفر = بلا حد. الباقات والمعاينة مستثناة */
 var MIN_ORDER=250;
 var BANK={bank:'مصرف الإنماء',iban:'SA5405000068204621866000',name:'مؤسسة علم التنظيف التجارية'};
@@ -2609,10 +2609,10 @@ function copyIban(btn){
 /* بطاقة التحويل — في مراجعة الطلب وفي بطاقة الطلب لين يتأكد */
 function payCard(dep,o){
   var tap=o&&TAP_ON&&!rcptDone(o.id);
-  return '<div class="pay"><div class="pay-h"><span><b>عربون تثبيت الحجز</b>'+Math.round(DEP_PCT*100)+'% من الإجمالي التقديري</span>'+
+  return '<div class="pay"><div class="pay-h"><span><b>الدفع لتثبيت الحجز</b>قيمة الطلب كاملة</span>'+
       '<strong class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></strong></div>'+
     '<div class="pay-b">'+
-      (tap?'<button type="button" class="tap-go" onclick="this.disabled=true;payStart(\''+o.id+'\','+(Number(o.no)||0)+')">ادفع العربون '+
+      (tap?'<button type="button" class="tap-go" onclick="this.disabled=true;payStart(\''+o.id+'\','+(Number(o.no)||0)+')">ادفع '+
         dep.toLocaleString('en-US')+' ر.س</button>'+
         '<div class="pm-ic" style="margin:-4px 0 12px"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div>'+
         '<p class="pay-n" style="margin:0 0 10px;text-align:center">أو حوّل بنكياً وارفع الإيصال:</p>':'')+
@@ -2622,8 +2622,8 @@ function payCard(dep,o){
       ibanBox())+
       (o&&rcptDone(o.id)?'<div class="rcpt-done">'+ic('check')+'<span>وصلنا إيصالك — نراجعه ونؤكد موعدك قريباً.</span></div>':'')+
       (o&&!rcptDone(o.id)?rcptBox(o.id):'')+
-      '<p class="pay-n">'+(o?(rcptDone(o.id)?'':'<b>حوّل العربون وارفع صورة الإيصال</b> — نؤكد موعدك بعد مراجعته.')
-        :'بعد إرسال الطلب حوّل العربون وأرسل صورة الإيصال على واتساب. <b style="color:var(--tx)">الموعد ما يتثبت إلا بعد وصول العربون</b>، والباقي تدفعه بعد التنفيذ.')+'</p>'+
+      '<p class="pay-n">'+(o?(rcptDone(o.id)?'':'<b>حوّل المبلغ وارفع صورة الإيصال</b> — نؤكد موعدك بعد مراجعته.')
+        :'بعد إرسال الطلب حوّل المبلغ وأرسل صورة الإيصال على واتساب. <b style="color:var(--tx)">الموعد ما يتثبت إلا بعد وصول المبلغ</b>.')+'</p>'+
     '</div></div>';
 }
 var BKBAR='';   /* شريط «المستحق الآن» أسفل الملخص — تملؤه خطوة التأكيد */
@@ -2684,15 +2684,15 @@ function bsAdr(){
 function bsOpt(dep){
   var amt='<div class="o-b"><s>المستحق الآن</s><b class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></b></div>';
   if(!TAP_ON)PAYM='bank';
-  return '<h3 class="bs-t">'+(TAP_ON?'طريقة دفع العربون':'طريقة الحجز')+'</h3>'+
+  return '<h3 class="bs-t">'+'طريقة الدفع'+'</h3>'+
     (TAP_ON?'<button type="button" class="bs-opt pick'+(PAYM==='tap'?'':' off')+'" id="pmTap" role="radio" aria-checked="'+(PAYM==='tap')+'" onclick="payPick(\'tap\','+dep+')"><span class="rd"><i></i></span>'+
       '<div class="o-a"><em>الأسرع — يتأكد على طول</em><b>دفع إلكتروني</b>'+
-        '<s>عربون '+Math.round(DEP_PCT*100)+'% الحين، والباقي بعد التنفيذ</s>'+
+        '<s>تدفع قيمة الطلب كاملة الحين</s>'+
         '<div class="pm-ic"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div></div>'+amt+'</button>':'')+
     '<'+(TAP_ON?'button type="button"':'div')+' class="bs-opt'+(TAP_ON?' pick':'')+(PAYM==='bank'?'':' off')+'" id="pmBank" role="radio" aria-checked="'+(PAYM==='bank')+'"'+
       (TAP_ON?' onclick="payPick(\'bank\','+dep+')"':'')+'><span class="rd"><i></i></span>'+
-      '<div class="o-a">'+(TAP_ON?'':'<em>يثبّت موعدك</em>')+'<b>'+(TAP_ON?'تحويل بنكي':'عربون '+Math.round(DEP_PCT*100)+'%')+'</b>'+
-        '<s>'+(TAP_ON?'تحوّل وترفع الإيصال، ونؤكد بعد المراجعة':'تحويل بنكي الحين، والباقي بعد التنفيذ')+'</s></div>'+amt+'</'+(TAP_ON?'button':'div')+'>'+
+      '<div class="o-a">'+(TAP_ON?'':'<em>يثبّت موعدك</em>')+'<b>'+(TAP_ON?'تحويل بنكي':'الدفع مقدماً')+'</b>'+
+        '<s>'+(TAP_ON?'تحوّل وترفع الإيصال، ونؤكد بعد المراجعة':'تحويل بنكي بقيمة الطلب كاملة')+'</s></div>'+amt+'</'+(TAP_ON?'button':'div')+'>'+
     '<div id="bankBox"'+(PAYM==='bank'?'':' hidden')+'><div class="bs-c bs-bank">'+
       '<div class="pay-r"><s>البنك</s><b>'+esc(BANK.bank)+'</b></div>'+
       '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
@@ -2700,7 +2700,7 @@ function bsOpt(dep){
       '<ol class="pay-steps">'+
         '<li><span><b>حوّل '+dep.toLocaleString('en-US')+' ر.س</b> للحساب أعلاه</span></li>'+
         '<li><span><b>ارفع صورة الإيصال</b> تحت وأرسل الطلب</span></li>'+
-        '<li><span><b>نؤكد موعدك</b> بعد مراجعة الإيصال، والباقي تدفعه بعد التنفيذ</span></li>'+
+        '<li><span><b>نؤكد موعدك</b> بعد مراجعة الإيصال</span></li>'+
       '</ol>'+
     '</div>'+
     '<h3 class="bs-t">إيصال التحويل</h3><div id="rcptHost">'+rcptBox()+'</div></div>';
@@ -2813,7 +2813,7 @@ function payStart(oid,no){
     return fetch(PAY_API+'/api/pay/start',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},
       body:JSON.stringify({order:oid})});
   }).then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
-    if(j&&j.paid){fail('العربون مدفوع ✓');return;}
+    if(j&&j.paid){fail('الطلب مدفوع ✓');return;}
     if(j&&j.url&&/^https:\/\/[a-z0-9.-]*tap\.company\//.test(j.url)){LS.set('payo',{id:oid,no:no||0});location.href=j.url;return;}
     fail();
   }).catch(function(){fail();});
@@ -2827,7 +2827,7 @@ function payVerify(cid){
       body:JSON.stringify({tap_id:cid})});
   }).then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
     LS.set('payo',null);
-    if(j&&j.ok)toast('تم دفع العربون ✓'+(j.no?' — طلبك رقم '+j.no+' محجوز':'')+'، ونأكد موعدك قريب');
+    if(j&&j.ok)toast('تم الدفع ✓'+(j.no?' — طلبك رقم '+j.no+' محجوز':'')+'، ونأكد موعدك قريب');
     else toast('ما اكتمل الدفع — تقدر تحاول مرة ثانية من بطاقة الطلب');
     API.orders().then(function(){renderAll();});
   }).catch(function(){toast('ما قدرنا نتأكد من الدفع الحين — يتحدّث الطلب تلقائياً لما يوصلنا');});
