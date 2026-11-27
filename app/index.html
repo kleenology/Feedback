@@ -474,6 +474,20 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .wal-card b{display:block;font-size:40px;font-weight:700;font-family:var(--dsp);margin-top:4px;font-variant-numeric:tabular-nums}
 .wal-card b .rs{width:.62em;height:.7em;margin-inline-start:6px;opacity:.9}
 .wal-card p{font-size:12px;opacity:.85;margin-top:8px}
+.wal-add{position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;padding:7px 16px 7px 7px;border-radius:999px;
+  background:#16324a;color:#fff;font:inherit;font-weight:600;font-size:14px;box-shadow:0 6px 16px rgba(0,0,0,.18);margin-bottom:14px}
+.wal-add i{width:30px;height:30px;border-radius:50%;background:#fff;color:#16324a;display:grid;place-items:center;font-style:normal;font-size:20px;font-weight:700;line-height:1}
+.wal-card .wc-l{position:relative;z-index:1}
+.seg{display:flex;background:var(--card);border-radius:999px;padding:5px;box-shadow:var(--sh);margin-bottom:18px}
+.seg button{flex:1;padding:11px;border-radius:999px;font:inherit;font-weight:600;font-size:15px;color:var(--mut);background:none}
+.seg button.on{background:var(--blue);color:#fff}
+.amt-in{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:22px;padding:6px 18px;box-shadow:var(--sh)}
+.amt-in input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:22px;font-weight:600;padding:14px 0;outline:none;color:var(--tx)}
+.amt-in .rs{width:22px;height:24px;color:var(--tx);flex:0 0 auto}
+.w-empty{text-align:center;padding:34px 0 10px}
+.w-empty .ic{width:64px;height:64px;color:var(--faint);margin:0 auto 14px;display:block}
+.w-empty b{display:block;font-size:18px;font-weight:700;font-family:var(--dsp)}
+.w-empty s{display:block;text-decoration:none;font-size:13px;color:var(--mut);margin-top:6px}
 .wal-act{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 18px}
 .wal-act button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:18px;background:var(--card);
   box-shadow:var(--sh);font:inherit;font-weight:600;font-size:13.5px;color:var(--tx)}
@@ -1995,12 +2009,12 @@ function walUse(total,due){return USEWAL&&WAL.bal>0?Math.max(0,Math.min(WAL.bal,
 var WTX={topup:['شحن الرصيد','wallet'],code:['كود هدية','gift'],admin:['رصيد من كلينولوجي','gift'],spend:['دفع طلب','cart'],refund:['استرجاع لطلب ملغي','repeat']};
 function renderWallet(){
   var ob=$('walBack');if(ob&&!ob.innerHTML)ob.innerHTML=backTo('الرئيسية');
-  var h='<div class="wal-card"><s>رصيدك</s><b class="mono">'+WAL.bal.toLocaleString('en-US')+'<i class="rs" role="img" aria-label="ريال"></i></b>'+
-      '<p>تقدر تدفع فيه حتى '+WAL_PCT+'٪ من قيمة أي طلب</p></div>'+
-    '<div class="wal-act"><button onclick="topupSheet()">'+ic('plus')+'<span>شحن الرصيد</span></button>'+
-      '<button onclick="codeSheet()">'+ic('gift')+'<span>عندك كود؟</span></button></div>';
-  h+='<h3 class="bs-t">العمليات</h3>';
-  if(!WAL.tx.length)h+='<div class="empty" style="padding:22px 0">'+(WAL.ok||DEMO?'ما فيه عمليات للحين':'جاري التحميل…')+'</div>';
+  var h='<div class="wal-card"><button type="button" class="wal-add" onclick="addSheet()"><i>+</i><span>إضافة رصيد</span></button>'+
+      '<div class="wc-l"><b class="mono">'+WAL.bal.toLocaleString('en-US')+'<i class="rs" role="img" aria-label="ريال"></i></b>'+
+      '<s>رصيد المحفظة</s><p>تقدر تدفع فيه حتى '+WAL_PCT+'٪ من قيمة أي طلب</p></div></div>';
+  h+='<h3 class="bs-t" style="margin-top:22px">العمليات</h3>';
+  if(!WAL.tx.length)h+=(WAL.ok||DEMO)?'<div class="w-empty">'+ic('list')+'<b>لا توجد عمليات</b><s>أول ما تضيف رصيد أو تستخدمه، يطلع هنا.</s></div>'
+    :'<div class="empty" style="padding:22px 0">جاري التحميل…</div>';
   else h+='<div class="olist">'+WAL.tx.map(function(x){
     var m=WTX[x.type]||['عملية','wallet'],pos=Number(x.amt)>0;
     var t=m[0]+(x.type==='code'&&x.ref?' · '+x.ref:'');
@@ -2011,13 +2025,27 @@ function renderWallet(){
   }).join('')+'</div>';
   $('walBody').innerHTML=h;
 }
-function topupSheet(){
-  openSheet('شحن الرصيد','<div class="amts">'+[100,200,500,1000].map(function(a){
-      return '<button type="button" class="'+(TOPAMT===a?'on':'')+'" onclick="TOPAMT='+a+';document.querySelectorAll(\'.amts button\').forEach(function(b){b.classList.remove(\'on\');});this.classList.add(\'on\');$(\'topIn\').value=\'\'">'+a+'</button>';}).join('')+'</div>'+
-    '<input class="in" id="topIn" type="tel" inputmode="numeric" maxlength="4" placeholder="أو اكتب مبلغ (20 – 5000)" oninput="var v=digits(this.value);this.value=v;if(v){TOPAMT=+v;document.querySelectorAll(\'.amts button\').forEach(function(b){b.classList.remove(\'on\');});}">'+
-    '<button class="btn ap-btn tap-go" style="margin-top:14px" onclick="walletTopup(this)">'+apBtn()+'</button>'+
-    '<p class="pay-n" style="text-align:center;margin-top:8px">الرصيد ينضاف لمحفظتك أول ما يكتمل الدفع</p>');
+/* إضافة رصيد: تبويبين — «المبلغ» شحن بالدفع، و«قسيمة» كود من كلينولوجي */
+var ADDTAB='amt';
+function addSheet(tab){
+  ADDTAB=tab||ADDTAB||'amt';
+  var seg='<div class="seg"><button type="button" class="'+(ADDTAB==='amt'?'on':'')+'" onclick="addSheet(\'amt\')">المبلغ</button>'+
+    '<button type="button" class="'+(ADDTAB==='code'?'on':'')+'" onclick="addSheet(\'code\')">قسيمة</button></div>';
+  var body=ADDTAB==='amt'
+    ?'<div class="amt-in"><input id="topIn" type="tel" inputmode="numeric" maxlength="4" dir="rtl" style="text-align:right" placeholder="أدخل المبلغ" oninput="var v=digits(this.value);this.value=v;TOPAMT=+v||0;"><i class="rs" role="img" aria-label="ريال"></i></div>'+
+      '<div class="amts" style="margin-top:12px">'+[100,200,500,1000].map(function(a){
+        return '<button type="button" onclick="TOPAMT='+a+';$(\'topIn\').value='+a+'">'+a+'</button>';}).join('')+'</div>'+
+      '<button class="btn ap-btn tap-go" style="margin-top:6px" onclick="walletTopup(this)">'+apBtn()+'</button>'+
+      '<p class="pay-n" style="text-align:center;margin-top:8px">من 20 إلى 5000 ريال — ينضاف لرصيدك أول ما يكتمل الدفع</p>'
+    :'<div class="amt-in"><input id="codeIn" maxlength="24" dir="ltr" autocapitalize="characters" autocomplete="off" placeholder="أدخل رمز القسيمة" style="text-align:right;letter-spacing:1px">'+ic('gift')+'</div>'+
+      '<button class="btn" style="margin-top:14px" onclick="redeemCode(this)">أضف للرصيد</button>'+
+      '<p class="pay-n" style="text-align:center;margin-top:8px">القسيمة تُستخدم مرة وحدة، وقيمتها تنضاف لرصيدك على طول</p>';
+  if($('sh').classList.contains('on')&&$('shT').textContent==='إضافة رصيد'){$('shB').innerHTML=seg+body;}
+  else openSheet('إضافة رصيد',seg+body);
+  TOPAMT=0;var f=$(ADDTAB==='amt'?'topIn':'codeIn');if(f)setTimeout(function(){try{f.focus();}catch(e){}},250);
 }
+function topupSheet(){addSheet('amt');}
+function codeSheet(){addSheet('code');}
 function walletTopup(b){
   var a=Math.round(TOPAMT||0);if(a<20||a>5000){toast('المبلغ من 20 إلى 5000 ريال');return;}
   if(DEMO){WAL.bal+=a;WAL.tx.unshift({type:'topup',amt:a,at:new Date().toISOString()});LS.set('wal',WAL);closeSheet();renderWallet();toast('تم شحن '+a+' ✓ (معاينة)');return;}
@@ -2027,11 +2055,6 @@ function walletTopup(b){
      if(j&&j.url&&/^https:\/\/[a-z0-9.-]*tap\.company\//.test(j.url)){location.href=j.url;return;}
      b.disabled=false;toast('تعذّر فتح صفحة الدفع — حاول مرة ثانية');
    }).catch(function(){b.disabled=false;toast('تعذّر الاتصال');});
-}
-function codeSheet(){
-  openSheet('استخدم كود','<p class="note" style="margin-bottom:12px">اكتب الكود اللي وصلك من كلينولوجي، وقيمته تنضاف لرصيدك.</p>'+
-    '<input class="in" id="codeIn" maxlength="24" dir="ltr" autocapitalize="characters" autocomplete="off" placeholder="KLN-XXXX" style="text-align:center;letter-spacing:2px;font-weight:700">'+
-    '<button class="btn" style="margin-top:14px" onclick="redeemCode(this)">أضف للرصيد</button>');
 }
 function redeemCode(b){
   var c=String(($('codeIn')||{}).value||'').trim();if(c.length<3){toast('اكتب الكود');return;}
