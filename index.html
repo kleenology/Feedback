@@ -1149,7 +1149,9 @@ function orAdvance(id){
     patch.paid=orTotal(o);patch.paidAt=new Date().toISOString();}
   orSet(id,patch).then(function(){
     /* إتمام الخدمة: الفاتورة مباشرة بدل ما تروح لقائمة «مكتملة» وتدوّر الطلب */
-    if(nx==='done'&&INV_API&&!(o.ostaz&&o.ostaz.id)&&confirm('تم التنفيذ ✓\nتطلع فاتورة الأستاذ الحين؟')){
+    /* الفاتورة للطلب المدفوع كامل بس — لو باقي مبلغ ما انسجّل، ما نعرضها */
+    var paidAll=!!patch.paid||orRem(o)===0;
+    if(nx==='done'&&INV_API&&!(o.ostaz&&o.ostaz.id)&&paidAll&&confirm('تم التنفيذ ✓\nتطلع فاتورة الأستاذ الحين؟')){
       orInvoice(id,null,true);return;}
     /* العميل ما يشوف التغيير إلا لو التطبيق مفتوح عنده — فنعرض الإبلاغ في نفس اللحظة */
     showToast(ORST[nx]+' ✓',o.ph?{t:'أبلغ العميل',wa:waOpen(o.ph,orMsg(o))}:null);
@@ -1174,9 +1176,13 @@ function orPaid(id){
 function orInvoice(id,btn,asked){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
   if(!INV_API){alert('ربط الأستاذ يحتاج نشر الخادم (server/) وضبط INV_API — شوف server/README.md');return;}
+  /* asked: جاي من «تم التنفيذ» بعد ما انسجّل المبلغ كامل للتو.
+     غير كذا: ما تطلع فاتورة لطلب ما انْدفع كامل — تطلع «غير مدفوعة» في الأستاذ وتنرسل للهيئة كذا */
+  if(!asked&&orRem(o)>0){
+    if(confirm('ما تقدر تطلع فاتورة والطلب ما انْدفع كامل.\nالمتبقي '+orRem(o)+' ر.س (المستلم: '+(Number(o.paid)||0)+' ر.س)\n\nتسجّل المبلغ المستلم الحين؟'))orPaid(id);
+    return;
+  }
   if(!btn)showToast('جاري إصدار الفاتورة…');
-  /* asked: جاي من «تم التنفيذ» وسؤال المتبقي انسأل للتو — ما نكرره */
-  if(!asked&&orRem(o)>0&&!confirm('المتبقي '+orRem(o)+' ر.س ما انسجّل مستلماً.\nتصدر الفاتورة كذا؟ (المدفوع فيها: '+(Number(o.paid)||0)+' ر.س)'))return;
   var u=auth.currentUser;if(!u){showToast('سجّل دخولك أول');return;}
   if(btn){btn.disabled=true;btn.textContent='جاري الإصدار…';}
   u.getIdToken().then(function(tok){
@@ -1186,6 +1192,7 @@ function orInvoice(id,btn,asked){
   .then(function(x){
     if(x.s===200&&x.j.ostaz){o.ostaz=x.j.ostaz;rOr();
       showToast((x.j.already?'الفاتورة موجودة: ':'✓ صدرت ')+(x.j.ostaz.code||'')+(x.j.ostaz.status==='draft'?' — مسودة، اعتمدها من الأستاذ':''));return;}
+    if(x.j&&x.j.error==='not_paid')throw new Error('الطلب ما انْدفع كامل — سجّل المبلغ المستلم أول');
     throw new Error(x.j&&(x.j.message||x.j.error)||('خطأ '+x.s));
   }).catch(function(e){
     if(btn){btn.disabled=false;btn.textContent='🧾 فاتورة الأستاذ';}

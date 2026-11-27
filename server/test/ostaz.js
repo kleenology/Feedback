@@ -218,8 +218,16 @@ const ORDER = {
     eq(MADE, 0);
   });
 
+  await t('طلب ما انْدفع كامل: ما تطلع فاتورة (تطلع «غير مدفوعة» في الأستاذ)', async () => {
+    ORD = { u1: { st: 'done', est: 900 }, u2: { st: 'done', est: 900, paid: 450 } }; MADE = 0;
+    const r = await call({ order: 'u1' }, 'good');
+    eq([r.status, r.body.error, r.body.due, MADE], [400, 'not_paid', 900, 0]);
+    eq((await call({ order: 'u2' }, 'good')).body.due, 450);
+    eq(!!ORD.u1.ostazLock, false);
+  });
+
   await t('أدمن: تطلع الفاتورة وتنحفظ على الطلب', async () => {
-    ORD = { a1: { st: 'done' } }; MADE = 0;
+    ORD = { a1: { st: 'done', est: 900, paid: 900 } }; MADE = 0;
     const r = await call({ order: 'a1' }, 'good');
     eq(r.status, 200); eq(r.body.ostaz.code, 'S-1'); eq(ORD.a1.ostaz.code, 'S-1'); eq(MADE, 1);
   });
@@ -237,7 +245,7 @@ const ORDER = {
   });
 
   await t('فشل الأستاذ يرجع برسالته وما يحفظ شي', async () => {
-    ORD = { a2: { st: 'done' } }; FAILS = true;
+    ORD = { a2: { st: 'done', est: 300, paid: 300 } }; FAILS = true;
     const r = await call({ order: 'a2' }, 'good');
     eq(r.status, 502); if (!String(r.body.message).includes('422')) throw new Error(JSON.stringify(r.body));
     eq(ORD.a2.ostaz, undefined); FAILS = false;

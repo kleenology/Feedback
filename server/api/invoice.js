@@ -33,6 +33,9 @@ module.exports = async function handler(req, res) {
   }
   const o = lock.order;
   if (o.st === 'cancelled') { await S.unlockInvoice(id); return U.json(res, 400, { error: 'cancelled' }); }
+  /* ما تطلع فاتورة لطلب ما انْدفع كامل — تطلع «غير مدفوعة» في الأستاذ. اللوحة تطلب تسجيل المستلم أول */
+  const total = Number(o.price) || Number(o.est) || 0;
+  if (!(total > 0) || (Number(o.paid) || 0) < total) { await S.unlockInvoice(id); return U.json(res, 400, { error: 'not_paid', due: Math.max(0, total - (Number(o.paid) || 0)) }); }
 
   try {
     const r = await O.createInvoice(o);
