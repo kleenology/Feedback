@@ -1078,9 +1078,7 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
   <button class="tab" role="tab" aria-selected="false" data-s="scMe" data-i="user">حسابي</button>
 </nav>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<!-- فايربيس (~550KB) يتحمّل بالخلفية بعد ما تطلع الشاشة — كان يوقف رسم التطبيق لين يخلص (loadFB تحت) -->
 <script>
 /* ================= رسوم ثنائية اللون: قاعدة مصمتة + خط + لمسة ذهبية =================
    .b = الجسم المصمت · .l = الخطوط · .a = اللمعة الذهبية (من الشعار) */
@@ -1335,7 +1333,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.1000';
+var APP_VER='2026.11.29.1100';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1387,10 +1385,21 @@ var ORQF='';                     /* فلتر قائمة الطلبات: '' ال�
 var BK={step:0,date:'',slot:'',adr:null,kind:'',locErr:''};
 
 var db=null,auth=null,FAPP=null,FBERR='';
-if(!DEMO){
-  var CFG={apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"};
-  /* لو تعذّر تحميل SDK فايربيس (شبكة ضعيفة أو حجب) نمسك الخطأ ونعرض رسالة —
-     بدونه ينفجر السطر ويقف التطبيق على شاشة بيضاء بلا سبب ظاهر للعميل */
+var CFG={apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"};
+/* تحميل مكتبات فايربيس بالترتيب، بدون ما توقف رسم الصفحة */
+var FBP=null;
+function loadFB(){
+  if(FBP)return FBP;
+  var base='https://www.gstatic.com/firebasejs/10.12.0/';
+  FBP=['firebase-app-compat.js','firebase-firestore-compat.js','firebase-auth-compat.js'].reduce(function(p,f){
+    return p.then(function(){return new Promise(function(ok,no){
+      var sc=document.createElement('script');sc.src=base+f;sc.onload=ok;sc.onerror=function(){no(new Error(f));};
+      document.head.appendChild(sc);});});
+  },Promise.resolve()).then(fbInit);
+  return FBP;
+}
+function fbInit(){
+  /* لو تعذّر تحميل SDK فايربيس (شبكة ضعيفة أو حجب) نمسك الخطأ — التصفح يكمل والدخول يعطي رسالة */
   try{
     /* التطبيق باسمه الخاص: جلسة دخول مستقلة عن لوحة الإدارة على نفس النطاق */
     FAPP=firebase.initializeApp(CFG,'kln-app');
@@ -1399,7 +1408,8 @@ if(!DEMO){
     try{firebase.app();}catch(e){firebase.initializeApp(CFG);}
     db=FAPP.firestore();auth=FAPP.auth();
   }catch(e){FBERR=(e&&e.message)||'firebase';}
-}else{document.getElementById('demoBar').classList.remove('hide');}
+}
+if(DEMO)document.getElementById('demoBar').classList.remove('hide');
 
 /* ================= أدوات ================= */
 function $(id){return document.getElementById(id);}
@@ -1736,7 +1746,12 @@ function emSubmit(){
   var em=String($('inEm').value||'').trim(),pw=String($('inPw').value||'');lgErr('');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){lgErr('اكتب بريدك الإلكتروني صحيح');return;}
   if(pw.length<6){lgErr('كلمة المرور 6 أحرف أو أرقام على الأقل');return;}
-  var b=$('btnEm');b.disabled=true;b.textContent='لحظة…';
+  var b=$('btnEm');
+  if(!DEMO&&!auth){b.disabled=true;b.textContent='لحظة…';
+    loadFB().then(function(){b.disabled=false;b.textContent=EMMODE==='in'?'دخول':'إنشاء الحساب';if(auth)emSubmit();else lgErr('تعذّر الاتصال — تأكد من الإنترنت');})
+      .catch(function(){b.disabled=false;b.textContent=EMMODE==='in'?'دخول':'إنشاء الحساب';lgErr('تعذّر الاتصال — تأكد من الإنترنت');});
+    return;}
+  b.disabled=true;b.textContent='لحظة…';
   function done(){b.disabled=false;b.textContent=EMMODE==='in'?'دخول':'إنشاء الحساب';}
   if(DEMO){setTimeout(function(){done();ME.em=em;onSignedIn('demo-uid');},400);return;}
   (EMMODE==='in'?auth.signInWithEmailAndPassword(em,pw):auth.createUserWithEmailAndPassword(em,pw))
@@ -1747,6 +1762,7 @@ function emForgot(){
   var em=String($('inEm').value||'').trim();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){lgErr('اكتب بريدك فوق، وبعدها اضغط «نسيت كلمة المرور؟»');return;}
   if(DEMO){toast('وضع المعاينة');return;}
+  if(!auth){toast('لحظة… جرّب بعد ثانية');loadFB().catch(function(){});return;}
   auth.sendPasswordResetEmail(em).then(function(){lgErr('');toast('أرسلنا رابط تغيير كلمة المرور لبريدك — شيّك الوارد والرسائل غير المرغوبة');})
     .catch(function(e){lgErr(emErr(e));});
 }
@@ -1861,9 +1877,11 @@ function onSignedIn(uid){
   ME.uid=uid;AUTHED=true;GUEST=false;
   var g=$('lgGuest');if(g)g.classList.add('hide');var w=$('lgWhy');if(w)w.classList.add('hide');
   CART=LS.get('cart',{});
-  var snap=DEMO?null:LS.get('snap',null),shown=false;
+  var snap=DEMO?null:LS.get('snap',null);
+  /* الشاشة طلعت من اللقطة أو التصفح قبل ما يجهز فايربيس — ما نرجّع العميل للرئيسية وهو يتصفح */
+  var shown=BOOTED&&!$('scLogin').classList.contains('on');
   /* بلا جوال محفوظ ما نفتح التطبيق — لا تبويبات ولا رئيسية لين يكمّل بياناته */
-  if(snap&&snap.uid===uid&&(ME.ph||snap.ph)){
+  if(!shown&&snap&&snap.uid===uid&&(ME.ph||snap.ph)){
     $('tabBar').classList.remove('hide');
     ME.n=snap.n||'';ME.ok=!!snap.ok;if(!ME.ph&&snap.ph)ME.ph=snap.ph;ORD=snap.ord||[];ADR=snap.adr||[];
     renderAll();go('scHome');setTab('scHome');shown=true;
@@ -1894,7 +1912,13 @@ function guestHome(){
   renderAll();loadRevs();go('scHome');setTab('scHome');syncCartUI();
 }
 function needLogin(next){
-  if(AUTHED&&ME.ph)return false;
+  if(AUTHED&&ME.ph&&(auth||DEMO))return false;
+  /* داخل من قبل (لقطة الجهاز) وفايربيس للحين يحمّل: ننتظره ثواني ونكمل، بدون شاشة دخول */
+  if(AUTHED&&ME.ph&&!DEMO&&!FBERR&&!FBFAIL){toast('لحظة…');
+    loadFB().then(function(){if(typeof window[next]==='function'&&!/^sc/.test(next||''))window[next]();}).catch(function(){toast('تعذّر الاتصال — حاول مرة ثانية');});
+    return true;}
+  if(!DEMO&&!auth){loadFB().catch(function(){});
+    if(FBERR||FBFAIL){toast('تعذّر الاتصال — تأكد من الإنترنت وحاول مرة ثانية');return true;}}
   PENDING=next||'';
   go('scLogin');$('tabBar').classList.add('hide');syncCartUI();
   if(emailOn())emShow();
@@ -3441,17 +3465,31 @@ if('serviceWorker' in navigator&&window.isSecureContext){
     }).then(again,again);
   }).catch(function(){});
 }
-if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else guestHome();}
-else if(!auth){
-  go('scLogin');
-  lgErr('تعذّر تحميل التطبيق — تأكد من الإنترنت وأعد فتح الصفحة');
-  var pb=$('btnPh');if(pb)pb.disabled=true;
-}else auth.onAuthStateChanged(function(u){
+/* الإقلاع: الشاشة تطلع فوراً — من آخر بيانات العميل على جهازه، أو التصفح كزائر — وفايربيس يكمل بالخلفية */
+var BOOTED=false,FBFAIL=false;
+function boot(){
+  var sn=LS.get('snap',null);
+  if(sn&&sn.uid&&sn.ph){
+    ME.uid=sn.uid;ME.n=sn.n||'';ME.ok=!!sn.ok;ME.ph=sn.ph;ORD=sn.ord||[];ADR=sn.adr||[];AUTHED=true;
+    CART=LS.get('cart',{});$('tabBar').classList.remove('hide');renderAll();go('scHome');setTab('scHome');
+  }else guestHome();
+  BOOTED=true;
+}
+function authWatch(u){
   if(isCustomer(u)){if(u.phoneNumber)ME.ph=String(u.phoneNumber).replace('+','');
     else if(String(u.uid).indexOf('ph_')===0)ME.ph=String(u.uid).slice(3);
     else{ME.ph='';ME.em=u.email||'';}   /* إيميل: الجوال من ملفه، أو نطلبه */
     onSignedIn(u.uid);}
-  else guestHome();});
+  else if(AUTHED||!GUEST)guestHome();   /* زائر أصلاً = ما نحرّكه من مكانه */
+}
+if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else guestHome();}
+else{
+  boot();
+  loadFB().then(function(){
+    if(!auth){FBFAIL=true;return;}
+    auth.onAuthStateChanged(authWatch);
+  }).catch(function(){FBFAIL=true;});
+}
 if(DEMO&&emailOn())emShow();
 </script>
 </body>
