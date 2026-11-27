@@ -1,5 +1,5 @@
 /* كاش الأصول الثابتة فقط — بيانات Firestore تُجلب دائماً من الشبكة */
-var CACHE = 'kln-v115';
+var CACHE = 'kln-v116';
 /* مكتبات خارجية روابطها فيها رقم إصدار ثابت (فايربيس 10.12.0، ملفات الخط) — محتواها ما يتغير،
    فتنحفظ مرة وتُخدم من الجهاز. كاش منفصل يعيش بين إصدارات التطبيق */
 var LIB = 'kln-lib-1';
@@ -7,7 +7,7 @@ function isLib(u) {
   return (u.hostname === 'www.gstatic.com' && u.pathname.indexOf('/firebasejs/') === 0) ||
          u.hostname === 'fonts.gstatic.com' || u.hostname === 'fonts.googleapis.com';
 }
-var ASSETS = ['./index.html', './reviews.html', './app/index.html', './app/manifest.json', './app/img/splash.png', './logo.png', './icon.png', './icon-192.png', './icon-512.png', './manifest.json'];
+var ASSETS = ['./index.html', './reviews.html', './app/index.html', './app/manifest.json', './app/img/splash.png', './app/fonts/plex-ar-400.woff2', './app/fonts/plex-ar-500.woff2', './app/fonts/plex-ar-600.woff2', './app/fonts/plex-ar-700.woff2', './app/fonts/plex-la-400.woff2', './app/fonts/plex-la-500.woff2', './app/fonts/plex-la-600.woff2', './app/fonts/plex-la-700.woff2', './logo.png', './icon.png', './icon-192.png', './icon-512.png', './manifest.json'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }).then(function () { return self.skipWaiting(); }));
