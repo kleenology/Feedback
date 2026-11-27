@@ -8,6 +8,7 @@
 const U = require('../_lib/util');
 const S = require('../_lib/store');
 const T = require('../_lib/tap');
+const A = require('../_lib/autoinv');
 
 const GAP = 5 * 60 * 1000;
 
@@ -26,7 +27,11 @@ module.exports = async function handler(req, res) {
         let ch = null;
         try { ch = await T.getCharge(cid); } catch (e) { ch = null; }
         if (!ch && T.mode()) { kept++; continue; }               /* ما قدرنا نسأل تاب — نخليه للمرة الجاية */
-        if (ch && T.captured(ch, o._id)) { await S.applyTapPayment(o._id, ch, T.methodOf(ch)); paid++; continue; }
+        if (ch && T.captured(ch, o._id)) {
+          const r = await S.applyTapPayment(o._id, ch, T.methodOf(ch)); paid++;
+          if (r && r.ok) await A.autoInvoice(o._id).catch(() => {});
+          continue;
+        }
         /* العميل للحين في صفحة الدفع؟ (عملية بدأت خلال المهلة) — ننتظره */
         if (ch && ch.status === 'INITIATED' && o.tap.at && o.tap.at > cutoff) { kept++; continue; }
       }
