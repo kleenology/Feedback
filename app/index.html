@@ -812,6 +812,12 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .mapfr,.mapjs{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 /* الخريطة المدمجة ثابتة: لو تحركت تحت الإصبع يختلف مكان الدبوس عن الإحداثيات. العميل يسحب الدبوس بس */
 .mapfr{pointer-events:none}
+.mapwrap{touch-action:pan-y}
+.mapzoom{position:absolute;top:10px;left:10px;z-index:4;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;
+  background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.mapzoom button{width:38px;height:38px;font:600 21px/1 var(--sf);color:var(--tx);background:none}
+.mapzoom button+button{border-top:1px solid var(--line)}
+.mapzoom button:disabled{color:var(--faint)}
 /* لوحة تحتية: تظهر إذا تعذّر تحميل الخريطة، وتختفي خلفها إذا حُمّلت */
 .mapfb{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:7px;color:var(--mut);font-size:13.5px;font-weight:600;text-align:center;padding:16px;
@@ -2544,7 +2550,7 @@ function renderBook(){
   BKBAR='';
   $('bkBody').innerHTML=[stepWhere,stepWhen,stepConfirm][BK.step]();
   var bar=$('bkBar');bar.innerHTML=BKBAR;bar.classList.toggle('hide',!BKBAR);
-  if(BK.step===0&&BK.loc){initMapPin();pinDrag($('mapPin'));}
+  if(BK.step===0&&BK.loc){initMapPin();pinDrag($('mapPin'));mapPinch($('mapWrap'));}
   window.scrollTo(0,0);
 }
 function head(t,s){return '<div class="stp-n" style="margin-top:22px">'+esc(STEPS[BK.step])+'</div><h2 class="stp-t">'+esc(t)+'</h2><p class="stp-s">'+esc(s)+'</p>';}
@@ -2641,6 +2647,29 @@ function useMyLocation(){
 /* تصحيح الدبوس بدون مفتاح: الخريطة تبقى ثابتة على نقطة الـGPS، والعميل يسحب الدبوس فوقها.
    نحوّل إزاحة البكسل إلى إحداثيات بمقياس مركاتور — يكفي لتصحيح عشرات الأمتار، وهو المطلوب. */
 var MZOOM=17;
+/* تكبير وتصغير الخريطة الثابتة: نعيد تحميلها بمستوى تكبير جديد حول نفس النقطة.
+   حساب سحب الدبوس يعتمد على MZOOM، فيبقى دقيق في أي مستوى */
+function mapZoom(d){
+  var z=Math.max(12,Math.min(20,MZOOM+d));if(z===MZOOM||!BK.base||MAPS_KEY)return;
+  MZOOM=z;var fr=document.querySelector('.mapfr');if(fr)fr.src=mapEmbed(BK.base.lat,BK.base.lng);
+  var zi=$('mzIn'),zo=$('mzOut');if(zi)zi.disabled=MZOOM>=20;if(zo)zo.disabled=MZOOM<=12;
+}
+/* إصبعين على الخريطة: التباعد يكبّر والتقارب يصغّر (خطوة لكل ضعف المسافة) */
+function mapPinch(w){
+  if(!w||MAPS_KEY||w.dataset.pinch)return;w.dataset.pinch='1';
+  var pts={},d0=0;
+  function dist(){var k=Object.keys(pts);if(k.length<2)return 0;var a=pts[k[0]],b=pts[k[1]];return Math.hypot(a.x-b.x,a.y-b.y);}
+  w.addEventListener('pointerdown',function(e){pts[e.pointerId]={x:e.clientX,y:e.clientY};if(Object.keys(pts).length===2)d0=dist();});
+  w.addEventListener('pointermove',function(e){if(pts[e.pointerId])pts[e.pointerId]={x:e.clientX,y:e.clientY};});
+  function up(e){
+    if(Object.keys(pts).length===2&&d0>20){var r=dist()/d0,st=Math.round(Math.log2(r)*1.5);if(st)mapZoom(st);}
+    delete pts[e.pointerId];if(Object.keys(pts).length<2)d0=0;
+  }
+  w.addEventListener('pointerup',up);w.addEventListener('pointercancel',up);
+  /* سفاري يرسل إيماءة التكبير كحدث خاص — نستخدمه لو ما وصلت نقطتين */
+  w.addEventListener('gestureend',function(e){if(e.scale&&!d0){var st=Math.round(Math.log2(e.scale)*1.5);if(st)mapZoom(st);}});
+  w.addEventListener('gesturestart',function(e){e.preventDefault();});
+}
 function mPerPx(lat){return 156543.03392*Math.cos(lat*Math.PI/180)/Math.pow(2,MZOOM);}
 function pinDrag(el){
   if(!el||!BK.base)return;
@@ -2728,6 +2757,8 @@ function stepWhere(){
       '<div class="mapwrap" id="mapWrap">'+
         '<div class="mapfb">'+ic('pin')+'<span>موقعك محدَّد</span>'+
           '<s class="mono" dir="ltr">'+BK.loc.lat+', '+BK.loc.lng+'</s></div>'+
+        (MAPS_KEY?'':'<div class="mapzoom"><button type="button" id="mzIn" aria-label="تكبير" onclick="mapZoom(1)"'+(MZOOM>=20?' disabled':'')+'>+</button>'+
+          '<button type="button" id="mzOut" aria-label="تصغير" onclick="mapZoom(-1)"'+(MZOOM<=12?' disabled':'')+'>−</button></div>')+
         (MAPS_KEY?'<div class="mapjs" id="mapJs"></div>'
                  :'<iframe class="mapfr" src="'+mapEmbed(BK.base.lat,BK.base.lng)+'" title="موقعك على الخريطة" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>'+
                   '<button class="mappin" id="mapPin" aria-label="اسحب الدبوس لضبط موقعك">'+
@@ -3193,7 +3224,7 @@ function mapUrl(a){return a&&a.lat?'https://maps.google.com/?q='+a.lat+','+a.lng
 /* خريطة مدمجة بدون مفتاح — تشتغل على موقعك وداخل تطبيق آيفون */
 function mapEmbed(lat,lng){
   return MAPS_KEY?'https://www.google.com/maps/embed/v1/place?key='+MAPS_KEY+'&q='+lat+','+lng+'&zoom=17&language=ar'
-                 :'https://maps.google.com/maps?q='+lat+','+lng+'&z=17&hl=ar&output=embed';
+                 :'https://maps.google.com/maps?q='+lat+','+lng+'&z='+MZOOM+'&hl=ar&output=embed';
 }
 function waLink(o){
   var m=mapUrl(o.adr);
