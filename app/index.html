@@ -482,15 +482,9 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .wal-card b{display:block;font-size:40px;font-weight:700;font-family:var(--dsp);margin-top:4px;font-variant-numeric:tabular-nums}
 .wal-card b .rs{width:.62em;height:.7em;margin-inline-start:6px;opacity:.9}
 .wal-card p{font-size:12px;opacity:.85;margin-top:8px}
-.ref-c{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh);margin-top:14px}
-.ref-t{display:flex;gap:12px;align-items:flex-start}
-.ref-t .ic{width:30px;height:30px;color:var(--gold-d);flex:0 0 auto}
-.ref-t b{display:block;font-size:15.5px;font-weight:700}
-.ref-t b .rs{width:.7em;height:.78em}
-.ref-t s{display:block;text-decoration:none;font-size:12.5px;color:var(--mut);margin-top:4px;line-height:1.6}
-.ref-r{display:flex;gap:10px;margin-top:14px;align-items:stretch}
-.ref-code{flex:0 0 auto;padding:0 16px;border-radius:999px;border:1.5px dashed var(--blue);background:var(--blue-l);color:var(--blue-d);
-  font:700 15px/1 var(--sf);letter-spacing:1.5px}
+.ref-box{width:100%;display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-radius:16px;
+  background:var(--card);box-shadow:var(--sh);font:700 17px/1 var(--sf);letter-spacing:2px;color:var(--tx)}
+.ref-box .ic{color:var(--blue)}
 .wal-add{position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;padding:7px 16px 7px 7px;border-radius:999px;
   background:#16324a;color:#fff;font:inherit;font-weight:600;font-size:14px;box-shadow:0 6px 16px rgba(0,0,0,.18);margin-bottom:14px}
 .wal-add i{width:30px;height:30px;border-radius:50%;background:#fff;color:#16324a;display:grid;place-items:center;font-style:normal;font-size:20px;font-weight:700;line-height:1}
@@ -2062,10 +2056,16 @@ function refLoad(){
 function refCard(){
   if(DEMO&&!REF)REF={code:'SALEM7K2Q',friend:25,reward:25};
   if(!REF){refLoad();return '';}
-  return '<div class="ref-c"><div class="ref-t">'+ic('gift')+'<div><b>ادعُ صديقك واكسب '+REF.reward+' <i class="rs"></i></b>'+
-      '<s>صديقك ياخذ '+REF.friend+' ريال أول ما يسجّل بكودك، وأنت تاخذ '+REF.reward+' ريال بعد أول طلب له</s></div></div>'+
-    '<div class="ref-r"><button type="button" class="ref-code" onclick="refCopy()" dir="ltr">'+esc(REF.code)+'</button>'+
-      '<button type="button" class="btn" style="flex:1;margin:0" onclick="refShare()">شارك الدعوة</button></div></div>';
+  return '<button type="button" class="mrow" style="margin-top:14px" onclick="refSheet()">'+
+    '<span class="mic">'+ic('gift')+'</span>'+
+    '<span class="mtx"><b>ادعُ صديقك</b><s>لك ولصديقك '+REF.reward+' ريال</s></span>'+ic('back','','ic-sm')+'</button>';
+}
+function refSheet(){
+  if(!REF)return;
+  openSheet('ادعُ صديقك',
+    '<p style="font-size:13.5px;color:var(--mut);line-height:1.7;margin-bottom:14px">صديقك ياخذ '+REF.friend+' ريال لما يسجّل بكودك، وأنت تاخذ '+REF.reward+' ريال بعد أول طلب له.</p>'+
+    '<button type="button" class="ref-box" onclick="refCopy()"><span dir="ltr">'+esc(REF.code)+'</span>'+ic('doc','','ic-sm')+'</button>'+
+    '<button class="btn" style="margin-top:12px" onclick="refShare()">مشاركة</button>');
 }
 function refLink(){return 'https://app.kleenology.me/app/?ref='+encodeURIComponent(REF.code);}
 function refCopy(){var t=REF&&REF.code;if(!t)return;try{navigator.clipboard.writeText(t).then(function(){toast('نسخنا الكود ✓');});}catch(e){toast(t);}}
