@@ -3551,8 +3551,8 @@ function renderMe(){
     mrow('shield','الشروط وسياسة الخصوصية','','openTerms()')+
     mrow('out','تسجيل الخروج','','logout()')+
     mrow('trash','حذف الحساب','يمسح بياناتك نهائياً','askDelAccount()','danger')+
-    '<p class="hint" style="margin-top:14px;text-align:center">الإصدار <span class="mono">'+APP_VER+'</span>'+
-      (ME.uid?'<br>معرّف الحساب <span class="mono" style="user-select:all">'+esc(ME.uid)+'</span>':'')+'</p>';
+    /* سطر هادئ: اسم التطبيق والإصدار (التاريخ بس — الوقت داخلي) */
+    '<p style="margin:22px 0 6px;text-align:center;font-size:11.5px;color:var(--faint);letter-spacing:.2px">كلينولوجي · الإصدار <span class="mono">'+APP_VER.split('.').slice(0,3).join('.')+'</span></p>';
 }
 function toggleOk(){
   ME.ok=!ME.ok;
