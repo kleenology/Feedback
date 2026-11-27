@@ -1218,7 +1218,9 @@ function orShareInv(id,btn){
     o.ostaz.status=x.j.status||o.ostaz.status;o.ostaz.url=x.j.url;rOr();
     showToast('✓ الفاتورة ظهرت للعميل في طلبه بالتطبيق');
     var nm=o.n||'يا غالي';
-    var msg=greetAr()+' '+nm+' 🌟\nمعك '+BIZ.rep+'\n\nفاتورة طلبك'+(o.no?' رقم '+o.no:'')+' ('+(x.j.code||'')+'):\n'+x.j.url+'\n\nشكراً لثقتك ✨';
+    /* رابط التطبيق بدل رابط برنامج المحاسبة — العميل يفتح فاتورته من «طلباتي» بشعارنا */
+    var msg=greetAr()+' '+nm+' 🌟\nمعك '+BIZ.rep+'\n\nفاتورة طلبك'+(o.no?' رقم '+o.no:'')+' ('+(x.j.code||'')+') جاهزة في التطبيق:\n'+
+      'https://app.kleenology.me/app/\nمن «طلباتي» ← اضغط الطلب ← فاتورتك\n\nشكراً لثقتك ✨';
     /* واتساب للأعمال على أندرويد / التطبيق مباشرة على الآيفون — نفس إعداد صفحة العروض.
        رابط خاص (intent:// أو whatsapp://) يفتح التطبيق من نفس الصفحة بلا نافذة جديدة */
     var w=waOpen(o.ph,msg);

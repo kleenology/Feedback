@@ -1331,7 +1331,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.0600';
+var APP_VER='2026.11.29.0700';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -3039,10 +3039,10 @@ function ordCard(o,live){
     (o.price?'<div class="tot big"><span>السعر النهائي</span><b>'+sar(o.price)+'</b></div>':'')+
     paidBox(o)+
     (o.st==='cancelled'&&autoCut(o)?'<p class="pay-n" style="margin-top:10px;color:var(--mut)">أُلغي تلقائياً لأن الدفع ما اكتمل خلال ساعة، والموعد رجع متاح. تقدر تطلب من جديد.</p>':'')+
-    (o.ostaz&&o.ostaz.url&&/^https:\/\//.test(o.ostaz.url)?'<a class="inv-c" target="_blank" rel="noopener" href="'+esc(o.ostaz.url)+'">'+
+    (o.ostaz&&o.ostaz.url&&/^https:\/\//.test(o.ostaz.url)?'<button type="button" class="inv-c" style="width:100%;font:inherit;text-align:inherit" onclick="invOpen(\''+o.id+'\')">'+
       '<span class="inv-i">'+ic('doc')+'</span>'+
       '<span class="inv-t"><b>فاتورتك جاهزة</b>'+(o.ostaz.code?'<s class="mono">'+esc(o.ostaz.code)+'</s>':'')+'</span>'+
-      '<span class="inv-go">عرض الفاتورة</span></a>':'')+
+      '<span class="inv-go">عرض الفاتورة</span></button>':'')+
     (o.st==='new'&&o.dep&&depDue(o)?payCard(depDue(o),o):'')+
     timeline(o)+
     (o.st==='new'?'<button class="btn btn-x btn-sm" style="margin-top:15px" onclick="cancelOrder(\''+o.id+'\')">'+ic('trash','','ic-sm')+'<span>إلغاء الطلب</span></button>':'')+
@@ -3137,6 +3137,33 @@ function openOrd(id){
   var o=ORD.filter(function(x){return x.id===id;})[0];if(!o)return;
   OPENORD=id;openSheet('تفاصيل الحجز',ordDetail(o));
 }
+/* الفاتورة داخل التطبيق: الخادم يجيب الـPDF من برنامج المحاسبة ويرجّعه، فالعميل ما يشوف رابطه ولا اسمه */
+var INVURL='';
+function invOpen(id){
+  var o=ORD.filter(function(x){return x.id===id;})[0];if(!o)return;
+  if(DEMO){toast('وضع المعاينة — الفاتورة تطلع في التطبيق الحقيقي');return;}
+  var u=auth&&auth.currentUser;if(!u)return;
+  OPENORD='';
+  if(INVURL){try{URL.revokeObjectURL(INVURL);}catch(e){}INVURL='';}
+  openSheet('فاتورتك','<div class="empty" style="padding:40px 0">جاري تحميل الفاتورة…</div>');
+  var name='kleenology-'+String((o.ostaz&&o.ostaz.code)||o.no||'invoice').replace(/[^A-Za-z0-9-]/g,'')+'.pdf';
+  u.getIdToken().then(function(tk){
+    return fetch(PAY_API+'/api/inv',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({order:id})});
+  }).then(function(r){if(!r.ok)throw new Error(r.status);return r.blob();}).then(function(b){
+    var f=new File([b],name,{type:'application/pdf'});INVURL=URL.createObjectURL(f);INVFILE=f;
+    $('shB').innerHTML=
+      '<iframe src="'+INVURL+'#toolbar=0&view=FitH" title="الفاتورة" style="width:100%;height:62vh;border:0;border-radius:16px;background:#fff;box-shadow:var(--sh)"></iframe>'+
+      '<div style="display:flex;gap:10px;margin-top:14px">'+
+        '<button class="btn" style="flex:1" onclick="invShare()">'+ic('doc','','ic-sm')+'<span>حفظ أو مشاركة</span></button>'+
+        '<a class="btn btn-2" style="flex:1;text-decoration:none" href="'+INVURL+'" download="'+name+'" target="_blank" rel="noopener">فتح كامل</a></div>';
+  }).catch(function(){$('shB').innerHTML='<div class="empty" style="padding:30px 0">ما قدرنا نجيب الفاتورة الحين — حاول بعد شوي</div>';});
+}
+var INVFILE=null;
+function invShare(){
+  var f=INVFILE;if(!f)return;
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'فاتورة كلينولوجي'}).catch(function(){});return;}}catch(e){}
+  var a=document.createElement('a');a.href=INVURL;a.download=f.name;document.body.appendChild(a);a.click();a.remove();
+}
 function odr(l,v,cls){return '<div class="od-r'+(cls?' '+cls:'')+'"><s>'+l+'</s><b>'+v+'</b></div>';}
 function ordDetail(o){
   var s=ordSvc(o),sl=SLOTS.filter(function(x){return x.k===o.slot;})[0];
@@ -3169,8 +3196,8 @@ function ordDetail(o){
       (P&&o.st!=='cancelled'?odr('المدفوع',sar(P),'ok')+(R?odr('المتبقي',sar(R),'rem'):''):'')+
     '</div>';
   if(o.ostaz&&o.ostaz.url&&/^https:\/\//.test(o.ostaz.url))
-    h+='<a class="od-inv" target="_blank" rel="noopener" href="'+esc(o.ostaz.url)+'">'+ic('doc')+'<span>فاتورتك'+
-      (o.ostaz.code?' <s class="mono" style="text-decoration:none;color:var(--mut);font-weight:400">'+esc(o.ostaz.code)+'</s>':'')+'</span><em>عرض</em></a>';
+    h+='<button type="button" class="od-inv" style="width:100%;font:inherit;text-align:inherit" onclick="invOpen(\''+o.id+'\')">'+ic('doc')+'<span>فاتورتك'+
+      (o.ostaz.code?' <s class="mono" style="text-decoration:none;color:var(--mut);font-weight:400">'+esc(o.ostaz.code)+'</s>':'')+'</span><em>عرض</em></button>';
   if(o.nt)h+='<div class="od-c"><div class="od-r" style="display:block"><s style="display:block;margin-bottom:4px">'+(o.quote?'تفاصيل المكان':'ملاحظاتك')+'</s><span style="font-size:13.5px;white-space:pre-line">'+esc(o.nt)+'</span></div></div>';
   h+=timeline(o);
   if(o.st==='done')h+='<a class="btn btn-2 btn-sm" style="margin-top:14px;text-decoration:none" target="_blank" rel="noopener" href="'+waLink(o)+'">'+ic('chat','','ic-sm')+'<span>تواصل معنا</span></a>';
