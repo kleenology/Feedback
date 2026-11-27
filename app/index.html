@@ -1336,7 +1336,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.1200';
+var APP_VER='2026.11.29.1300';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1499,7 +1499,8 @@ var API={
       var patch={ph:ME.ph||'',seen:now};
       if(ME.em)patch.em=ME.em;
       if(!v||!v.at)patch.at=now;
-      return ref.set(patch,{merge:true});
+      /* تسجيل «آخر دخول» ما ننتظره — ما يأثر على اللي يشوفه العميل */
+      ref.set(patch,{merge:true}).catch(function(){});
     }).catch(function(){});},
   /* اشتراك حي بدل قراءة واحدة عند الدخول: العميل يشوف تأكيدك وانطلاق الفريق
      لحظة ما تضغطها، وأي فشل قراءة يظهر له بسببه بدل «ما عندك طلبات» الكاذبة */
@@ -1902,7 +1903,9 @@ function onSignedIn(uid){
     if(!shown){go('scHome');setTab('scHome');}
   }
   /* لو فشل تحميل الطلبات أو العناوين ما نعلّق العميل — نكمل بالموجود */
-  Promise.all([API.loadMe(),API.orders(),API.addrs()]).then(ready,ready);
+  /* ننتقل أول ما نعرف بيانات العميل (هل عنده جوال؟) — الطلبات والعناوين تتحمّل بالخلفية وتتحدّث الشاشة لحالها */
+  API.loadMe().then(ready,ready);
+  Promise.all([API.orders(),API.addrs()]).then(function(){saveSnap();renderAll();},function(){});
 }
 /* ===== التصفح بدون تسجيل =====
    الزائر يشوف الخدمات والأسعار والباقات ويضيف للسلة. الدخول يُطلب بس عند الحجز أو «طلباتي» و«حسابي»،
