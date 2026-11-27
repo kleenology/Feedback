@@ -54,7 +54,8 @@ async function redeemFail(uid) {
 
 async function redeem(uid, code) {
   if (await redeemBlocked(uid)) return { ok: false, why: 'too_many' };
-  const r = await redeemTx(uid, code);
+  let r = await redeemTx(uid, code);
+  if (!r.ok && r.why === 'not_found') r = await refRedeem(uid, code);
   /* المحاولة الغلط بس تنحسب — الكود المستخدم أو المنتهي مو تخمين */
   if (!r.ok && (r.why === 'not_found' || r.why === 'bad_code')) await redeemFail(uid).catch(() => {});
   return r;
@@ -155,4 +156,82 @@ async function createCode(d) {
   return { ok: true, code: c, amt };
 }
 
-module.exports = { credit, redeem, applyToOrder, cancelWithRefund, createCode, normCode, MAX_PCT, r2 };
+/* ===== ادعُ صديق =====
+   refs/{CODE} {uid}  ·  wallets/{uid}.ref = كوده  ·  wallets/{uid}.refBy = اللي دعاه  ·  refPaid = انصرفت مكافأة الداعي
+   refPhones/{ph} = الجوال استفاد من دعوة قبل — مكافأة الصديق مرة وحدة لكل رقم حتى لو سوّى أكثر من حساب */
+const REF_FRIEND = () => { const n = Number(process.env.REF_FRIEND); return n >= 0 && n <= 500 ? n : 25; };
+const REF_REWARD = () => { const n = Number(process.env.REF_REWARD); return n >= 0 && n <= 500 ? n : 25; };
+
+async function refCode(uid, name) {
+  const w = db().collection('wallets').doc(uid);
+  const ws = await w.get();
+  if (ws.exists && ws.data().ref) return ws.data().ref;
+  const base = String(name || '').replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 5);
+  for (let i = 0; i < 6; i++) {
+    const c = (base.length >= 3 ? base : 'KLN') + Math.random().toString(36).slice(2, 6).toUpperCase().replace(/[^A-Z0-9]/g, '7');
+    try {
+      await db().runTransaction(async t => {
+        const r = db().collection('refs').doc(c);
+        const [rs, w2] = await Promise.all([t.get(r), t.get(w)]);
+        if (w2.exists && w2.data().ref) throw Object.assign(new Error('has'), { has: w2.data().ref });
+        if (rs.exists) throw new Error('taken');
+        t.create(r, { uid, at: now() });
+        t.set(w, { ref: c, at: now() }, { merge: true });
+      });
+      return c;
+    } catch (e) { if (e.has) return e.has; if (e.message !== 'taken') throw e; }
+  }
+  throw new Error('ref_code');
+}
+
+/* الصديق يستخدم كود الدعوة: رصيد له، وتسجيل الداعي عشان يكافأ بعد أول دفع */
+async function refRedeem(uid, code) {
+  const c = normCode(code);
+  const rr = db().collection('refs').doc(c);
+  const w = db().collection('wallets').doc(uid);
+  const cu = db().collection('customers').doc(uid);
+  /* طلبات العميل بفلتر واحد (ما يحتاج فهرس مركّب)، والمدفوع نفحصه هنا */
+  const paidQ = db().collection('orders').where('uid', '==', uid).limit(50);
+  return db().runTransaction(async t => {
+    const [rs, ws, cs, ps] = await Promise.all([t.get(rr), t.get(w), t.get(cu), t.get(paidQ)]);
+    if (!rs.exists) return { ok: false, why: 'not_found' };
+    const owner = rs.data().uid;
+    if (owner === uid) return { ok: false, why: 'own_ref' };
+    const wv = ws.exists ? ws.data() : {};
+    if (wv.refBy) return { ok: false, why: 'ref_used' };
+    if (ps.docs.some(d => Number(d.data().paid) > 0)) return { ok: false, why: 'not_new' };
+    const ph = cs.exists ? String(cs.data().ph || '') : '';
+    if (!/^9665\d{8}$/.test(ph)) return { ok: false, why: 'need_phone' };
+    const pr = db().collection('refPhones').doc(ph);
+    const prs = await t.get(pr);
+    if (prs.exists) return { ok: false, why: 'ref_used' };
+    const amt = r2(REF_FRIEND());
+    const bal = r2((Number(wv.bal) || 0) + amt);
+    t.set(pr, { uid, by: owner, at: now() });
+    t.set(w, { bal, refBy: owner, at: now() }, { merge: true });
+    if (amt > 0) t.set(w.collection('tx').doc('ref-in'), { amt, type: 'ref', ref: c, note: 'هدية دعوة صديق', at: now() });
+    return { ok: true, amt, bal, ref: true };
+  });
+}
+
+/* بعد أول طلب مدفوع للصديق: مكافأة الداعي مرة وحدة */
+async function refReward(friendUid) {
+  const fw = db().collection('wallets').doc(friendUid);
+  return db().runTransaction(async t => {
+    const fs = await t.get(fw);
+    if (!fs.exists) return { ok: false };
+    const f = fs.data();
+    if (!f.refBy || f.refPaid) return { ok: false };
+    const ow = db().collection('wallets').doc(f.refBy);
+    const os = await t.get(ow);
+    const amt = r2(REF_REWARD());
+    t.set(fw, { refPaid: now() }, { merge: true });
+    if (amt > 0) {
+      t.set(ow, { bal: r2(((os.exists && os.data().bal) || 0) + amt), at: now() }, { merge: true });
+      t.set(ow.collection('tx').doc('ref-' + friendUid), { amt, type: 'ref', ref: '', note: 'مكافأة دعوة صديق — أول طلب له', at: now() });
+    }
+    return { ok: true, amt, to: f.refBy };
+  });
+}
+
+module.exports = { refCode, refRedeem, refReward, REF_FRIEND, REF_REWARD, credit, redeem, applyToOrder, cancelWithRefund, createCode, normCode, MAX_PCT, r2 };

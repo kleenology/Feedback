@@ -40,6 +40,7 @@ module.exports = async function handler(req, res) {
       const r = await S.applyTapPayment(oid, ch, T.methodOf(ch));
       /* الفاتورة بعد الدفع — قفل الفوترة يمنع التكرار، ولو فشلت أول مرة تنعاد مع التحقق أو التنبيه الجاي */
       if (r && r.ok) await A.autoInvoice(oid).catch(e => console.error('autoinv:', e && e.message));
+      if (r && r.ok && !r.already) { const oo = await S.getOrder(oid).catch(() => null); if (oo && oo.uid) await W.refReward(oo.uid).catch(() => {}); }
       return U.json(res, 200, { ok: true, status: 'CAPTURED', order: oid, no: o.no || null, paid: r.paid });
     }
     await S.setTapStatus(oid, ch.id, ch.status || 'UNKNOWN');

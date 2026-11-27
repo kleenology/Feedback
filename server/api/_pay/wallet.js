@@ -9,7 +9,8 @@ const W = require('../_lib/wallet');
 const A = require('../_lib/autoinv');
 
 const WHY = { bad_code: 'الكود غير صحيح', not_found: 'الكود غير صحيح', off: 'الكود موقوف', expired: 'انتهت صلاحية الكود',
-  used: 'استخدمت هذا الكود من قبل', finished: 'الكود انتهى عدد استخداماته', too_many: 'محاولات كثيرة — جرّب بعد ساعة' };
+  used: 'استخدمت هذا الكود من قبل', finished: 'الكود انتهى عدد استخداماته', too_many: 'محاولات كثيرة — جرّب بعد ساعة',
+  own_ref: 'هذا كود دعوتك — شاركه مع أصحابك', ref_used: 'استفدت من دعوة صديق من قبل', not_new: 'كود الدعوة للعملاء الجدد بس', need_phone: 'أكمل رقم جوالك أول' };
 
 module.exports = async function handler(req, res) {
   if (U.cors(req, res)) return;
@@ -28,12 +29,16 @@ module.exports = async function handler(req, res) {
       const r = await W.redeem(uid, b.code);
       return U.json(res, r.ok ? 200 : (r.why === 'too_many' ? 429 : 400), r.ok ? r : { error: r.why, message: WHY[r.why] || 'تعذّر استخدام الكود' });
     }
+    if (op === 'refcode') {
+      const c = await W.refCode(uid, b.name);
+      return U.json(res, 200, { ok: true, code: c, friend: W.REF_FRIEND(), reward: W.REF_REWARD() });
+    }
     if (op === 'apply') {
       const id = String(b.order || '');
       if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) return U.json(res, 400, { error: 'bad_order' });
       const r = await W.applyToOrder(uid, id);
       if (!r.ok) return U.json(res, 400, { error: r.why });
-      if (r.amt > 0 && r.due <= 0) await A.autoInvoice(id).catch(() => {});
+      if (r.amt > 0 && r.due <= 0) { await A.autoInvoice(id).catch(() => {}); await W.refReward(uid).catch(() => {}); }
       return U.json(res, 200, r);
     }
     if (op === 'cancel') {

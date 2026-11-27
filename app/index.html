@@ -482,6 +482,15 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .wal-card b{display:block;font-size:40px;font-weight:700;font-family:var(--dsp);margin-top:4px;font-variant-numeric:tabular-nums}
 .wal-card b .rs{width:.62em;height:.7em;margin-inline-start:6px;opacity:.9}
 .wal-card p{font-size:12px;opacity:.85;margin-top:8px}
+.ref-c{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh);margin-top:14px}
+.ref-t{display:flex;gap:12px;align-items:flex-start}
+.ref-t .ic{width:30px;height:30px;color:var(--gold-d);flex:0 0 auto}
+.ref-t b{display:block;font-size:15.5px;font-weight:700}
+.ref-t b .rs{width:.7em;height:.78em}
+.ref-t s{display:block;text-decoration:none;font-size:12.5px;color:var(--mut);margin-top:4px;line-height:1.6}
+.ref-r{display:flex;gap:10px;margin-top:14px;align-items:stretch}
+.ref-code{flex:0 0 auto;padding:0 16px;border-radius:999px;border:1.5px dashed var(--blue);background:var(--blue-l);color:var(--blue-d);
+  font:700 15px/1 var(--sf);letter-spacing:1.5px}
 .wal-add{position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;padding:7px 16px 7px 7px;border-radius:999px;
   background:#16324a;color:#fff;font:inherit;font-weight:600;font-size:14px;box-shadow:0 6px 16px rgba(0,0,0,.18);margin-bottom:14px}
 .wal-add i{width:30px;height:30px;border-radius:50%;background:#fff;color:#16324a;display:grid;place-items:center;font-style:normal;font-size:20px;font-weight:700;line-height:1}
@@ -1877,7 +1886,7 @@ function askSave(){
   /* loadMe بعد الحفظ يسجّل «أول دخول» و«آخر دخول» — حساب الإيميل ما كان له جوال وقت الدخول فما انكتبت */
   API.saveMe().then(function(){API.loadMe();b.disabled=false;b.textContent='حفظ ومتابعة';
     $('lgAsk').classList.add('hide');$('tabBar').classList.remove('hide');
-    renderAll();if(!runPending()){go('scHome');setTab('scHome');}
+    renderAll();refApplyPending();if(!runPending()){go('scHome');setTab('scHome');}
   }).catch(function(){b.disabled=false;b.textContent='حفظ ومتابعة';ME.ph='';lgErr('تعذّر الحفظ — حاول مرة ثانية');});
 }
 
@@ -1992,6 +2001,7 @@ function onSignedIn(uid){
     /* الرئيسية أول شي دائماً — والاسم يُطلب من بطاقة داخلها بدل ما نرمي العميل في «حسابي» */
     if(!ME.ph){askPhone();return;}
     $('tabBar').classList.remove('hide');
+    refApplyPending();
     if(PAYRET){var c=PAYRET;PAYRET='';payVerify(c);return;}
     if(runPending())return;
     if(!shown){go('scHome');setTab('scHome');}
@@ -2016,12 +2026,13 @@ function walWatch(){
 function walStop(){if(WUN){WUN();WUN=null;}if(WTUN){WTUN();WTUN=null;}WAL={bal:0,tx:[],ok:false};}
 function walRefresh(){var sc=$('scWallet');if(sc&&sc.classList.contains('on'))renderWallet();}
 function walUse(total,due){return USEWAL&&WAL.bal>0?Math.max(0,Math.min(WAL.bal,Math.floor(total*WAL_PCT/100),due)):0;}
-var WTX={topup:['شحن الرصيد','wallet'],code:['كود هدية','gift'],admin:['رصيد من كلينولوجي','gift'],spend:['دفع طلب','cart'],refund:['استرجاع لطلب ملغي','repeat']};
+var WTX={ref:['دعوة صديق','gift'],topup:['شحن الرصيد','wallet'],code:['كود هدية','gift'],admin:['رصيد من كلينولوجي','gift'],spend:['دفع طلب','cart'],refund:['استرجاع لطلب ملغي','repeat']};
 function renderWallet(){
   var ob=$('walBack');if(ob&&!ob.innerHTML)ob.innerHTML=backTo('الرئيسية');
   var h='<div class="wal-card"><button type="button" class="wal-add" onclick="addSheet()"><i>+</i><span>إضافة رصيد</span></button>'+
       '<div class="wc-l"><b class="mono">'+WAL.bal.toLocaleString('en-US')+'<i class="rs" role="img" aria-label="ريال"></i></b>'+
       '<s>رصيد المحفظة</s><p>تقدر تدفع فيه حتى '+WAL_PCT+'٪ من قيمة أي طلب</p></div></div>';
+  h+=refCard();
   h+='<h3 class="bs-t" style="margin-top:22px">العمليات</h3>';
   if(!WAL.tx.length)h+=(WAL.ok||DEMO)?'<div class="w-empty">'+ic('list')+'<b>لا توجد عمليات</b><s>أول ما تضيف رصيد أو تستخدمه، يطلع هنا.</s></div>'
     :'<div class="empty" style="padding:22px 0">جاري التحميل…</div>';
@@ -2034,6 +2045,55 @@ function renderWallet(){
       '<span class="wa'+(pos?' pos':'')+'"><span dir="ltr">'+(pos?'+':'−')+Math.abs(Number(x.amt)||0).toLocaleString('en-US')+'</span> <i class="rs"></i></span></div>';
   }).join('')+'</div>';
   $('walBody').innerHTML=h;
+}
+/* ===== ادعُ صديق =====
+   كود ثابت لكل عميل من الخادم (يُحفظ في جهازه). الصديق يكتبه في «قسيمة» أو يفتح الرابط ?ref=الكود
+   فيتطبّق تلقائياً بعد ما يسجّل. الداعي ياخذ مكافأته بعد أول طلب مدفوع للصديق */
+var REF=null;
+function refLoad(){
+  if(REF||DEMO||!ME.uid)return;
+  var c=LS.get('ref_'+ME.uid,null);if(c&&c.code){REF=c;return;}
+  var u=auth&&auth.currentUser;if(!u)return;
+  u.getIdToken().then(function(tk){return fetch(PAY_API+'/api/pay/wallet',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({op:'refcode',name:ME.n||''})});})
+   .then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
+     if(j&&j.ok&&j.code){REF={code:j.code,friend:j.friend,reward:j.reward};LS.set('ref_'+ME.uid,REF);walRefresh();}
+   }).catch(function(){});
+}
+function refCard(){
+  if(DEMO&&!REF)REF={code:'SALEM7K2Q',friend:25,reward:25};
+  if(!REF){refLoad();return '';}
+  return '<div class="ref-c"><div class="ref-t">'+ic('gift')+'<div><b>ادعُ صديقك واكسب '+REF.reward+' <i class="rs"></i></b>'+
+      '<s>صديقك ياخذ '+REF.friend+' ريال أول ما يسجّل بكودك، وأنت تاخذ '+REF.reward+' ريال بعد أول طلب له</s></div></div>'+
+    '<div class="ref-r"><button type="button" class="ref-code" onclick="refCopy()" dir="ltr">'+esc(REF.code)+'</button>'+
+      '<button type="button" class="btn" style="flex:1;margin:0" onclick="refShare()">شارك الدعوة</button></div></div>';
+}
+function refLink(){return 'https://app.kleenology.me/app/?ref='+encodeURIComponent(REF.code);}
+function refCopy(){var t=REF&&REF.code;if(!t)return;try{navigator.clipboard.writeText(t).then(function(){toast('نسخنا الكود ✓');});}catch(e){toast(t);}}
+function refShare(){
+  if(!REF)return;var txt='جرّب كلينولوجي للتنظيف 🧽 — سجّل بكودي '+REF.code+' وتاخذ '+REF.friend+' ريال في محفظتك:';
+  try{if(navigator.share){navigator.share({title:'كلينولوجي',text:txt,url:refLink()}).catch(function(){});return;}}catch(e){}
+  try{navigator.clipboard.writeText(txt+' '+refLink()).then(function(){toast('نسخنا رسالة الدعوة — الصقها لأصحابك');});}catch(e){}
+}
+/* رابط دعوة: نحفظ الكود ونطبّقه بعد ما يسجّل الصديق ويكمّل جواله */
+var REFIN=(function(){var m=/[?&]ref=([A-Za-z0-9-]{3,24})/.exec(location.search);
+  if(m){try{localStorage.setItem('kln_refin',m[1].toUpperCase());}catch(e){}}
+  try{return localStorage.getItem('kln_refin')||'';}catch(e){return '';}})();
+function refApplyPending(){
+  if(!REFIN||DEMO||!ME.ph)return;var c=REFIN;REFIN='';try{localStorage.removeItem('kln_refin');}catch(e){}
+  var u=auth&&auth.currentUser;if(!u)return;
+  u.getIdToken().then(function(tk){return fetch(PAY_API+'/api/pay/wallet',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({op:'redeem',code:c})});})
+   .then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
+     if(j&&j.ok)toast('هدية الدعوة: انضاف '+j.amt+' ريال لمحفظتك 🎁');
+   }).catch(function(){});
+}
+/* اطلب مرة ثانية: نفس الأصناف بالأسعار الحالية في السلة، ويختار موعد جديد */
+function reorder(id){
+  var o=ORD.filter(function(x){return x.id===id;})[0];if(!o)return;
+  if(o.pkg&&o.pkg.k){closeSheet();openPkg(o.pkg.k);return;}
+  var n=0;CART={};(o.items||[]).forEach(function(i){if(i&&i.k&&itemOf(i.k)&&i.q>0){CART[i.k]=Number(i.q);n++;}});
+  if(!n){toast('أصناف هذا الطلب ما عادت متوفرة — اختر من الخدمات');return;}
+  LS.set('cart',CART);syncCartUI();closeSheet();go('scCart');setTab('');renderCart();
+  toast('رجّعنا أصناف طلبك بأسعار اليوم — اختر موعد جديد');
 }
 /* إضافة رصيد: تبويبين — «المبلغ» شحن بالدفع، و«قسيمة» كود من كلينولوجي */
 var ADDTAB='amt';
@@ -2128,7 +2188,7 @@ function runPending(){
 function logout(){
   if(!confirm('تسجيل الخروج؟'))return;
   function done(){
-    if(ORUN){ORUN();ORUN=null;}ORERR='';walStop();
+    if(ORUN){ORUN();ORUN=null;}ORERR='';walStop();REF=null;
     AUTHED=false;ME={uid:'',ph:'',n:'',ok:false,em:''};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
     backToPhone();$('inPh').value='';loginFirst();}
   if(DEMO){done();return;}
@@ -3523,7 +3583,9 @@ function ordDetail(o){
       (o.ostaz.code?' <s class="mono" style="text-decoration:none;color:var(--mut);font-weight:400">'+esc(o.ostaz.code)+'</s>':'')+'</span><em>عرض</em></button>';
   if(o.nt)h+='<div class="od-c"><div class="od-r" style="display:block"><s style="display:block;margin-bottom:4px">'+(o.quote?'تفاصيل المكان':'ملاحظاتك')+'</s><span style="font-size:13.5px;white-space:pre-line">'+esc(o.nt)+'</span></div></div>';
   h+=timeline(o);
-  if(o.st==='done')h+='<a class="btn btn-2 btn-sm" style="margin-top:14px;text-decoration:none" target="_blank" rel="noopener" href="'+waLink(o)+'">'+ic('chat','','ic-sm')+'<span>تواصل معنا</span></a>';
+  if((o.st==='done'||o.st==='cancelled')&&!o.quote&&((o.items||[]).length||o.pkg))
+    h+='<button class="btn" style="margin-top:14px" onclick="reorder(\''+o.id+'\')">'+ic('repeat','','ic-sm')+'<span>اطلب مرة ثانية</span></button>';
+  if(o.st==='done')h+='<a class="btn btn-2 btn-sm" style="margin-top:10px;text-decoration:none" target="_blank" rel="noopener" href="'+waLink(o)+'">'+ic('chat','','ic-sm')+'<span>تواصل معنا</span></a>';
   if(o.st==='new')h+='<button class="od-x" onclick="cancelOrder(\''+o.id+'\')">إلغاء الطلب</button>';
   return h;
 }
@@ -3563,6 +3625,7 @@ function renderMe(){
     '<div class="sec-h" style="margin-bottom:12px"><h2>الإعدادات والخصوصية</h2></div>'+
     mrow('edit','تحديث الاسم',ME.n?'مسجّل باسم '+ME.n:'عرّفنا باسمك','openNameSheet()')+
     mrow('pin','العناوين',ADR.length?ADR.length+' عنوان محفوظ':'ينحفظ تلقائياً أول ما تحجز','openAddrSheet()')+
+    mrow('gift','ادعُ صديق','اكسب رصيد مع كل صديق يطلب',"go('scWallet');setTab('scWallet');renderWallet()")+
     mrow('list','طلباتي',ORD.length?ORD.length+' طلب':'ما عندك طلبات بعد',"ORQF='';go('scOrders');setTab('scOrders');renderOrders()")+
     mrow('tag','عروض الأسعار',quotes?quotes+' طلب تسعير':'اطلب تسعير لخدمة تحتاج معاينة',"openQuotesTab()")+
     mrow('chat','تواصل معنا','واتساب '+BIZ.rep,"window.open('https://wa.me/'+BIZ.wa,'_blank')")+
