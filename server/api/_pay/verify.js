@@ -5,6 +5,7 @@
 const U = require('../_lib/util');
 const S = require('../_lib/store');
 const T = require('../_lib/tap');
+const A = require('../_lib/autoinv');
 
 module.exports = async function handler(req, res) {
   if (U.cors(req, res)) return;
@@ -27,6 +28,8 @@ module.exports = async function handler(req, res) {
     if (!o || o.uid !== uid) return U.json(res, 404, { error: 'not_found' });
     if (T.captured(ch, oid)) {
       const r = await S.applyTapPayment(oid, ch, T.methodOf(ch));
+      /* الفاتورة بعد الدفع — قفل الفوترة يمنع التكرار، ولو فشلت أول مرة تنعاد مع التحقق أو التنبيه الجاي */
+      if (r && r.ok) await A.autoInvoice(oid).catch(e => console.error('autoinv:', e && e.message));
       return U.json(res, 200, { ok: true, status: 'CAPTURED', order: oid, no: o.no || null, paid: r.paid });
     }
     await S.setTapStatus(oid, ch.id, ch.status || 'UNKNOWN');

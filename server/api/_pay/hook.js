@@ -4,6 +4,7 @@
    كذا لو أحد أرسل تنبيه مزوّر ما يقدر يسجّل دفعة ما صارت. */
 const S = require('../_lib/store');
 const T = require('../_lib/tap');
+const A = require('../_lib/autoinv');
 
 function reply(res, status, body) {
   res.statusCode = status;
@@ -30,6 +31,8 @@ module.exports = async function handler(req, res) {
     if (!oid) return reply(res, 200, { ok: true, ignored: 'no_order' });
     if (T.captured(ch, oid)) {
       const r = await S.applyTapPayment(oid, ch, T.methodOf(ch));
+      /* الفاتورة بعد الدفع — قفل الفوترة يمنع التكرار، ولو فشلت أول مرة تنعاد مع التحقق أو التنبيه الجاي */
+      if (r && r.ok) await A.autoInvoice(oid).catch(e => console.error('autoinv:', e && e.message));
       return reply(res, 200, { ok: true, applied: !r.already });
     }
     await S.setTapStatus(oid, ch.id, ch.status || 'UNKNOWN');
