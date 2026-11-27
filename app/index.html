@@ -1410,6 +1410,8 @@ var AREA_MSG='حالياً نخدم مدينة الرياض فقط — وقري�
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
+/* رقم الإصدار اللي يشوفه العميل — ترفعه يدوياً مع التحديثات الكبيرة. APP_VER تحت للتحديث التلقائي بس */
+var APP_LABEL='1.0';
 var APP_VER='2026.11.29.1900';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
@@ -3552,7 +3554,7 @@ function renderMe(){
     mrow('out','تسجيل الخروج','','logout()')+
     mrow('trash','حذف الحساب','يمسح بياناتك نهائياً','askDelAccount()','danger')+
     /* سطر هادئ: اسم التطبيق والإصدار (التاريخ بس — الوقت داخلي) */
-    '<p style="margin:22px 0 6px;text-align:center;font-size:11.5px;color:var(--faint);letter-spacing:.2px">كلينولوجي · الإصدار <span class="mono">'+APP_VER.split('.').slice(0,3).join('.')+'</span></p>';
+    '<p style="margin:22px 0 6px;text-align:center;font-size:11.5px;color:var(--faint);letter-spacing:.2px">كلينولوجي · الإصدار <span class="mono">'+APP_LABEL+'</span></p>';
 }
 function toggleOk(){
   ME.ok=!ME.ok;
