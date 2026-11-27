@@ -104,6 +104,11 @@ button{cursor:pointer;border:none;background:none}
 .em-tabs button.on{background:var(--card);color:var(--blue-d);box-shadow:var(--sh)}
 .pw-row{position:relative}
 .pw-row .in{padding-left:48px}
+.area-chip{display:inline-flex;align-items:center;gap:6px;margin:-4px 0 16px;padding:7px 12px 7px 14px;border-radius:999px;
+  background:var(--blue-l);color:var(--blue-d);font-size:12.5px}
+.area-chip .ic{color:var(--blue)}
+.area-chip span{color:var(--mut);font-weight:500}
+.area-chip b{font-weight:700}
 .lg-or{display:flex;align-items:center;gap:12px;margin:14px 0;color:var(--mut);font-size:12.5px}
 .lg-or::before,.lg-or::after{content:"";flex:1;border-top:1px solid var(--line)}
 .pw-eye{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;color:var(--mut)}
@@ -2692,7 +2697,8 @@ function initMapPin(){
   });
 }
 function stepWhere(){
-  var h=head('وين نجيك؟','نخدم حالياً مدينة الرياض — نحتاج موقعك عشان الفريق يوصلك');
+  var h=head('وين نجيك؟','نحتاج موقعك عشان الفريق يوصلك')+
+    '<div class="area-chip">'+ic('pin','','ic-sm')+'<span>منطقة الخدمة</span><b>'+esc(CITIES.join(' · '))+'</b></div>';
   /* عنوان محفوظ خارج منطقة الخدمة: يظهر مقفل بدل ما يختفي — العميل يفهم ليش */
   if(BK.adr&&!adrOk(BK.adr))BK.adr=null;
   if(ADR.length)h+='<div class="fld">'+ADR.map(function(a,i){
