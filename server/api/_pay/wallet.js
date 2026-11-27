@@ -9,7 +9,7 @@ const W = require('../_lib/wallet');
 const A = require('../_lib/autoinv');
 
 const WHY = { bad_code: 'الكود غير صحيح', not_found: 'الكود غير صحيح', off: 'الكود موقوف', expired: 'انتهت صلاحية الكود',
-  used: 'استخدمت هذا الكود من قبل', finished: 'الكود انتهى عدد استخداماته' };
+  used: 'استخدمت هذا الكود من قبل', finished: 'الكود انتهى عدد استخداماته', too_many: 'محاولات كثيرة — جرّب بعد ساعة' };
 
 module.exports = async function handler(req, res) {
   if (U.cors(req, res)) return;
@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
   try {
     if (op === 'redeem') {
       const r = await W.redeem(uid, b.code);
-      return U.json(res, r.ok ? 200 : 400, r.ok ? r : { error: r.why, message: WHY[r.why] || 'تعذّر استخدام الكود' });
+      return U.json(res, r.ok ? 200 : (r.why === 'too_many' ? 429 : 400), r.ok ? r : { error: r.why, message: WHY[r.why] || 'تعذّر استخدام الكود' });
     }
     if (op === 'apply') {
       const id = String(b.order || '');

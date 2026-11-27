@@ -72,6 +72,21 @@ const bal = async u => ((await db.doc('wallets/' + u).get()).data() || {}).bal |
     await db.doc('orders/' + oid).set({ uid: U1, st: 'new', est: 100, dep: 100, paid: 100, pays: [{ m: 'tap', amt: 100 }] });
     eq((await W.cancelWithRefund(oid, 'customer', U1)).why, 'card_paid');
   });
+  await t('حد المحاولات: ٥ أكواد غلط في الساعة، وبعدها حتى الكود الصحيح يوقف', async () => {
+    const U3 = 'u3_' + Date.now();
+    for (let i = 0; i < 5; i++) eq((await W.redeem(U3, 'WRONG' + i)).why, 'not_found');
+    const c = await W.createCode({ amt: 10, uses: 5 });
+    eq((await W.redeem(U3, c.code)).why, 'too_many');
+    eq((await W.redeem(U2, c.code)).ok, true);   /* عميل ثاني ما يتأثر */
+  });
+  await t('الكود المستخدم أو المنتهي ما ينحسب محاولة غلط', async () => {
+    const U4 = 'u4_' + Date.now();
+    const c = await W.createCode({ amt: 10, uses: 1 });
+    eq((await W.redeem(U4, c.code)).ok, true);
+    for (let i = 0; i < 6; i++) eq((await W.redeem(U4, c.code)).why, 'used');
+    const d = await W.createCode({ amt: 10, uses: 5 });
+    eq((await W.redeem(U4, d.code)).ok, true);
+  });
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();

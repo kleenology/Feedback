@@ -33,7 +33,33 @@ async function credit(uid, amt, type, ref, note, txId) {
   });
 }
 
+/* حد محاولات القسائم الغلط: ٥ في الساعة لكل عميل — يمنع تجربة أكواد عشوائية لين يصيب وحدة.
+   redeem_lim/{uid} {n, since} — ممنوعة على المتصفح (ما لها قاعدة = مرفوضة) */
+const LIM_N = 5, LIM_MS = 3600 * 1000;
+async function redeemBlocked(uid) {
+  const d = await db().collection('redeem_lim').doc(uid).get();
+  if (!d.exists) return false;
+  const v = d.data();
+  return Date.now() - (v.since || 0) < LIM_MS && (v.n || 0) >= LIM_N;
+}
+async function redeemFail(uid) {
+  const ref = db().collection('redeem_lim').doc(uid);
+  await db().runTransaction(async t => {
+    const d = await t.get(ref);
+    const v = d.exists ? d.data() : null;
+    if (!v || Date.now() - (v.since || 0) >= LIM_MS) t.set(ref, { n: 1, since: Date.now() });
+    else t.update(ref, { n: (v.n || 0) + 1 });
+  });
+}
+
 async function redeem(uid, code) {
+  if (await redeemBlocked(uid)) return { ok: false, why: 'too_many' };
+  const r = await redeemTx(uid, code);
+  /* المحاولة الغلط بس تنحسب — الكود المستخدم أو المنتهي مو تخمين */
+  if (!r.ok && (r.why === 'not_found' || r.why === 'bad_code')) await redeemFail(uid).catch(() => {});
+  return r;
+}
+async function redeemTx(uid, code) {
   const c = normCode(code);
   if (c.length < 3) return { ok: false, why: 'bad_code' };
   const cr = db().collection('codes').doc(c);
