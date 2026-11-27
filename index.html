@@ -636,6 +636,9 @@ body{font-family:'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif;background:#f5f5
 <script>
 firebase.initializeApp({apiKey:"AIzaSyBpzmldAixRVbgPTANlSmcynnIxGwT8YCs",authDomain:"kleenology-d23a3.firebaseapp.com",projectId:"kleenology-d23a3"});
 var db=firebase.firestore(),auth=firebase.auth();
+/* نسخة محلية من البيانات: لو فتحت اللوحة مرة ثانية خلال نص ساعة، فايربيس يجيب اللي تغيّر بس
+   بدل ما يقرأ كل التقييمات والطلبات من جديد — يوفّر من الحد اليومي المجاني */
+try{db.enablePersistence({synchronizeTabs:true}).catch(function(){});}catch(e){}
 var MO=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var SUBMIT_COOLDOWN_MS=60*60*1000; /* حد الإرسال المتكرر من نفس الجهاز: ساعة واحدة */
 var TEAMS=['فريق أبو رزان']; /* أسماء الفرق — أضف أسماء جديدة هنا ويظهر سؤال الفريق تلقائياً في النموذج */
@@ -881,9 +884,12 @@ try{fetch(INV_API+'/api/pay/sweep',{method:'POST'}).catch(function(){});}catch(e
 if(PAYTEST)setTimeout(payTestResult,400);
 if(window.Notification&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
 /* التقييمات أولاً — هي أول ما تعرضه اللوحة، فما تنتظر بقية البيانات */
-startLive();startOrders();startCust();
+startLive();startOrders();
+/* العملاء وقائمة العروض (آلاف الأرقام) ما تنقرأ إلا لما تفتح تبويبها — أكبر استهلاك للحد اليومي */
+CTP=null;if(CUUN){CUUN();CUUN=null;}
+var onT=document.querySelector('.adm-tb.on');if(onT)needTab(onT.dataset.t);
 /* البقية مستقلة عن بعضها: تُجلب دفعة وحدة بدل ما تنتظر كل وحدة اللي قبلها */
-Promise.all([loadPub(),loadTargets(),loadContacts(),loadStaff(),loadPayDay(),loadPayrun(pyMonKey(new Date()))])
+Promise.all([loadPub(),loadTargets(),loadStaff(),loadPayDay(),loadPayrun(pyMonKey(new Date()))])
   .then(function(){if(auth.currentUser)renderAdm();});
 /* Chart.js ثقيل ولا يظهر إلا في الرسوم البيانية — يُحمّل بالخلفية وتُعاد الرسوم لما يجهز */
 loadCh().then(function(){if(CHL&&auth.currentUser)renderAdm();});
@@ -911,7 +917,17 @@ auth.signInWithEmailAndPassword(em,pw).then(function(){
 document.getElementById('lgPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 function doLogout(){auth.signOut().then(goHome).catch(goHome);}
 
-document.querySelectorAll('.adm-tb').forEach(function(t){t.onclick=function(){document.querySelectorAll('.adm-tb').forEach(function(x){x.classList.remove('on');});document.querySelectorAll('.tc').forEach(function(x){x.classList.remove('on');});t.classList.add('on');document.getElementById('tc'+t.dataset.t.charAt(0).toUpperCase()+t.dataset.t.slice(1)).classList.add('on');clBarSync();};});
+/* تحميل عند الحاجة: تبويب العملاء يحتاج العملاء وقائمة العروض، وتبويب العروض يحتاج القائمة */
+var CTP=null;
+function needContacts(){
+  if(!CTP)CTP=loadContacts().then(function(){if(auth.currentUser){rCu();rOf();}});
+  return CTP;
+}
+function needTab(t){
+  if(t==='customers'){if(!CUUN)startCust();needContacts();}
+  if(t==='offers')needContacts();
+}
+document.querySelectorAll('.adm-tb').forEach(function(t){t.onclick=function(){needTab(t.dataset.t);document.querySelectorAll('.adm-tb').forEach(function(x){x.classList.remove('on');});document.querySelectorAll('.tc').forEach(function(x){x.classList.remove('on');});t.classList.add('on');document.getElementById('tc'+t.dataset.t.charAt(0).toUpperCase()+t.dataset.t.slice(1)).classList.add('on');clBarSync();};});
 
 function loadCh(){return new Promise(function(r){if(CHL){r();return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';s.onload=function(){CHL=true;r();};s.onerror=function(){r();};document.head.appendChild(s);});}
 function kC(id){if(CH[id]){CH[id].destroy();delete CH[id];}}

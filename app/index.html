@@ -1273,7 +1273,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.28.2100';
+var APP_VER='2026.11.28.2200';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1806,8 +1806,7 @@ function onSignedIn(uid){
     renderAll();go('scHome');setTab('scHome');shown=true;
   }
   loadRevs();
-  /* المواعيد ما تلزم إلا عند الحجز — تتحمّل بالخلفية، ولو فتح الحجز قبلها نعيد رسمه */
-  loadSlots().then(function(){var b=$('scBook');if(b&&b.classList.contains('on')&&BK.step===0)renderBook();});
+  /* المواعيد ما تنقرأ إلا لما يفتح الحجز (startBooking وغيرها تحمّلها) — توفير من الحد اليومي */
   function ready(){
     saveSnap();
     renderAll();
@@ -1855,9 +1854,11 @@ function loadRevs(){
   if(DEMO){REVS=LS.get('revs',[]);renderHomeRevs();return;}
   if(!db)return;
   if(!REVS){REVS=LS.get('revs',null);if(REVS)renderHomeRevs();}
+  /* التقييمات ما تتغيّر كل دقيقة — نقرأها من فايربيس مرة كل ٦ ساعات بالكثير، والباقي من الجهاز */
+  if(REVS&&Date.now()-(Number(LS.get('revsAt',0))||0)<6*3600e3)return;
   db.collection('public_reviews').orderBy('ts','desc').limit(20).get().then(function(sn){
     var a=[];sn.forEach(function(d){var r=d.data()||{};a.push({n:r.n||'',o:Number(r.o)||0,nt:String(r.nt||'')});});
-    REVS=a;LS.set('revs',a);renderHomeRevs();
+    REVS=a;LS.set('revs',a);LS.set('revsAt',Date.now());renderHomeRevs();
   }).catch(function(e){console.log('revs:',e&&e.code);});
 }
 function renderHomeRevs(){
