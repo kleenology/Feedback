@@ -447,6 +447,17 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
   direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
 
 /* ===== الطلبات ===== */
+.olist{background:var(--card);border-radius:24px;box-shadow:var(--sh);overflow:hidden}
+.orow{display:flex;align-items:center;gap:14px;width:100%;padding:16px 18px;background:none;font:inherit;color:inherit;text-align:right;position:relative}
+.orow+.orow::before{content:"";position:absolute;top:0;right:18px;left:18px;border-top:1px solid var(--line)}
+.orow:active{background:var(--sunk)}
+.orow .oi{width:58px;height:58px;border-radius:17px;background:var(--blue-l);display:grid;place-items:center;flex:0 0 auto}
+.orow .oi .pic,.orow .oi .il{width:36px;height:36px}
+.orow .ot{flex:1;min-width:0}
+.orow .ot b{display:block;font-size:16.5px;font-weight:700;font-family:var(--dsp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orow .ot s{display:block;text-decoration:none;font-size:13px;color:var(--mut);margin-top:4px}
+.orow .st{flex:0 0 auto;font-size:11px;padding:4px 9px}
+#shB .ord{box-shadow:none;padding:4px 0 0;margin:0}
 .ord{background:var(--card);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:var(--sh)}
 .ord.live{box-shadow:0 0 0 2px var(--gold), var(--sh)}
 /* حالة الطلب في سطر واحد، وتنفتح كاملة بالضغط */
@@ -1288,7 +1299,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.0000';
+var APP_VER='2026.11.29.0100';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2300,6 +2311,7 @@ function openSheet(title,html){
   try{history.pushState({sh:1},'');}catch(e){}
 }
 function closeSheet(){
+  if(typeof OPENORD!=='undefined')OPENORD='';
   $('sh').classList.remove('on');$('shX').classList.remove('on');
   document.body.style.overflow='';
   if(SHBACK){window.removeEventListener('popstate',SHBACK);SHBACK=null;}
@@ -3057,13 +3069,36 @@ function renderOrders(){
     return;
   }
   var L=ORQF==='quote'?ORD.filter(function(o){return o.quote;}):ORD;
+  /* لو تفاصيل طلب مفتوحة، نحدّثها مع أي تغيير (تأكيد، دفع، فاتورة) */
+  if(OPENORD&&$('sh').classList.contains('on')){var oo=ORD.filter(function(x){return x.id===OPENORD;})[0];if(oo)$('shB').innerHTML=ordCard(oo,false);}
   $('ordList').innerHTML=
     (ORQF?'<button class="okline" style="width:100%;justify-content:center;background:var(--blue-l);color:var(--blue-d)" '+
       'onclick="ORQF=\'\';renderOrders()"><span>تعرض عروض الأسعار فقط — اعرض كل الطلبات</span></button>':'')+
-    (L.length?L.map(function(o){return ordCard(o,false);}).join(''):
+    (L.length?'<div class="olist">'+L.map(ordRow).join('')+'</div>':
     '<div class="empty">'+il('file')+'<p>'+(ORQF?'ما عندك عروض أسعار':'ما عندك طلبات بعد')+'</p>'+
     '<button class="btn" style="margin-top:20px;max-width:230px;margin-inline:auto" onclick="'+
       (ORQF?'ORQF=\'\';renderOrders()':'go(\'scHome\');setTab(\'scHome\')')+'">'+(ORQF?'اعرض كل الطلبات':'تصفّح الخدمات')+'</button></div>');
+}
+/* قائمة الحجوزات مختصرة: أيقونة الخدمة، اسمها، اليوم والفترة — والتفاصيل كاملة بالضغط */
+var OPENORD='';
+function ordSvc(o){
+  var k=o.items&&o.items[0]&&o.items[0].sv;
+  if(k&&!o.pkg)return svcOf(k);
+  var t=String(o.svc||'');
+  return SVCS.filter(function(s){return t.indexOf(s.t)>=0;})[0]||null;
+}
+function ordRow(o){
+  var s=ordSvc(o),sl=SLOTS.filter(function(x){return x.k===o.slot;})[0];
+  var t=o.quote?'معاينة — '+(s?s.t:String(o.svc||'').replace(/^زيارة تسعير — /,'')):isSub(o)?String(o.svc||'اشتراك'):(s?s.t:String(o.svc||'طلب'));
+  if(!o.quote&&!isSub(o)&&String(o.svc||'').indexOf(' · ')>0)t=String(o.svc);
+  return '<button class="orow" onclick="openOrd(\''+o.id+'\')">'+
+    '<span class="oi">'+(s?svcIc(s):il('cart'))+'</span>'+
+    '<span class="ot"><b>'+esc(t)+'</b><s>'+esc(fmtDate(o.date))+(sl?' • '+esc(sl.t)+' ('+esc(sl.s)+')':'')+'</s></span>'+
+    '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></button>';
+}
+function openOrd(id){
+  var o=ORD.filter(function(x){return x.id===id;})[0];if(!o)return;
+  OPENORD=id;openSheet('تفاصيل الحجز',ordCard(o,false));
 }
 function reloadOrders(){
   ORERR='';$('ordList').innerHTML='<div class="empty">جاري التحميل…</div>';
