@@ -887,7 +887,9 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
   <div class="lg">
     <div class="lg-m"><img src="../logo.png" alt="كلينولوجي"></div>
     <div id="lgEmail" class="hide">
+      <button type="button" id="lgGuest" class="bk hide" style="margin-bottom:14px" onclick="PENDING='';guestHome()"></button>
       <h1>أهلاً بك في <em>كلينولوجي</em></h1>
+      <p id="lgWhy" class="hide" style="color:var(--blue-d);font-weight:600;margin:-4px 0 12px"></p>
       <div class="em-tabs" role="tablist">
         <button type="button" id="emTabIn" class="on" onclick="emMode('in')">دخول</button>
         <button type="button" id="emTabUp" onclick="emMode('up')">حساب جديد</button>
@@ -1333,7 +1335,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.0900';
+var APP_VER='2026.11.29.1000';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1416,7 +1418,7 @@ function go(id){
   document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
   $(id).classList.add('on');
   /* أثناء إتمام الحجز نخفي التبويبات — مسار واحد بلا تشتيت */
-  var tb=$('tabBar');if(tb&&AUTHED)tb.classList.toggle('hide',id==='scBook');
+  var tb=$('tabBar');if(tb&&(AUTHED||GUEST))tb.classList.toggle('hide',id==='scBook'||id==='scLogin');
   window.scrollTo(0,0);
   if(typeof syncCartUI==='function')syncCartUI();   /* شريط السلة يتبع الشاشة */
 }
@@ -1763,7 +1765,7 @@ function askSave(){
   /* loadMe بعد الحفظ يسجّل «أول دخول» و«آخر دخول» — حساب الإيميل ما كان له جوال وقت الدخول فما انكتبت */
   API.saveMe().then(function(){API.loadMe();b.disabled=false;b.textContent='حفظ ومتابعة';
     $('lgAsk').classList.add('hide');$('tabBar').classList.remove('hide');
-    renderAll();go('scHome');setTab('scHome');
+    renderAll();if(!runPending()){go('scHome');setTab('scHome');}
   }).catch(function(){b.disabled=false;b.textContent='حفظ ومتابعة';ME.ph='';lgErr('تعذّر الحفظ — حاول مرة ثانية');});
 }
 
@@ -1856,7 +1858,8 @@ function saveSnap(){
   LS.set('snap',{uid:ME.uid,n:ME.n||'',ok:!!ME.ok,ph:ME.ph||'',ord:ORD.slice(0,20),adr:ADR});
 }
 function onSignedIn(uid){
-  ME.uid=uid;AUTHED=true;
+  ME.uid=uid;AUTHED=true;GUEST=false;
+  var g=$('lgGuest');if(g)g.classList.add('hide');var w=$('lgWhy');if(w)w.classList.add('hide');
   CART=LS.get('cart',{});
   var snap=DEMO?null:LS.get('snap',null),shown=false;
   /* بلا جوال محفوظ ما نفتح التطبيق — لا تبويبات ولا رئيسية لين يكمّل بياناته */
@@ -1874,17 +1877,43 @@ function onSignedIn(uid){
     if(!ME.ph){askPhone();return;}
     $('tabBar').classList.remove('hide');
     if(PAYRET){var c=PAYRET;PAYRET='';payVerify(c);return;}
+    if(runPending())return;
     if(!shown){go('scHome');setTab('scHome');}
   }
   /* لو فشل تحميل الطلبات أو العناوين ما نعلّق العميل — نكمل بالموجود */
   Promise.all([API.loadMe(),API.orders(),API.addrs()]).then(ready,ready);
+}
+/* ===== التصفح بدون تسجيل =====
+   الزائر يشوف الخدمات والأسعار والباقات ويضيف للسلة. الدخول يُطلب بس عند الحجز أو «طلباتي» و«حسابي»،
+   وبعده يكمل من نفس المكان (PENDING) والسلة محفوظة في جهازه */
+var GUEST=false,PENDING='';
+function guestHome(){
+  GUEST=true;AUTHED=false;
+  CART=LS.get('cart',{});
+  $('tabBar').classList.remove('hide');
+  renderAll();loadRevs();go('scHome');setTab('scHome');syncCartUI();
+}
+function needLogin(next){
+  if(AUTHED&&ME.ph)return false;
+  PENDING=next||'';
+  go('scLogin');$('tabBar').classList.add('hide');syncCartUI();
+  if(emailOn())emShow();
+  var g=$('lgGuest');if(g){g.innerHTML=backTo('تصفّح بدون تسجيل');g.classList.remove('hide');}
+  var w=$('lgWhy');if(w){w.textContent=/^sc/.test(next||'')?'سجّل دخولك عشان تشوف طلباتك وحسابك':'سجّل دخولك عشان تكمل حجزك — سلتك محفوظة';w.classList.remove('hide');}
+  return true;
+}
+function runPending(){
+  var p=PENDING;PENDING='';if(!p)return false;
+  if(/^sc/.test(p)){go(p);setTab(p);if(p==='scMe')renderMe();if(p==='scOrders')renderOrders();return true;}
+  if(typeof window[p]==='function'){window[p]();return true;}
+  return false;
 }
 function logout(){
   if(!confirm('تسجيل الخروج؟'))return;
   function done(){
     if(ORUN){ORUN();ORUN=null;}ORERR='';
     AUTHED=false;ME={uid:'',ph:'',n:'',ok:false,em:''};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
-    $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';go('scLogin');if(emailOn())emShow();}
+    backToPhone();$('inPh').value='';guestHome();}
   if(DEMO){done();return;}
   auth.signOut().then(done).catch(done);
 }
@@ -1957,7 +1986,7 @@ function renderHome(){
       '<s>'+esc(fmtDate(live.date))+' · '+esc(slotOf(live.slot))+'</s></span>'+
       stPill(live)+ic('back','','ic-sm')+'</button></div>'
     : '';
-  $('nameCard').innerHTML=ME.n?'':
+  $('nameCard').innerHTML=(ME.n||!AUTHED)?'':
     '<div class="sec" style="padding-bottom:0"><div class="card" style="padding:16px">'+
       '<label class="lb" for="hmN">وش نناديك؟</label>'+
       '<div style="display:flex;gap:9px;align-items:stretch">'+
@@ -2285,6 +2314,7 @@ function renderQuote(){
 }
 /* زيارة التسعير تمر بنفس خطوات الحجز وتحجز فترة فعلية — لأنها موعد حقيقي على فريقك */
 function startQuoteVisit(){
+  if(needLogin('startQuoteVisit'))return;
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
   QW={kind:'',area:'',nt:'',freq:'',rooms:0,halls:0,baths:0,kitchens:0,
       cab:false,cement:false,paint:false,afterh:false,glass:false,carpet:false};
@@ -2377,7 +2407,7 @@ function syncCartUI(){
   cb.innerHTML=ic('cart')+(n?'<span class="badge mono">'+n+'</span>':'');
   var bar=$('cartBar');
   /* ‎.cartbar و‎.sticky على نفس الارتفاع — يتراكبان لو ظهرا معاً */
-  var own=['scService','scCart','scBook'].some(function(id){var e=$(id);return e&&e.classList.contains('on');});
+  var own=['scService','scCart','scBook','scLogin'].some(function(id){var e=$(id);return e&&e.classList.contains('on');});
   if(!n||own){bar.classList.add('hide');bar.innerHTML='';return;}
   bar.classList.remove('hide');
   bar.innerHTML='<div class="cartbar-in"><div><s>'+n+' صنف'+(t.cut?' · وفّرت '+t.cut+' <i class="rs" role="img" aria-label="ريال"></i>':'')+'</s>'+
@@ -2423,22 +2453,25 @@ function clearCart(){if(!confirm('تفريغ السلة؟'))return;CART={};LS.se
   renderCart();svRows();renderLadder();svCta();toast('فُرّغت السلة');}
 
 /* ================= إتمام الحجز ================= */
-var STEPS=['الموعد','العنوان','التأكيد'];
+/* العنوان قبل الموعد: نتأكد إن الموقع داخل تغطيتنا قبل ما يختار وقت */
+var STEPS=['العنوان','الموعد','التأكيد'];
 function startBooking(){
   if(!cartLines().length){toast('سلتك فاضية');return;}
   if(cartTotals().tot<MIN_ORDER){toast('الحد الأدنى للطلب '+MIN_ORDER+' ر.س');go('scCart');setTab('');renderCart();return;}
+  if(needLogin('startBooking'))return;
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
   BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,quote:null,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
 /* الاشتراك يمر بنفس الخطوات — الفرق أن المطلوب باقة متكررة لا سلة أصناف */
 function startPkgBooking(){
   if(!PKG)return;
+  if(needLogin('startPkgBooking'))return;
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
   BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,quote:null,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
 }
 function bookBack(){if(BK.step===0){go(BK.quote?'scQuote':BK.pkg?'scPkg':'scCart');return;}BK.step--;renderBook();}
 function bookNext(){
-  if(BK.step===1&&!BK.adr)commitWhere();
+  if(BK.step===0&&!BK.adr)commitWhere();
   BK.step++;renderBook();
 }
 function renderBook(){
@@ -2446,9 +2479,9 @@ function renderBook(){
   $('bkBtn').innerHTML=backTo(BK.step===0?(BK.quote?'التسعير':BK.pkg?'الباقة':'السلة'):STEPS[BK.step-1]);
   $('bkStepN').innerHTML='<span dir="ltr" style="unicode-bidi:isolate">'+(BK.step+1)+' / '+STEPS.length+'</span>';
   BKBAR='';
-  $('bkBody').innerHTML=[stepWhen,stepWhere,stepConfirm][BK.step]();
+  $('bkBody').innerHTML=[stepWhere,stepWhen,stepConfirm][BK.step]();
   var bar=$('bkBar');bar.innerHTML=BKBAR;bar.classList.toggle('hide',!BKBAR);
-  if(BK.step===1&&BK.loc){initMapPin();pinDrag($('mapPin'));}
+  if(BK.step===0&&BK.loc){initMapPin();pinDrag($('mapPin'));}
   window.scrollTo(0,0);
 }
 function head(t,s){return '<div class="stp-n" style="margin-top:22px">'+esc(STEPS[BK.step])+'</div><h2 class="stp-t">'+esc(t)+'</h2><p class="stp-s">'+esc(s)+'</p>';}
@@ -2894,7 +2927,7 @@ function onSubmitErr(e){
   var c=e&&e.code;
   if(c==='slot-taken'){
     loadSlots().then(function(){
-      BK.slot='';BK.step=0;renderBook();
+      BK.slot='';BK.step=1;renderBook();
       toast('سبقك أحد على هذي الفترة — اختر فترة ثانية');
     });
     return;
@@ -3334,6 +3367,7 @@ function setTab(id){document.querySelectorAll('.tab').forEach(function(t){t.setA
 document.querySelectorAll('.tab').forEach(function(t){
   t.insertAdjacentHTML('afterbegin',ic(t.dataset.i));
   t.onclick=function(){
+    if(!AUTHED&&(t.dataset.s==='scOrders'||t.dataset.s==='scMe')){needLogin(t.dataset.s);return;}
     go(t.dataset.s);setTab(t.dataset.s);
     if(t.dataset.s==='scMe')renderMe();
     if(t.dataset.s==='scPkgs')renderPkgs();
@@ -3407,7 +3441,7 @@ if('serviceWorker' in navigator&&window.isSecureContext){
     }).then(again,again);
   }).catch(function(){});
 }
-if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else go('scLogin');}
+if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else guestHome();}
 else if(!auth){
   go('scLogin');
   lgErr('تعذّر تحميل التطبيق — تأكد من الإنترنت وأعد فتح الصفحة');
@@ -3417,7 +3451,7 @@ else if(!auth){
     else if(String(u.uid).indexOf('ph_')===0)ME.ph=String(u.uid).slice(3);
     else{ME.ph='';ME.em=u.email||'';}   /* إيميل: الجوال من ملفه، أو نطلبه */
     onSignedIn(u.uid);}
-  else{go('scLogin');if(emailOn())emShow();}});
+  else guestHome();});
 if(DEMO&&emailOn())emShow();
 </script>
 </body>
