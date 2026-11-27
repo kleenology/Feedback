@@ -578,6 +578,8 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .pm-ic{display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap}
 .pm-ic span{font-size:11px;font-weight:700;border:1px solid var(--line);border-radius:7px;padding:3px 8px;background:#fff;color:var(--tx)}
 .pm-ic .ap{background:#000;color:#fff;border-color:#000}
+.btn.ap-btn,.btn.tap-go{background:#000;color:#fff!important}
+.btn.ap-btn:disabled{opacity:.45}
 .tap-go{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin:4px 0 12px;box-shadow:0 6px 18px rgba(0,0,0,.18);
   background:#000;color:#fff;border-radius:14px;padding:15px;font:inherit;font-weight:700;font-size:15px}
 .bs-terms{font-size:13px;color:var(--mut);line-height:1.8;margin:18px 2px 0}
@@ -1286,7 +1288,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.28.2300';
+var APP_VER='2026.11.29.0000';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2651,12 +2653,12 @@ function payCard(dep,o){
   var tap=o&&TAP_ON&&!rcptDone(o.id);
   /* بلا تحويل بنكي: الطلب الجديد له زر الدفع بس. طلب قديم بالتحويل (أو قبل حقل pay) يبقى له رفع الإيصال */
   if(tap&&o.pay==='tap')
-    return '<div class="pay"><div class="pay-h"><span><b>الدفع لتثبيت الحجز</b>'+(o&&Number(o.est)>Number(o.dep)?'عربون الحجز':'قيمة الطلب كاملة')+'</span>'+
+    return '<div class="pay"><div class="pay-h"><span><b>الدفع لتثبيت الحجز</b>'+(o&&o.quote?'قيمة زيارة المعاينة':o&&Number(o.est)>Number(o.dep)?'عربون الحجز':'قيمة الطلب كاملة')+'</span>'+
       '<strong class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></strong></div>'+
       '<div class="pay-b"><button type="button" class="tap-go" onclick="this.disabled=true;payStart(\''+o.id+'\','+(Number(o.no)||0)+')">'+apBtn()+'</button>'+
       '<div class="pm-ic" style="margin:-4px 0 6px"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div>'+
       '<p class="pay-n" style="text-align:center">موعدك يتثبت أول ما يكتمل الدفع.</p></div></div>';
-  return '<div class="pay"><div class="pay-h"><span><b>الدفع لتثبيت الحجز</b>'+(o&&Number(o.est)>Number(o.dep)?'عربون الحجز':'قيمة الطلب كاملة')+'</span>'+
+  return '<div class="pay"><div class="pay-h"><span><b>الدفع لتثبيت الحجز</b>'+(o&&o.quote?'قيمة زيارة المعاينة':o&&Number(o.est)>Number(o.dep)?'عربون الحجز':'قيمة الطلب كاملة')+'</span>'+
       '<strong class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></strong></div>'+
     '<div class="pay-b">'+
       (tap?'<button type="button" class="tap-go" onclick="this.disabled=true;payStart(\''+o.id+'\','+(Number(o.no)||0)+')">ادفع '+
@@ -2817,8 +2819,12 @@ function stepConfirmQuote(){
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="حالة المكان · متى تبي الخدمة · أي شي يفيد الفريق">'+esc(QW.nt||'')+'</textarea></div>'+
     '<div class="note acc">'+(QUOTE_FEE?'تدفع <b>'+QUOTE_FEE+' ر.س</b> للمعاينة، و<b>تُخصم كاملة من قيمة الخدمة</b> لو أكملت معنا. وإن ما ناسبك السعر ما تلزمك بشي.'
                                       :'الزيارة مجانية وما تلزمك بشي — تسمع السعر وتقرر.')+'</div>'+
-    '<button class="btn" style="margin-top:20px" id="bkGo" '+(qwReady()?'':'disabled')+
-      ' onclick="submitOrder()">اطلب الزيارة</button>';
+    (QUOTE_FEE&&TAP_ON
+      ?'<button class="btn ap-btn tap-go" style="margin-top:20px" id="bkGo" '+(qwReady()?'':'disabled')+' onclick="submitOrder()">'+apBtn()+'</button>'+
+        '<div class="pm-ic" style="margin-top:2px"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div>'+
+        '<p class="pay-n" style="text-align:center;margin-top:8px">تدفع <b>'+QUOTE_FEE+' ر.س</b> ويتأكد موعد المعاينة على طول.</p>'
+      :'<button class="btn" style="margin-top:20px" id="bkGo" '+(qwReady()?'':'disabled')+
+        ' onclick="submitOrder()">اطلب الزيارة</button>');
 }
 function row(l,v){return '<div class="row-i"><s style="text-decoration:none;font-size:13px;color:var(--mut)">'+esc(l)+'</s><b>'+esc(v)+'</b></div>';}
 /* مراجعة الاشتراك: باقة متكررة بدل سلة أصناف */
@@ -2915,9 +2921,13 @@ function submitOrder(){
       adr:BK.adr?{t:BK.adr.t,c:BK.adr.c||'',d:BK.adr.d||'',s:BK.adr.s||'',lat:BK.adr.lat||null,lng:BK.adr.lng||null}:{},
       nt:(quoteSummary()+(String($('bkNt').value||'').trim()?'\nملاحظات: '+String($('bkNt').value||'').trim():'')).slice(0,600),
       st:'new',at:now,hist:[{s:'new',at:now}]};
+    /* قيمة المعاينة تُدفع قبل تأكيد الموعد — نفس مسار الدفع الإلكتروني */
+    var qPay=QUOTE_FEE&&TAP_ON;
+    if(qPay){qo.dep=QUOTE_FEE;qo.pay='tap';}
     API.addOrder(qo).then(function(){
+      if(qPay){BK.quote=null;payStart(qo.id,qo.no);return;}
       BK.quote=null;renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(qo.no?'وصلنا طلبك رقم '+qo.no:'وصلنا طلبك');
-    }).catch(function(e){b.disabled=false;b.textContent='اطلب الزيارة';onSubmitErr(e);});
+    }).catch(function(e){b.disabled=false;if(QUOTE_FEE&&TAP_ON)b.innerHTML=apBtn();else b.textContent='اطلب الزيارة';onSubmitErr(e);});
     return;
   }
   if(BK.pkg){

@@ -65,6 +65,10 @@ const reset = () => { CREATED = []; SHARE_FAIL = CREATE_FAIL = false; delete pro
   await t('طلب ملغي: ما تطلع', async () => {
     reset(); ORD.o1.st = 'cancelled'; eq((await A.autoInvoice('o1')).skipped, 'not_fully_paid');
   });
+  await t('زيارة المعاينة المدفوعة: ما تطلع فاتورة تلقائية (تنخصم من فاتورة الخدمة)', async () => {
+    reset(); Object.assign(ORD.o1, { quote: true, est: 29, dep: 29, paid: 29, items: [] });
+    eq([(await A.autoInvoice('o1')).skipped, CREATED.length, !!ORD.o1.ostazLock], ['quote', 0, false]);
+  });
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();
