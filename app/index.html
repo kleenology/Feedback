@@ -460,6 +460,30 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .orow .ot s{display:block;text-decoration:none;font-size:13px;color:var(--mut);margin-top:4px}
 .orow .st{flex:0 0 auto;font-size:11px;padding:4px 9px}
 #shB .ord{box-shadow:none;padding:4px 0 0;margin:0}
+/* تفاصيل الحجز: صفوف مرتبة بدل البطاقة الكبيرة */
+.od-h{display:flex;align-items:center;gap:13px;margin:2px 0 16px}
+.od-h .oi{width:54px;height:54px;border-radius:16px;background:var(--blue-l);display:grid;place-items:center;flex:0 0 auto}
+.od-h .oi .pic,.od-h .oi .il{width:34px;height:34px}
+.od-h .ot{flex:1;min-width:0}
+.od-h .ot b{display:block;font-size:17px;font-weight:700;font-family:var(--dsp)}
+.od-h .ot s{display:block;text-decoration:none;font-size:12.5px;color:var(--mut);margin-top:3px}
+.od-c{background:var(--card);border-radius:18px;padding:2px 16px;margin-bottom:12px;box-shadow:var(--sh)}
+.od-r{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;font-size:14px}
+.od-r+.od-r{border-top:1px solid var(--line)}
+.od-r>s{text-decoration:none;color:var(--mut);flex:0 0 auto}
+.od-r>b{font-weight:600;text-align:left;min-width:0}
+.od-r>b a{color:var(--blue-d);font-weight:700;text-decoration:none;margin-inline-start:6px}
+.od-r.tot>s{color:var(--tx);font-weight:700}.od-r.tot>b{font-size:17px;font-weight:700;color:var(--blue-d)}
+.od-r.ok>s,.od-r.ok>b{color:#16a34a}.od-r.rem>s,.od-r.rem>b{color:var(--gold-d)}
+.od-r .it{display:block;font-size:12px;color:var(--mut);font-weight:400;margin-top:2px}
+.od-pay{background:#fff8ec;border-radius:18px;padding:14px 16px;margin-bottom:12px}
+.od-pay p{font-size:13px;color:#8a5a00;margin-bottom:11px;display:flex;align-items:center;gap:7px}
+.od-pay .tap-go{margin:0;padding:14px;font-size:15px}
+.od-inv{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:18px;padding:14px 16px;margin-bottom:12px;
+  box-shadow:var(--sh);text-decoration:none;color:inherit;font-size:14px;font-weight:600}
+.od-inv .ic{color:var(--blue)}.od-inv span{flex:1}.od-inv em{font-style:normal;color:var(--blue-d);font-size:13px}
+.od-x{display:block;margin:6px auto 4px;color:var(--stop);font:inherit;font-size:14px;font-weight:600;padding:10px}
+#shB .tl{margin-top:4px}
 .ord{background:var(--card);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:var(--sh)}
 .ord.live{box-shadow:0 0 0 2px var(--gold), var(--sh)}
 /* حالة الطلب في سطر واحد، وتنفتح كاملة بالضغط */
@@ -1302,7 +1326,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.0300';
+var APP_VER='2026.11.29.0400';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -3075,7 +3099,7 @@ function renderOrders(){
   }
   var L=ORQF==='quote'?ORD.filter(function(o){return o.quote;}):ORD;
   /* لو تفاصيل طلب مفتوحة، نحدّثها مع أي تغيير (تأكيد، دفع، فاتورة) */
-  if(OPENORD&&$('sh').classList.contains('on')){var oo=ORD.filter(function(x){return x.id===OPENORD;})[0];if(oo)$('shB').innerHTML=ordCard(oo,false);}
+  if(OPENORD&&$('sh').classList.contains('on')){var oo=ORD.filter(function(x){return x.id===OPENORD;})[0];if(oo)$('shB').innerHTML=ordDetail(oo);}
   $('ordList').innerHTML=
     (ORQF?'<button class="okline" style="width:100%;justify-content:center;background:var(--blue-l);color:var(--blue-d)" '+
       'onclick="ORQF=\'\';renderOrders()"><span>تعرض عروض الأسعار فقط — اعرض كل الطلبات</span></button>':'')+
@@ -3103,7 +3127,47 @@ function ordRow(o){
 }
 function openOrd(id){
   var o=ORD.filter(function(x){return x.id===id;})[0];if(!o)return;
-  OPENORD=id;openSheet('تفاصيل الحجز',ordCard(o,false));
+  OPENORD=id;openSheet('تفاصيل الحجز',ordDetail(o));
+}
+function odr(l,v,cls){return '<div class="od-r'+(cls?' '+cls:'')+'"><s>'+l+'</s><b>'+v+'</b></div>';}
+function ordDetail(o){
+  var s=ordSvc(o),sl=SLOTS.filter(function(x){return x.k===o.slot;})[0];
+  var t=o.quote?'معاينة — '+(s?s.t:String(o.svc||'').replace(/^زيارة تسعير — /,'')):String(o.svc||(s?s.t:'طلب'));
+  var due=o.st==='new'?depDue(o):0,P=Number(o.paid)||0,T=Number(o.price)||Number(o.est)||0,R=Math.max(0,T-P);
+  var items=isSub(o)?[]:(o.items||[]);
+  var h='<div class="od-h"><span class="oi">'+(s?svcIc(s):il('cart'))+'</span>'+
+      '<span class="ot"><b>'+esc(t)+'</b>'+(o.no?'<s class="mono">طلب رقم '+o.no+'</s>':'')+'</span>'+
+      '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>';
+  /* بانتظار الدفع: تنبيه مختصر وزر واحد */
+  if(due&&TAP_ON&&o.pay==='tap')
+    h+='<div class="od-pay"><p>'+ic('clock','','ic-sm')+'<span>بانتظار الدفع — موعدك يتثبت أول ما يكتمل</span></p>'+
+      '<button type="button" class="btn ap-btn tap-go" onclick="this.disabled=true;payStart(\''+o.id+'\','+(Number(o.no)||0)+')">'+
+        '<span>ادفع '+due.toLocaleString('en-US')+' ر.س</span><span class="apw" dir="ltr">'+APL+'Pay</span></button></div>';
+  else if(due)h+=payCard(due,o);
+  if(o.st==='cancelled'&&autoCut(o))h+='<p class="pay-n" style="margin:0 2px 12px;color:var(--mut)">أُلغي تلقائياً لأن الدفع ما اكتمل خلال ساعة، والموعد رجع متاح.</p>';
+  h+='<div class="od-c">'+
+      odr(isSub(o)?'أول زيارة':'الموعد',esc(fmtDate(o.date)))+
+      (sl?odr('الفترة',esc(sl.t)+' ('+esc(sl.s)+')'):'')+
+      odr('العنوان',esc((o.adr&&o.adr.t)||'')+(o.adr&&o.adr.d?' — '+esc(o.adr.d):'')+
+        (mapUrl(o.adr)?'<a href="'+mapUrl(o.adr)+'" target="_blank" rel="noopener">الخريطة</a>':''))+
+      (isSub(o)&&o.pkg?odr('التكرار',esc(o.pkg.every||'')):'')+
+    '</div>';
+  h+='<div class="od-c">'+
+      items.map(function(i){return odr('<span style="color:var(--tx);font-weight:600">'+esc(i.t)+'</span><span class="it">'+esc(i.u||'')+' × '+i.q+'</span>',sar(i.p*i.q));}).join('')+
+      (o.quote?odr('قيمة المعاينة',o.est?sar(o.est):'مجانية'):'')+
+      (o.off?odr('الخصم',pct(o.off)):'')+
+      (o.price?odr('التقديري',sar(o.est))+odr('السعر النهائي',sar(o.price),'tot'):
+        (o.est&&!o.quote?odr(isSub(o)?'شهرياً':'الإجمالي',sar(o.est),'tot'):''))+
+      (P&&o.st!=='cancelled'?odr('المدفوع',sar(P),'ok')+(R?odr('المتبقي',sar(R),'rem'):''):'')+
+    '</div>';
+  if(o.ostaz&&o.ostaz.url&&/^https:\/\//.test(o.ostaz.url))
+    h+='<a class="od-inv" target="_blank" rel="noopener" href="'+esc(o.ostaz.url)+'">'+ic('doc')+'<span>فاتورتك'+
+      (o.ostaz.code?' <s class="mono" style="text-decoration:none;color:var(--mut);font-weight:400">'+esc(o.ostaz.code)+'</s>':'')+'</span><em>عرض</em></a>';
+  if(o.nt)h+='<div class="od-c"><div class="od-r" style="display:block"><s style="display:block;margin-bottom:4px">'+(o.quote?'تفاصيل المكان':'ملاحظاتك')+'</s><span style="font-size:13.5px;white-space:pre-line">'+esc(o.nt)+'</span></div></div>';
+  h+=timeline(o);
+  if(o.st==='done')h+='<a class="btn btn-2 btn-sm" style="margin-top:14px;text-decoration:none" target="_blank" rel="noopener" href="'+waLink(o)+'">'+ic('chat','','ic-sm')+'<span>تواصل معنا</span></a>';
+  if(o.st==='new')h+='<button class="od-x" onclick="cancelOrder(\''+o.id+'\')">إلغاء الطلب</button>';
+  return h;
 }
 function reloadOrders(){
   ORERR='';$('ordList').innerHTML='<div class="empty">جاري التحميل…</div>';
