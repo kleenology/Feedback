@@ -458,6 +458,7 @@ body{font-family:'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif;background:#f5f5
   <div class="tc on" id="tcOverview"></div>
   <div class="tc" id="tcOrders">
     <div id="orStats"></div>
+    <button type="button" id="payTestB" class="of-tp" style="width:100%;margin-bottom:10px" onclick="payTest()">💳 جرّب الدفع الإلكتروني بريال واحد</button>
     <div class="cc" style="padding:12px 14px">
       <input id="orSearch" class="rv-search" placeholder="🔍 بحث بالاسم أو الرقم أو الحي..." autocomplete="off">
       <div class="of-row" id="orChips">
@@ -845,8 +846,37 @@ function goHome(){if(UNSUB){UNSUB();UNSUB=null;}S={o:0,c:0,p:0,tw:0,r:null,tm:''
 
 var tc=0,tt;document.getElementById('logo').onclick=function(){tc++;clearTimeout(tt);if(tc>=3){tc=0;if(auth.currentUser){openAdmin();}else{go('pgLogin');}}else tt=setTimeout(function(){tc=0;},600);};
 
+/* تجربة الدفع بريال: تفتح صفحة تاب الحقيقية، وبعد الدفع ترجع هنا ونعرض النتيجة. ما تلمس أي طلب */
+var PAYTEST=(function(){var m=/[?&]tap_id=(chg_[A-Za-z0-9]+)/.exec(location.search);
+  if(m&&/[?&]paytest=1/.test(location.search)){try{history.replaceState(null,'',location.pathname+'?admin');}catch(e){}return m[1];}return '';})();
+function payTestCall(body){
+  var u=auth.currentUser;if(!u)return Promise.reject(new Error('login'));
+  return u.getIdToken().then(function(tok){
+    return fetch(INV_API+'/api/pay/test',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(body||{})});
+  }).then(function(r){return r.json().catch(function(){return {};});});
+}
+function payTest(){
+  if(!confirm('بتنفتح صفحة الدفع الحقيقية بمبلغ ١ ريال.\nبعد ما تدفع ترجع للوحة وتشوف النتيجة.\n\nالمبلغ ترجّعه من لوحة تاب (Refund). نكمل؟'))return;
+  var b=document.getElementById('payTestB');if(b){b.disabled=true;b.textContent='نجهّز صفحة الدفع…';}
+  payTestCall({}).then(function(j){
+    if(j&&j.url&&/^https:\/\/[a-z0-9.-]*tap\.company\//.test(j.url)){location.href=j.url;return;}
+    alert('تعذّر فتح صفحة الدفع'+(j&&j.message?'\n'+j.message:j&&j.error?' ('+j.error+')':''));
+    if(b){b.disabled=false;b.textContent='💳 جرّب الدفع الإلكتروني بريال واحد';}
+  }).catch(function(){alert('تعذّر الاتصال بالخادم');if(b){b.disabled=false;b.textContent='💳 جرّب الدفع الإلكتروني بريال واحد';}});
+}
+function payTestResult(){
+  var id=PAYTEST;PAYTEST='';if(!id)return;
+  payTestCall({tap_id:id}).then(function(j){
+    var M={APPLE_PAY:'Apple Pay',MADA:'مدى',VISA:'Visa',MASTERCARD:'Mastercard',STC_PAY:'STC Pay'};
+    if(j&&j.ok)alert('✅ الدفع نجح!\n\nالمبلغ: '+j.amount+' ر.س\nالطريقة: '+(M[j.method]||j.method||'—')+'\n'+(j.live?'دفع حقيقي — ترجّعه من لوحة تاب (Refund)':'وضع تجربة')+'\n\nرقم العملية: '+j.id);
+    else alert('❌ ما اكتمل الدفع'+(j&&j.status?'\nالحالة عند تاب: '+j.status:'')+(j&&j.error?' ('+j.error+')':''));
+  }).catch(function(){alert('تعذّر التأكد من نتيجة التجربة');});
+}
+/* رجعنا من صفحة الدفع: نفتح اللوحة تلقائياً أول ما تتأكد الجلسة — بدل ما يدوّر على الشعار */
+if(PAYTEST){var payUn=auth.onAuthStateChanged(function(u){if(u&&PAYTEST)openAdmin();else if(!u)go('pgLogin');payUn();});}
 function openAdmin(){
 go('pgAdm');
+if(PAYTEST)setTimeout(payTestResult,400);
 if(window.Notification&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
 /* التقييمات أولاً — هي أول ما تعرضه اللوحة، فما تنتظر بقية البيانات */
 startLive();startOrders();startCust();
