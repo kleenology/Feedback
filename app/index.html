@@ -170,6 +170,8 @@ button{cursor:pointer;border:none;background:none}
 .top-in{max-width:520px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .top h1{font-size:21px;line-height:1.5}
 .top p{font-size:12.5px;color:var(--mut);margin-top:1px}
+.top-in.big-t{margin-top:12px}
+.top-in.big-t h1{font-size:30px;font-weight:800;font-family:var(--dsp);line-height:1.3}
 /* العلامة الصغيرة مقابل زر الرجوع — تتراجع للخلف ولا تزاحم العنوان */
 .mark{font-size:12.5px;font-weight:600;color:var(--faint);font-family:var(--dsp)}
 .mark.en{letter-spacing:.7px}
@@ -1003,8 +1005,9 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
 <!-- ===== طلباتي ===== -->
 <section class="scr" id="scOrders">
   <header class="top"><div class="top-in">
-    <div><h1>طلباتي</h1><p>تابع حالة كل طلب</p></div>
-  </div></header>
+    <button class="bk" onclick="go('scHome');setTab('scHome')" id="ordBack"></button>
+  </div>
+  <div class="top-in big-t"><h1>طلباتي</h1></div></header>
   <div class="wrap"><div class="sec" id="ordList"></div></div>
 </section>
 
@@ -1299,7 +1302,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.0100';
+var APP_VER='2026.11.29.0200';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -3057,6 +3060,7 @@ function cancelOrder(id){
   API.cancelOrder(o).then(function(){renderAll();toast('أُلغي الطلب');}).catch(function(){toast('تعذّر الإلغاء');});
 }
 function renderOrders(){
+  var ob=$('ordBack');if(ob&&!ob.innerHTML)ob.innerHTML=backTo('الرئيسية');
   if(ORERR){
     $('ordList').innerHTML='<div class="empty">'+il('file')+
       '<p>ما قدرنا نجيب طلباتك</p>'+
