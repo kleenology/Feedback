@@ -104,6 +104,8 @@ button{cursor:pointer;border:none;background:none}
 .em-tabs button.on{background:var(--card);color:var(--blue-d);box-shadow:var(--sh)}
 .pw-row{position:relative}
 .pw-row .in{padding-left:48px}
+.lg-or{display:flex;align-items:center;gap:12px;margin:14px 0;color:var(--mut);font-size:12.5px}
+.lg-or::before,.lg-or::after{content:"";flex:1;border-top:1px solid var(--line)}
 .pw-eye{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;color:var(--mut)}
 .em-hint{display:block;text-decoration:none;font-size:12px;color:var(--mut);margin-top:6px}
 /* ===== الرئيسية: الباقات وآراء العملاء — نفس نظام بطاقات الخدمات (زوايا 26، نفس الظل والمسافات) ===== */
@@ -887,7 +889,6 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
   <div class="lg">
     <div class="lg-m"><img src="../logo.png" alt="كلينولوجي"></div>
     <div id="lgEmail" class="hide">
-      <button type="button" id="lgGuest" class="bk hide" style="margin-bottom:14px" onclick="PENDING='';guestHome()"></button>
       <h1>أهلاً بك في <em>كلينولوجي</em></h1>
       <p id="lgWhy" class="hide" style="color:var(--blue-d);font-weight:600;margin:-4px 0 12px"></p>
       <div class="em-tabs" role="tablist">
@@ -906,6 +907,8 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
       </div>
       <button class="btn" id="btnEm" onclick="emSubmit()">دخول</button>
       <button class="lnk" style="width:100%;justify-content:center;margin-top:6px" onclick="emForgot()" id="btnEmForgot">نسيت كلمة المرور؟</button>
+      <div class="lg-or"><span>أو</span></div>
+      <button type="button" class="btn btn-2" id="lgGuest" onclick="PENDING='';guestHome()">تصفّح الخدمات بدون تسجيل</button>
       <small>بالمتابعة أنت توافق على <a href="#" onclick="openTerms();return false">الشروط وسياسة الخصوصية</a></small>
     </div>
     <div id="lgAsk" class="hide">
@@ -1333,7 +1336,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.1100';
+var APP_VER='2026.11.29.1200';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1875,7 +1878,7 @@ function saveSnap(){
 }
 function onSignedIn(uid){
   ME.uid=uid;AUTHED=true;GUEST=false;
-  var g=$('lgGuest');if(g)g.classList.add('hide');var w=$('lgWhy');if(w)w.classList.add('hide');
+  var w=$('lgWhy');if(w)w.classList.add('hide');
   CART=LS.get('cart',{});
   var snap=DEMO?null:LS.get('snap',null);
   /* الشاشة طلعت من اللقطة أو التصفح قبل ما يجهز فايربيس — ما نرجّع العميل للرئيسية وهو يتصفح */
@@ -1905,6 +1908,13 @@ function onSignedIn(uid){
    الزائر يشوف الخدمات والأسعار والباقات ويضيف للسلة. الدخول يُطلب بس عند الحجز أو «طلباتي» و«حسابي»،
    وبعده يكمل من نفس المكان (PENDING) والسلة محفوظة في جهازه */
 var GUEST=false,PENDING='';
+/* الصفحة الأولى للزائر: الدخول، ومنها «تصفّح الخدمات بدون تسجيل» */
+function loginFirst(){
+  GUEST=false;AUTHED=false;PENDING='';
+  go('scLogin');$('tabBar').classList.add('hide');syncCartUI();
+  if(emailOn())emShow();
+  var w=$('lgWhy');if(w)w.classList.add('hide');
+}
 function guestHome(){
   GUEST=true;AUTHED=false;
   CART=LS.get('cart',{});
@@ -1922,7 +1932,6 @@ function needLogin(next){
   PENDING=next||'';
   go('scLogin');$('tabBar').classList.add('hide');syncCartUI();
   if(emailOn())emShow();
-  var g=$('lgGuest');if(g){g.innerHTML=backTo('تصفّح بدون تسجيل');g.classList.remove('hide');}
   var w=$('lgWhy');if(w){w.textContent=/^sc/.test(next||'')?'سجّل دخولك عشان تشوف طلباتك وحسابك':'سجّل دخولك عشان تكمل حجزك — سلتك محفوظة';w.classList.remove('hide');}
   return true;
 }
@@ -1937,7 +1946,7 @@ function logout(){
   function done(){
     if(ORUN){ORUN();ORUN=null;}ORERR='';
     AUTHED=false;ME={uid:'',ph:'',n:'',ok:false,em:''};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
-    backToPhone();$('inPh').value='';guestHome();}
+    backToPhone();$('inPh').value='';loginFirst();}
   if(DEMO){done();return;}
   auth.signOut().then(done).catch(done);
 }
@@ -3472,7 +3481,7 @@ function boot(){
   if(sn&&sn.uid&&sn.ph){
     ME.uid=sn.uid;ME.n=sn.n||'';ME.ok=!!sn.ok;ME.ph=sn.ph;ORD=sn.ord||[];ADR=sn.adr||[];AUTHED=true;
     CART=LS.get('cart',{});$('tabBar').classList.remove('hide');renderAll();go('scHome');setTab('scHome');
-  }else guestHome();
+  }else loginFirst();
   BOOTED=true;
 }
 function authWatch(u){
@@ -3480,9 +3489,9 @@ function authWatch(u){
     else if(String(u.uid).indexOf('ph_')===0)ME.ph=String(u.uid).slice(3);
     else{ME.ph='';ME.em=u.email||'';}   /* إيميل: الجوال من ملفه، أو نطلبه */
     onSignedIn(u.uid);}
-  else if(AUTHED||!GUEST)guestHome();   /* زائر أصلاً = ما نحرّكه من مكانه */
+  else if(AUTHED)loginFirst();   /* خرج من حسابه من مكان ثاني. الزائر ما نحرّكه من مكانه */
 }
-if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else guestHome();}
+if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else loginFirst();}
 else{
   boot();
   loadFB().then(function(){
