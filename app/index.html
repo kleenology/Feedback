@@ -1330,13 +1330,19 @@ function qProf(){var k=(typeof BK!=='undefined'&&BK&&BK.quote&&BK.quote.k)||CTV;
 /* مساحات تقريبية لطلب التسعير — العميل يختار بضغطة بدل ما يكتب رقماً */
 var AREAS=['أقل من 150م','150 – 300م','300 – 500م','500 – 1000م','أكبر من 1000م'];
 /* مدن الخدمة — تظهر كأزرار بدل حقل كتابة. عدّلها حسب تغطيتكم */
-var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','المدينة'];
+var CITIES=['الرياض'];
+/* منطقة الخدمة: الرياض بس حالياً. الموقع على الخريطة خارج هذا المربع ما ينحجز له.
+   تتوسع لمدينة ثانية؟ أضفها في CITIES وكبّر المربع أو حط مربع ثاني في AREAS */
+var AREAS=[{t:'الرياض',s:24.40,n:25.15,w:46.40,e:47.10}];
+function inArea(lat,lng){lat=+lat;lng=+lng;return AREAS.some(function(a){return lat>=a.s&&lat<=a.n&&lng>=a.w&&lng<=a.e;});}
+function adrOk(a){if(!a)return false;if(a.lat)return inArea(a.lat,a.lng);return !a.c||CITIES.indexOf(a.c)>=0;}
+var AREA_MSG='حالياً نخدم مدينة الرياض فقط — وقريباً مدن ثانية بإذن الله.';
 /* مفتاح Google Maps — اختياري.
    بدونه: تظهر خريطة قوقل مدمجة للعرض فقط (بدون سحب الدبوس).
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.1300';
+var APP_VER='2026.11.29.1400';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1484,16 +1490,24 @@ var LS={get:function(k,d){try{var v=localStorage.getItem('kln_'+k);
         set:function(k,v){try{localStorage.setItem('kln_'+k,JSON.stringify(v));}catch(e){}}};
 LADX=LS.get('ladx',false);
 var API={
-  saveMe:function(){if(DEMO){LS.set('me',ME);return Promise.resolve();}
+  saveMe:function(){if(DEMO){LS.set('me',ME);profKeep();return Promise.resolve();}
     var d={n:ME.n,ph:ME.ph,ok:!!ME.ok};if(ME.em)d.em=ME.em;
-    return db.collection('customers').doc(ME.uid).set(d,{merge:true}).then(function(r){saveSnap();return r;});},
+    return db.collection('customers').doc(ME.uid).set(d,{merge:true}).then(function(r){saveSnap();profKeep();return r;});},
   /* نسجّل الدخول في ملف العميل حتى لو ما كتب اسمه — عشان تعرف مين فتح التطبيق
      وما طلب. `at` تُكتب مرة واحدة فقط، و`seen` تتحدّث كل دخول. */
-  loadMe:function(){if(DEMO){var m=LS.get('me',null);if(m){ME.n=m.n||'';ME.ok=!!m.ok;}return Promise.resolve();}
+  loadMe:function(){
+    /* الاسم والجوال من آخر دخول لهذا الحساب على الجهاز — يبقى بعد تسجيل الخروج، فالدخول مرة ثانية
+       ما يسأل «وش اسمك» لو تأخرت القراءة أو فشلت */
+    var pc=LS.get('prof_'+ME.uid,null);
+    if(pc){if(!ME.n&&pc.n)ME.n=pc.n;if(!ME.ph&&pc.ph)ME.ph=pc.ph;}
+    if(DEMO){var m=LS.get('me',null);if(m){ME.n=m.n||ME.n||'';ME.ok=!!m.ok;if(!ME.ph&&m.ph)ME.ph=m.ph;}return Promise.resolve();}
     var ref=db.collection('customers').doc(ME.uid),now=new Date().toISOString();
-    return ref.get().then(function(d){
+    /* محاولة ثانية لو فشلت الأولى (شبكة أو فايربيس للحين يجهز) — بدونها نحسب العميل بلا بيانات ونسأله من جديد */
+    var get=function(){return ref.get();};
+    return get().catch(function(){return new Promise(function(r){setTimeout(r,1500);}).then(get);}).then(function(d){
       var v=d.exists?d.data():null;
-      if(v){ME.n=v.n||'';ME.ok=!!v.ok;if(!ME.ph&&v.ph)ME.ph=v.ph;}
+      if(v){ME.n=v.n||ME.n||'';ME.ok=!!v.ok;if(!ME.ph&&v.ph)ME.ph=v.ph;}
+      profKeep();
       /* دخول بالإيميل بلا جوال للحين: نسجّله بجواله فاضي عشان يظهر لك في اللوحة، والجوال نطلبه بعد التحميل */
       if(!ME.ph&&!ME.em)return;
       var patch={ph:ME.ph||'',seen:now};
@@ -1873,6 +1887,7 @@ function backToPhone(){clearInterval(RTM);clearInterval(SMTM);OTPVIA='';PIN1='';
   $('btnResend').classList.remove('hide');$('btnForgot').classList.add('hide');$('lgCode').classList.add('hide');$('lgPhone').classList.remove('hide');lgErr('');}
 /* لقطة من آخر بيانات العميل على جهازه: نعرض الرئيسية منها فوراً عند الفتح،
    والبيانات الحية من فايربيس تحلّ محلها أول ما توصل — بدل ما ينتظر أربع قراءات */
+function profKeep(){if(ME.uid&&(ME.n||ME.ph))LS.set('prof_'+ME.uid,{n:ME.n||'',ph:ME.ph||''});}
 function saveSnap(){
   if(DEMO||!ME.uid||ORERR)return;
   LS.set('snap',{uid:ME.uid,n:ME.n||'',ok:!!ME.ok,ph:ME.ph||'',ord:ORD.slice(0,20),adr:ADR});
@@ -2355,7 +2370,7 @@ function startQuoteVisit(){
   QW={kind:'',area:'',nt:'',freq:'',rooms:0,halls:0,baths:0,kitchens:0,
       cab:false,cement:false,paint:false,afterh:false,glass:false,carpet:false};
   BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,quote:svcOf(CTV),
-      loc:null,base:null,manual:false,city:'',locErr:''};
+      loc:null,base:null,manual:false,city:CITIES[0],locErr:''};
   go('scBook');setTab('');renderBook();
 }
 function qwSync(){var b=$('bkGo');if(b)b.disabled=!qwReady();}
@@ -2496,14 +2511,14 @@ function startBooking(){
   if(cartTotals().tot<MIN_ORDER){toast('الحد الأدنى للطلب '+MIN_ORDER+' ر.س');go('scCart');setTab('');renderCart();return;}
   if(needLogin('startBooking'))return;
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
-  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,quote:null,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
+  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,quote:null,loc:null,base:null,manual:false,city:CITIES[0],locErr:''};go('scBook');setTab('');renderBook();
 }
 /* الاشتراك يمر بنفس الخطوات — الفرق أن المطلوب باقة متكررة لا سلة أصناف */
 function startPkgBooking(){
   if(!PKG)return;
   if(needLogin('startPkgBooking'))return;
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
-  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,quote:null,loc:null,base:null,manual:false,city:'',locErr:''};go('scBook');setTab('');renderBook();
+  BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:PKG,quote:null,loc:null,base:null,manual:false,city:CITIES[0],locErr:''};go('scBook');setTab('');renderBook();
 }
 function bookBack(){if(BK.step===0){go(BK.quote?'scQuote':BK.pkg?'scPkg':'scCart');return;}BK.step--;renderBook();}
 function bookNext(){
@@ -2560,9 +2575,9 @@ function pickDay(iso){
   renderBook();
 }
 function whereReady(){
-  if(BK.adr)return true;
-  if(BK.loc)return true;
-  return !!(BK.city&&$('aD')&&$('aD').value.trim());
+  if(BK.adr)return adrOk(BK.adr);
+  if(BK.loc)return inArea(BK.loc.lat,BK.loc.lng);
+  return !!(BK.city&&CITIES.indexOf(BK.city)>=0&&$('aD')&&$('aD').value.trim());
 }
 /* أسرع طريق: ضغطة وحدة تلتقط الإحداثيات — الفريق يفتحها في الخرائط ويوصل.
    الكتابة اليدوية تبقى موجودة لمن ما يبي يشارك موقعه */
@@ -2638,6 +2653,7 @@ function pinDrag(el){
             acc:BK.loc?BK.loc.acc:0,moved:true};
     var c=document.querySelector('.mapfb s');if(c)c.textContent=BK.loc.lat+', '+BK.loc.lng;
     var lk=document.getElementById('mapOpen');if(lk)lk.href=mapUrl(BK.loc);
+    syncNext();
   }
   el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
 }
@@ -2668,6 +2684,7 @@ function initMapPin(){
     mk.addListener('dragend',function(e){
       BK.loc={lat:+e.latLng.lat().toFixed(6),lng:+e.latLng.lng().toFixed(6)};
       var fb=document.querySelector('.mapfb s');if(fb)fb.textContent=BK.loc.lat+', '+BK.loc.lng;
+      syncNext();
     });
   }).catch(function(){
     /* المفتاح غلط أو الشبكة مقطوعة — اللوحة التحتية تبقى ظاهرة */
@@ -2675,11 +2692,14 @@ function initMapPin(){
   });
 }
 function stepWhere(){
-  var h=head('وين نجيك؟','نحتاج موقعك عشان الفريق يوصلك');
+  var h=head('وين نجيك؟','نخدم حالياً مدينة الرياض — نحتاج موقعك عشان الفريق يوصلك');
+  /* عنوان محفوظ خارج منطقة الخدمة: يظهر مقفل بدل ما يختفي — العميل يفهم ليش */
+  if(BK.adr&&!adrOk(BK.adr))BK.adr=null;
   if(ADR.length)h+='<div class="fld">'+ADR.map(function(a,i){
-    return '<button class="pick" aria-pressed="'+(!!(BK.adr&&BK.adr.id===a.id))+'" onclick="BK.adr=ADR['+i+'];BK.loc=null;renderBook()">'+
+    var ok=adrOk(a);
+    return '<button class="pick" '+(ok?'':'disabled style="opacity:.55" ')+'aria-pressed="'+(!!(BK.adr&&BK.adr.id===a.id))+'" onclick="BK.adr=ADR['+i+'];BK.loc=null;renderBook()">'+
       ic('pin')+'<span><b style="font-size:14px;font-weight:600;display:block">'+esc(a.t)+'</b>'+
-      '<s style="text-decoration:none;font-size:12px;color:var(--mut)">'+esc(a.c+(a.d?' · '+a.d:''))+'</s></span></button>';}).join('')+
+      '<s style="text-decoration:none;font-size:12px;color:'+(ok?'var(--mut)':'var(--stop)')+'">'+(ok?esc(a.c+(a.d?' · '+a.d:'')):'خارج منطقة الخدمة')+'</s></span></button>';}).join('')+
     '<div class="or">أو أضف موقعاً جديداً</div></div>';
   if(BK.loc){
     if(!BK.base)BK.base={lat:BK.loc.lat,lng:BK.loc.lng};
@@ -2708,7 +2728,9 @@ function stepWhere(){
       '<a class="btn btn-2 btn-sm" id="mapOpen" style="margin-top:12px;text-decoration:none" target="_blank" rel="noopener" href="'+mapUrl(BK.loc)+'">'+
         ic('pin','','ic-sm')+'<span>افتح في خرائط قوقل</span></a>'+
       '<div class="fld" style="margin:14px 0 0"><input class="in" id="aS" maxlength="60" placeholder="شقة 3، الدور الثاني (اختياري)"></div>'+
-    '</div>';
+    '</div>'+
+    '<div class="note warn'+(inArea(BK.loc.lat,BK.loc.lng)?' hide':'')+'" id="areaWarn" style="margin-top:12px">'+AREA_MSG+
+      ' لو موقعك داخل الرياض، اسحب الدبوس عليه أو <button class="lnkb" onclick="clearLoc()">حدّده مرة ثانية</button>.</div>';
   }else{
     h+='<button class="btn btn-loc" id="locBtn" onclick="useMyLocation()">'+ic('pin','','ic-sm')+
         '<span>حدّد موقعي الآن</span></button>'+
@@ -2728,7 +2750,8 @@ function stepWhere(){
   return h+'<button class="btn" style="margin-top:24px" id="bkNext" '+(whereReady()?'':'disabled')+' onclick="bookNext()">التالي</button>';
 }
 /* الحقول تُفعّل زر التالي مباشرة — بدون زر حفظ منفصل يربك العميل */
-function syncNext(){var b=$('bkNext');if(b)b.disabled=!whereReady();}
+function syncNext(){var b=$('bkNext');if(b)b.disabled=!whereReady();
+  var w=$('areaWarn');if(w)w.classList.toggle('hide',!(BK.loc&&!BK.adr&&!inArea(BK.loc.lat,BK.loc.lng)));}
 /* العنوان يُحفظ تلقائياً عند «التالي» — ما فيه خطوة حفظ يدوية.
    الحفظ في دفتر عناوينه راحة للمرات الجاية، مو شرطاً للحجز: نمضي بالعنوان
    في يدنا فوراً، والحفظ يجري بالخلفية. فشله ما يوقف العميل. */
@@ -3372,6 +3395,7 @@ function doDelAccount(){
     var e=$('delErr');if(e){e.textContent=m;e.classList.remove('hide');}}
   API.delAccount().then(function(){
     closeSheet();
+    if(ME.uid)LS.set('prof_'+ME.uid,null);
     if(ORUN){ORUN();ORUN=null;}
     AUTHED=false;ME={uid:'',ph:'',n:'',ok:false,em:''};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
     $('tabBar').classList.add('hide');backToPhone();$('inPh').value='';go('scLogin');
