@@ -810,6 +810,8 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 /* ===== الخريطة ===== */
 .mapwrap{position:relative;height:210px;border-radius:var(--r2);overflow:hidden;background:var(--sunk)}
 .mapfr,.mapjs{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+/* الخريطة المدمجة ثابتة: لو تحركت تحت الإصبع يختلف مكان الدبوس عن الإحداثيات. العميل يسحب الدبوس بس */
+.mapfr{pointer-events:none}
 /* لوحة تحتية: تظهر إذا تعذّر تحميل الخريطة، وتختفي خلفها إذا حُمّلت */
 .mapfb{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:7px;color:var(--mut);font-size:13.5px;font-weight:600;text-align:center;padding:16px;
@@ -1352,7 +1354,7 @@ var AREA_MSG='حالياً نخدم مدينة الرياض فقط — وقري�
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.1500';
+var APP_VER='2026.11.29.1600';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2663,6 +2665,13 @@ function pinDrag(el){
             acc:BK.loc?BK.loc.acc:0,moved:true};
     var c=document.querySelector('.mapfb s');if(c)c.textContent=BK.loc.lat+', '+BK.loc.lng;
     var lk=document.getElementById('mapOpen');if(lk)lk.href=mapUrl(BK.loc);
+    /* نعيد توسيط الخريطة على المكان الجديد: علامة قوقل تنتقل له والدبوس يرجع للوسط فوقها —
+       العميل يشوف إن الموقع تغيّر فعلاً، ويقدر يسحب مرة ثانية للضبط الأدق */
+    if(!MAPS_KEY){
+      BK.base={lat:BK.loc.lat,lng:BK.loc.lng};dx=0;dy=0;el.style.transform='';
+      var fr=document.querySelector('.mapfr');if(fr)fr.src=mapEmbed(BK.loc.lat,BK.loc.lng);
+      var ht=document.querySelector('.locbox .hint');if(ht)ht.textContent='ضبطت الموقع ✓ — تقدر تسحب الدبوس مرة ثانية';
+    }
     syncNext();
   }
   el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
