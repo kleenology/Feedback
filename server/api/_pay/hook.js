@@ -5,6 +5,7 @@
 const S = require('../_lib/store');
 const T = require('../_lib/tap');
 const A = require('../_lib/autoinv');
+const W = require('../_lib/wallet');
 
 function reply(res, status, body) {
   res.statusCode = status;
@@ -27,6 +28,14 @@ module.exports = async function handler(req, res) {
   if (!/^chg_[A-Za-z0-9]{6,64}$/.test(cid)) return reply(res, 200, { ok: true, ignored: true });
   try {
     const ch = await T.getCharge(cid);
+    if (ch.metadata && ch.metadata.kind === 'topup') {
+      const wu = String(ch.metadata.wuid || '');
+      if (wu && ch.status === 'CAPTURED' && ch.currency === 'SAR' && Number(ch.amount) > 0) {
+        const r = await W.credit(wu, Number(ch.amount), 'topup', ch.id, 'شحن الرصيد', 'tap-' + ch.id);
+        return reply(res, 200, { ok: true, topup: true, applied: !r.already });
+      }
+      return reply(res, 200, { ok: true, topup: true, status: ch.status });
+    }
     const oid = T.oidOf(ch);
     if (!oid) return reply(res, 200, { ok: true, ignored: 'no_order' });
     if (T.captured(ch, oid)) {

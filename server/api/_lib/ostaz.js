@@ -29,6 +29,7 @@ function cfg() {
     status: process.env.OSTAZ_STATUS === 'issued' ? 'issued' : 'draft',
     products: Object.assign({ post: 5, sofa: 11, pkg: 31 }, map),
     product: num(process.env.OSTAZ_PRODUCT_ID, 18),
+    walletTreasury: num(process.env.OSTAZ_WALLET_TREASURY_ID, 0) || null,
     design: num(process.env.OSTAZ_DESIGN_ID, 6)       /* قالب الطباعة: 6 = القالب «t» */
   };
 }
@@ -91,8 +92,15 @@ function buildInvoice(order, partnerId, c, now) {
   const paid = Math.min(SAR(order.paid), target);
   /* الأستاذ يرفض الدفعات على المسودة (422: payments محظور عندما يكون status هو draft).
      المسودة: تسجّل الدفعة وقت الاعتماد (المبلغ في بطاقة الطلب باللوحة). المعتمدة: دفعة في الحساب البنكي */
-  if (paid > 0 && c.status === 'issued')
-    inv.payments = [{ amount: paid, treasury_id: c.treasury, description: 'تحويل بنكي — عربون/دفعات الطلب' }];
+  if (paid > 0 && c.status === 'issued') {
+    /* الدفعات حسب مصدرها: البطاقة على حساب البنك، والمحفظة على حسابها (OSTAZ_WALLET_TREASURY_ID) */
+    const pays = Array.isArray(order.pays) ? order.pays : [];
+    const wal = Math.min(paid, SAR(pays.filter(p => p && p.m === 'wallet').reduce((t, p) => t + (Number(p.amt) || 0), 0)));
+    const card = paid - wal;
+    inv.payments = [];
+    if (card > 0) inv.payments.push({ amount: card, treasury_id: c.treasury, description: pays.length ? 'دفع إلكتروني' : 'تحويل بنكي — عربون/دفعات الطلب' });
+    if (wal > 0) inv.payments.push({ amount: wal, treasury_id: c.walletTreasury || c.treasury, description: 'رصيد المحفظة' });
+  }
   if (!inv.partner_reference_code) delete inv.partner_reference_code;
   return inv;
 }
