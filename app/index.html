@@ -358,6 +358,10 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .scrollx>*{scroll-snap-align:end}
 /* تلاشٍ عند الطرف: يوضّح أن بقية الأيام تُسحب، بدل بطاقة مقطوعة نصفها */
 .chips{padding:2px 0 6px}
+.qfreq{display:flex;gap:8px}
+.qfreq button{flex:1;padding:12px 6px;border-radius:14px;background:var(--card);border:1.5px solid var(--line);
+  font:inherit;font-size:13.5px;font-weight:600;color:var(--tx)}
+.qfreq button.on{border-color:var(--blue);background:var(--blue-l);color:var(--blue-d)}
 .chip{flex:0 0 auto;display:flex;align-items:center;gap:7px;background:var(--card);box-shadow:var(--sh);
   padding:9px 14px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--tx);white-space:nowrap}
 .chip .ic{color:var(--blue)}
@@ -1264,6 +1268,15 @@ var KINDS=['شقة','فيلا','دور','مكتب','محل تجاري','مستو
 var QCOUNTS=[{k:'rooms',t:'الغرف'},{k:'halls',t:'الصالات'},
              {k:'baths',t:'دورات المياه'},{k:'kitchens',t:'المطابخ'}];
 var QFLAGS=[{k:'cab',t:'يوجد خزائن'},{k:'cement',t:'يوجد إسمنت'},{k:'paint',t:'يوجد دهانات'}];
+/* نموذج المعاينة حسب الخدمة: المكاتب لها أسئلتها، والباقي (منازل وما بعد البناء) على النموذج العام */
+var QPROF={
+  def:{kl:'نوع العقار',kinds:KINDS,counts:QCOUNTS,flags:QFLAGS},
+  office:{kl:'نوع المكان',kinds:['مكتب','عيادة','محل تجاري','معرض','مدرسة أو حضانة','مستودع','مبنى كامل'],
+    counts:[{k:'rooms',t:'المكاتب والغرف'},{k:'halls',t:'قاعات الاجتماعات'},{k:'baths',t:'دورات المياه'},{k:'kitchens',t:'المطبخ والبوفيه'}],
+    flags:[{k:'afterh',t:'تنظيف خارج الدوام'},{k:'glass',t:'واجهات زجاجية'},{k:'carpet',t:'سجاد أو موكيت'}],
+    freq:['مرة وحدة','أسبوعي','شهري']}
+};
+function qProf(){var k=(typeof BK!=='undefined'&&BK&&BK.quote&&BK.quote.k)||CTV;return QPROF[k]||QPROF.def;}
 /* مساحات تقريبية لطلب التسعير — العميل يختار بضغطة بدل ما يكتب رقماً */
 var AREAS=['أقل من 150م','150 – 300م','300 – 500م','500 – 1000م','أكبر من 1000م'];
 /* مدن الخدمة — تظهر كأزرار بدل حقل كتابة. عدّلها حسب تغطيتكم */
@@ -1273,7 +1286,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.28.2200';
+var APP_VER='2026.11.28.2300';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2134,12 +2147,13 @@ function galInit(){
 /* ================= طلب تسعير ================= */
 /* بعض الخدمات ما تُسعّر من كتالوج — لازم معاينة. نعطي العميل طريقين:
    زيارة تسعير محجوزة بموعد، أو تفاصيل سريعة على واتساب لمن يستعجل. */
-var QW={kind:'',area:'',nt:'',
-        rooms:0,halls:0,baths:0,kitchens:0,cab:false,cement:false,paint:false};
+var QW={kind:'',area:'',nt:'',freq:'',
+        rooms:0,halls:0,baths:0,kitchens:0,cab:false,cement:false,paint:false,afterh:false,glass:false,carpet:false};
 /* الحقول مشتركة، فنُعيد رسم الشاشة اللي المستخدم فيها فعلاً */
 function qwRedraw(){if($('scBook').classList.contains('on'))renderBook();}
-function qwSetKind(i){QW.kind=KINDS[i];closeSheet();qwRedraw();}
-function qwKindSheet(){openSheet('نوع العقار',sheetPick(KINDS,QW.kind,'qwSetKind'));}
+function qwSetKind(i){QW.kind=qProf().kinds[i];closeSheet();qwRedraw();}
+function qwKindSheet(){var P=qProf();openSheet(P.kl,sheetPick(P.kinds,QW.kind,'qwSetKind'));}
+function qwFreq(v){QW.freq=QW.freq===v?'':v;qwRedraw();}
 function qwStep(k,d){
   QW[k]=Math.max(0,Math.min(30,(QW[k]||0)+d));
   var row=document.querySelector('.qfrow[data-c="'+k+'"]');
@@ -2159,19 +2173,24 @@ function qwArea(v){QW.area=digits(v).slice(0,5);}
 function qwReady(){return !!(QW.kind&&QW.area);}
 /* الحقول نفسها تُستخدم في مسار الواتساب وفي مراجعة زيارة المعاينة — مصدر واحد */
 function quoteFields(){
-  return '<div class="fld"><span class="lb">نوع العقار <span class="req">*</span></span>'+
+  var P=qProf();
+  /* نوع من نموذج ثاني (فتح المنازل ثم المكاتب) ما يصلح — نرجّعه فاضي */
+  if(QW.kind&&P.kinds.indexOf(QW.kind)<0)QW.kind='';
+  return '<div class="fld"><span class="lb">'+P.kl+' <span class="req">*</span></span>'+
       '<button class="selrow'+(QW.kind?'':' empty')+'" onclick="qwKindSheet()">'+
-        '<span>'+(QW.kind?esc(QW.kind):'اختر نوع العقار')+'</span>'+ic('back','','ic-sm')+'</button></div>'+
+        '<span>'+(QW.kind?esc(QW.kind):'اختر '+P.kl)+'</span>'+ic('back','','ic-sm')+'</button></div>'+
+    (P.freq?'<div class="fld"><span class="lb">التكرار</span><div class="qfreq">'+P.freq.map(function(f){
+      return '<button type="button" class="'+(QW.freq===f?'on':'')+'" onclick="qwFreq(\''+f+'\')">'+esc(f)+'</button>';}).join('')+'</div></div>':'')+
     '<div class="fld"><span class="lb">التفاصيل</span><div class="qfcard">'+
       '<div class="qfrow"><span>المساحة التقريبية (م²) <span class="req">*</span></span>'+
         '<input class="qn" id="qwArea" type="tel" inputmode="numeric" maxlength="5" placeholder="مثال: 120" '+
           'value="'+esc(QW.area)+'" oninput="qwArea(this.value);qwSync()"></div>'+
-      QCOUNTS.map(function(c){
+      P.counts.map(function(c){
         return '<div class="qfrow" data-c="'+c.k+'"><span>'+esc(c.t)+'</span><span class="stp">'+
           '<button onclick="qwStep(\''+c.k+'\',-1)" aria-label="نقص" '+(QW[c.k]?'':'disabled')+'>'+ic('minus','','ic-sm')+'</button>'+
           '<b>'+QW[c.k]+'</b>'+
           '<button onclick="qwStep(\''+c.k+'\',1)" aria-label="زد">'+ic('plus','','ic-sm')+'</button></span></div>';}).join('')+
-      QFLAGS.map(function(f){
+      P.flags.map(function(f){
         return '<div class="qfrow"><span>'+esc(f.t)+'</span>'+
           '<button class="sw" data-f="'+f.k+'" aria-pressed="'+(!!QW[f.k])+'" aria-label="'+esc(f.t)+'" onclick="qwFlag(\''+f.k+'\')"><i></i></button></div>';}).join('')+
     '</div></div>';
@@ -2179,12 +2198,14 @@ function quoteFields(){
 /* ملخّص نصّي يُرسل في الواتساب ويُحفظ مع الطلب — نفس الترتيب في الاثنين */
 function quoteSummary(){
   var L=[];
-  if(QW.kind)L.push('نوع العقار: '+QW.kind);
+  var P=qProf();
+  if(QW.kind)L.push(P.kl+': '+QW.kind);
+  if(QW.freq&&P.freq)L.push('التكرار: '+QW.freq);
   if(QW.area)L.push('المساحة: '+QW.area+' م²');
-  var c=QCOUNTS.filter(function(x){return QW[x.k];})
+  var c=P.counts.filter(function(x){return QW[x.k];})
     .map(function(x){return x.t+': '+QW[x.k];});
   if(c.length)L.push(c.join(' · '));
-  var f=QFLAGS.filter(function(x){return QW[x.k];}).map(function(x){return x.t;});
+  var f=P.flags.filter(function(x){return QW[x.k];}).map(function(x){return x.t;});
   if(f.length)L.push(f.join(' · '));
   return L.join('\n');
 }
@@ -2218,8 +2239,8 @@ function renderQuote(){
 /* زيارة التسعير تمر بنفس خطوات الحجز وتحجز فترة فعلية — لأنها موعد حقيقي على فريقك */
 function startQuoteVisit(){
   loadSlots().then(function(){if($('scBook').classList.contains('on'))renderBook();});
-  QW={kind:'',area:'',nt:'',rooms:0,halls:0,baths:0,kitchens:0,
-      cab:false,cement:false,paint:false};
+  QW={kind:'',area:'',nt:'',freq:'',rooms:0,halls:0,baths:0,kitchens:0,
+      cab:false,cement:false,paint:false,afterh:false,glass:false,carpet:false};
   BK={step:0,date:'',slot:'',adr:ADR[0]||null,kind:'',pkg:null,quote:svcOf(CTV),
       loc:null,base:null,manual:false,city:'',locErr:''};
   go('scBook');setTab('');renderBook();
