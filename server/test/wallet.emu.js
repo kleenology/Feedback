@@ -72,6 +72,43 @@ const bal = async u => ((await db.doc('wallets/' + u).get()).data() || {}).bal |
     await db.doc('orders/' + oid).set({ uid: U1, st: 'new', est: 100, dep: 100, paid: 100, pays: [{ m: 'tap', amt: 100 }] });
     eq((await W.cancelWithRefund(oid, 'customer', U1)).why, 'card_paid');
   });
+  await t('حد المحاولات: ٥ أكواد غلط في الساعة، وبعدها حتى الكود الصحيح يوقف', async () => {
+    const U3 = 'u3_' + Date.now();
+    for (let i = 0; i < 5; i++) eq((await W.redeem(U3, 'WRONG' + i)).why, 'not_found');
+    const c = await W.createCode({ amt: 10, uses: 5 });
+    eq((await W.redeem(U3, c.code)).why, 'too_many');
+    eq((await W.redeem(U2, c.code)).ok, true);   /* عميل ثاني ما يتأثر */
+  });
+  await t('الكود المستخدم أو المنتهي ما ينحسب محاولة غلط', async () => {
+    const U4 = 'u4_' + Date.now();
+    const c = await W.createCode({ amt: 10, uses: 1 });
+    eq((await W.redeem(U4, c.code)).ok, true);
+    for (let i = 0; i < 6; i++) eq((await W.redeem(U4, c.code)).why, 'used');
+    const d = await W.createCode({ amt: 10, uses: 5 });
+    eq((await W.redeem(U4, d.code)).ok, true);
+  });
+  await t('ادعُ صديق: كود ثابت لكل عميل، الصديق ياخذ رصيد، والداعي بعد أول دفع', async () => {
+    const A1 = 'ra_' + Date.now(), F1 = 'rf_' + Date.now();
+    const c = await W.refCode(A1, 'Salem'); eq(c, await W.refCode(A1, 'Salem'));
+    await db.doc('customers/' + F1).set({ ph: '9665' + String(Date.now()).slice(-8) });
+    const r = await W.redeem(F1, c.toLowerCase());
+    eq([r.ok, r.amt, await bal(F1)], [true, 25, 25]);
+    eq((await W.redeem(F1, c)).why, 'ref_used');
+    eq(await bal(A1), 0);
+    eq((await W.refReward(F1)).amt, 25); eq(await bal(A1), 25);
+    eq((await W.refReward(F1)).ok, false); eq(await bal(A1), 25);
+  });
+  await t('ادعُ صديق: ما يستخدم كوده، ولا عميل دفع قبل، ولا نفس الجوال بحساب ثاني', async () => {
+    const A2 = 'rb_' + Date.now(), F2 = 'rg_' + Date.now(), F3 = 'rh_' + Date.now(), F4 = 'ri_' + Date.now();
+    const c = await W.refCode(A2, '');
+    await db.doc('customers/' + A2).set({ ph: '966511110000' });
+    eq((await W.redeem(A2, c)).why, 'own_ref');
+    await db.doc('customers/' + F2).set({ ph: '966522220000' });
+    await db.doc('orders/old' + F2).set({ uid: F2, paid: 300, st: 'done' });
+    eq((await W.redeem(F2, c)).why, 'not_new');
+    await db.doc('customers/' + F3).set({ ph: '966533330000' }); eq((await W.redeem(F3, c)).ok, true);
+    await db.doc('customers/' + F4).set({ ph: '966533330000' }); eq((await W.redeem(F4, c)).why, 'ref_used');
+  });
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();
