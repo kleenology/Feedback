@@ -26,6 +26,9 @@ async function autoInvoice(oid) {
   if (!lock.ok) return { skipped: lock.why };
   const o = lock.order;
   const total = Number(o.price) || Number(o.est) || 0;
+  /* زيارة المعاينة: الـ٢٩ ريال تُخصم من فاتورة الخدمة الكاملة بعد ما يتحدد السعر — ما نطلع لها فاتورة لحالها،
+     وإلا الطلب يتقفل على فاتورة الزيارة وما تطلع فاتورة الخدمة */
+  if (o.quote) { await S.unlockInvoice(oid); return { skipped: 'quote' }; }
   if (o.st === 'cancelled' || !(total > 0) || !(Number(o.paid) >= total)) {
     await S.unlockInvoice(oid);
     return { skipped: 'not_fully_paid' };
