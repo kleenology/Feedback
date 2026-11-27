@@ -5,6 +5,7 @@ process.env.TAP_SECRET_KEY = 'sk_test_x';
 const storePath = require.resolve('../api/_lib/store.js');
 let ORD = {}, TOK = {}, CH = {}, N = 0;
 require.cache[storePath] = { id: storePath, filename: storePath, loaded: true, exports: {
+  async adminUid(t) { return t === 'adm' ? 'a1' : ''; },
   async userUid(t) { if (!TOK[t]) throw new Error('bad token'); return TOK[t]; },
   async getOrder(id) { return ORD[id] ? JSON.parse(JSON.stringify(ORD[id])) : null; },
   async setTapPending(id, tap) { ORD[id].tap = tap; },
@@ -39,6 +40,7 @@ const T = require('../api/_lib/tap');
 const start = require('../api/pay/start');
 const verify = require('../api/pay/verify');
 const hook = require('../api/pay/hook');
+const ptest = require('../api/pay/test');
 
 function call(fn, body, tok) {
   const req = { method: 'POST', headers: { host: 'srv.test', origin: 'https://app.kleenology.me' }, body, rawBody: JSON.stringify(body) };
@@ -119,6 +121,15 @@ const reset = () => {
     reset(); eq((await call(verify, { tap_id: '../charges' }, 'tk1')).status, 400);
   });
 
+  await t('تجربة الريال: للأدمن بس', async () => {
+    reset(); eq((await call(ptest, {}, 'tk1')).status, 401); eq(LAST, null);
+    const r = await call(ptest, {}, 'adm'); eq([r.status, LAST.amount, LAST.metadata.test], [200, 1, 'admin']);
+    if (!/paytest=1/.test(LAST.redirect.url)) throw new Error(LAST.redirect.url);
+  });
+  await t('تجربة الريال: ما تقرأ عمليات الطلبات الحقيقية', async () => {
+    reset(); await call(start, { order: 'o1' }, 'tk1'); const id = ORD.o1.tap.id;
+    eq((await call(ptest, { tap_id: id }, 'adm')).status, 404);
+  });
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();
