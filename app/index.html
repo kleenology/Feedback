@@ -449,6 +449,10 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
   direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
 
 /* ===== الطلبات ===== */
+/* رمز الريال السعودي الجديد — من خط «Saudi Riyal» المفتوح (SIL OFL 1.1).
+   قناع بلون النص وحجمه: يطلع على كل الأجهزة حتى اللي خطوطها ما تدعم الرمز بعد */
+.rs{display:inline-block;width:.78em;height:.86em;vertical-align:-.08em;background:currentColor;font-style:normal;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%2740 0 1145 1270%27%3E%3Cpath d=%27M750,1119 C730,1163,716,1211,711,1262 C711,1262,1136,1172,1136,1172 C1156,1127,1169,1079,1174,1028 C1174,1028,750,1119,750,1119Z M1136,901 C1136,901,1136,901,1136,901 C1156,857,1169,809,1174,758 C1174,758,843,828,843,828 C843,828,843,693,843,693 C843,693,1136,631,1136,631 C1156,587,1169,538,1174,488 C1174,488,843,558,843,558 C843,558,843,72,843,72 C793,100,748,138,711,183 C711,183,711,586,711,586 C711,586,579,614,579,614 C579,614,579,6,579,6 C528,34,483,72,447,117 C447,117,447,642,447,642 C447,642,151,705,151,705 C131,750,117,798,112,849 C112,849,447,777,447,777 C447,777,447,948,447,948 C447,948,88,1024,88,1024 C68,1068,55,1117,50,1167 C50,1167,425,1088,425,1088 C456,1081,482,1063,499,1038 C499,1038,568,936,568,936 C568,936,568,936,568,936 C575,926,579,913,579,899 C579,899,579,749,579,749 C579,749,711,721,711,721 C711,721,711,992,711,992 C711,992,1136,901,1136,901Z%27/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%2740 0 1145 1270%27%3E%3Cpath d=%27M750,1119 C730,1163,716,1211,711,1262 C711,1262,1136,1172,1136,1172 C1156,1127,1169,1079,1174,1028 C1174,1028,750,1119,750,1119Z M1136,901 C1136,901,1136,901,1136,901 C1156,857,1169,809,1174,758 C1174,758,843,828,843,828 C843,828,843,693,843,693 C843,693,1136,631,1136,631 C1156,587,1169,538,1174,488 C1174,488,843,558,843,558 C843,558,843,72,843,72 C793,100,748,138,711,183 C711,183,711,586,711,586 C711,586,579,614,579,614 C579,614,579,6,579,6 C528,34,483,72,447,117 C447,117,447,642,447,642 C447,642,151,705,151,705 C131,750,117,798,112,849 C112,849,447,777,447,777 C447,777,447,948,447,948 C447,948,88,1024,88,1024 C68,1068,55,1117,50,1167 C50,1167,425,1088,425,1088 C456,1081,482,1063,499,1038 C499,1038,568,936,568,936 C568,936,568,936,568,936 C575,926,579,913,579,899 C579,899,579,749,579,749 C579,749,711,721,711,721 C711,721,711,992,711,992 C711,992,1136,901,1136,901Z%27/%3E%3C/svg%3E") center/contain no-repeat}
 .olist{background:var(--card);border-radius:24px;box-shadow:var(--sh);overflow:hidden}
 .orow{display:flex;align-items:center;gap:14px;width:100%;padding:16px 18px;background:none;font:inherit;color:inherit;text-align:right;position:relative}
 .orow+.orow::before{content:"";position:absolute;top:0;right:18px;left:18px;border-top:1px solid var(--line)}
@@ -1326,7 +1330,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.0400';
+var APP_VER='2026.11.29.0500';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1437,7 +1441,7 @@ function svcOf(k){return SVCS.filter(function(x){return x.k===k;})[0]||SVCS.filt
 function itemOf(k){return CAT.filter(function(x){return x.k===k;})[0];}
 function feeTxt(){return QUOTE_FEE?QUOTE_FEE+' ر.س':'مجانية';}
 function pct(n){return '<span dir="ltr" style="unicode-bidi:isolate">'+n+'%</span>';}
-function sar(n){return '<span class="mono">'+Number(n).toLocaleString('en-US')+'</span> <small style="font-size:.72em;color:var(--mut);font-weight:500">ر.س</small>';}
+function sar(n){return '<span class="mono">'+Number(n).toLocaleString('en-US')+'</span> <small style="font-size:.72em;color:var(--mut);font-weight:500"><i class="rs" role="img" aria-label="ريال"></i></small>';}
 
 /* ================= حساب السلة ================= */
 function cartLines(){return Object.keys(CART).filter(function(k){return CART[k]>0;}).map(function(k){
@@ -1896,7 +1900,7 @@ function renderHomePkgs(){
         (i===1?'<span class="tag">الأكثر طلباً</span>':'')+
         '<b>'+esc(p.t)+'</b>'+
         '<strong class="mono">'+p.p.toLocaleString('en-US')+'</strong>'+
-        '<small>ر.س / شهرياً</small>'+
+        '<small><i class="rs" role="img" aria-label="ريال"></i> / شهرياً</small>'+
         (p.was?'<del class="mono">'+p.was.toLocaleString('en-US')+'</del>':'')+
         (pc?'<span class="sv">وفّر '+pct(pc)+'</span>':'')+'</button>';}).join('')+'</div></div>';
 }
@@ -2008,7 +2012,7 @@ function renderService(){
     : '';
   var price = s.quote
     ? '<div class="sec"><div class="note acc">سعر هذي الخدمة يتغيّر حسب المساحة وحالة المكان — نعاينها أول. '+
-      (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b> و<b>تُخصم من قيمة الخدمة</b> لو أكملت معنا، وتحدّد موقعك وقت الحجز.':'وزيارة التسعير مجانية.')+'</div></div>'
+      (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' <i class="rs" role="img" aria-label="ريال"></i></b> و<b>تُخصم من قيمة الخدمة</b> لو أكملت معنا، وتحدّد موقعك وقت الحجز.':'وزيارة التسعير مجانية.')+'</div></div>'
     : '<div class="sec"><div class="sec-h"><h2>'+(s.one?'اختر مقاس مكانك':'الأسعار')+'</h2></div>'+
       (discOk(CTV)?'<div id="ladder" style="margin-bottom:14px"></div>':'')+
       (gs.length>1?'<div class="fade-x"><div class="cats scrollx" id="svTabs" style="padding:0 0 12px;margin:0"></div></div>':'')+
@@ -2092,7 +2096,7 @@ function svCta(){
   bar.classList.remove('hide');
   /* لا نستخدم sar() هنا — «ر.س» فيها لون خافت يضيع على الزر الأزرق */
   b.innerHTML=ic('cart','','ic-sm')+'<span>التالي · <span class="mono">'+
-    cartTotals().tot.toLocaleString('en-US')+'</span> ر.س</span>';
+    cartTotals().tot.toLocaleString('en-US')+'</span> <i class="rs" role="img" aria-label="ريال"></i></span>';
   b.onclick=function(){go('scCart');setTab('');};
 }
 
@@ -2134,11 +2138,11 @@ function renderPkgs(){
           '<div><b style="font-size:18px;font-weight:700;font-family:var(--dsp);display:block">'+esc(p.t)+'</b>'+
           '<s style="text-decoration:none;font-size:13px;color:var(--mut)">'+esc(p.every)+'</s></div>'+
           '<div style="text-align:left"><div style="font-size:24px;font-weight:700;font-family:var(--dsp);color:var(--blue-d);font-variant-numeric:tabular-nums">'+p.p+'</div>'+
-          '<s style="text-decoration:none;font-size:11px;color:var(--mut)">ر.س / شهرياً</s></div>'+
+          '<s style="text-decoration:none;font-size:11px;color:var(--mut)"><i class="rs" role="img" aria-label="ريال"></i> / شهرياً</s></div>'+
         '</div>'+
         '<p style="font-size:13.5px;color:var(--mut);margin:12px 0 14px;line-height:1.75">'+esc(p.d)+'</p>'+
         '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'+
-          '<span class="save">توفّر '+save+' ر.س</span>'+
+          '<span class="save">توفّر '+save+' <i class="rs" role="img" aria-label="ريال"></i></span>'+
           '<span style="font-size:13.5px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:5px">التفاصيل'+ic('back','','ic-sm')+'</span>'+
         '</div></button></div>';
     }).join('');
@@ -2147,15 +2151,15 @@ function openPkg(k){PKG=pkgOf(k);if(!PKG)return;go('scPkg');renderPkg();}
 function renderPkg(){
   var p=PKG;
   $('pkBack').innerHTML=backTo('الباقات');
-  $('pkGo').innerHTML=ic('repeat','','ic-sm')+'<span>اشترك — '+p.p+' ر.س شهرياً</span>';
+  $('pkGo').innerHTML=ic('repeat','','ic-sm')+'<span>اشترك — '+p.p+' <i class="rs" role="img" aria-label="ريال"></i> شهرياً</span>';
   $('pkGo').onclick=startPkgBooking;
   $('pkBody').innerHTML=
     '<div class="sec" style="padding-bottom:0"><div class="sv-hero">'+
       '<span class="ring">'+ic('repeat')+'</span>'+
       '<h2>'+esc(p.t)+'</h2><p>'+esc(p.d)+'</p>'+
-      '<div class="pkg-price"><b>'+p.p+'</b><small>ر.س شهرياً</small>'+
-        '<s class="was">'+p.was+' ر.س</s></div>'+
-      '<span class="save" style="margin-top:10px;display:inline-block">توفّر '+(p.was-p.p)+' ر.س كل شهر</span>'+
+      '<div class="pkg-price"><b>'+p.p+'</b><small><i class="rs" role="img" aria-label="ريال"></i> شهرياً</small>'+
+        '<s class="was">'+p.was+' <i class="rs" role="img" aria-label="ريال"></i></s></div>'+
+      '<span class="save" style="margin-top:10px;display:inline-block">توفّر '+(p.was-p.p)+' <i class="rs" role="img" aria-label="ريال"></i> كل شهر</span>'+
     '</div></div>'+
     '<div class="sec"><div class="sec-h"><h2>وش تشمل الباقة</h2></div><div class="incl">'+
       p.incl.map(function(x){return '<div><span class="tick">'+ic('check')+'</span><span>'+esc(x)+'</span></div>';}).join('')+
@@ -2265,7 +2269,7 @@ function renderQuote(){
           '<span class="qic">'+ic('cal')+'</span>'+
           '<b>احجز زيارة للتسعير</b>'+
           '<s>تحدّد موقعك وموعدك، ويزورك فريقنا للمعاينة ويعطيك السعر النهائي في مكانك</s>'+
-          '<i>'+(QUOTE_FEE?'<b class="fee">'+QUOTE_FEE+' ر.س</b><span class="feen">تُخصم من الخدمة</span>':'الأدق')+ic('back','','ic-sm')+'</i></button>'+
+          '<i>'+(QUOTE_FEE?'<b class="fee">'+QUOTE_FEE+' <i class="rs" role="img" aria-label="ريال"></i></b><span class="feen">تُخصم من الخدمة</span>':'الأدق')+ic('back','','ic-sm')+'</i></button>'+
         '<a class="qopt" href="tel:'+BIZ.tel+'" style="text-decoration:none;color:inherit">'+
           '<span class="qic">'+ic('phone')+'</span>'+
           '<b>تسعير عن طريق الاتصال</b>'+
@@ -2273,7 +2277,7 @@ function renderQuote(){
           '<i><b class="feeo">مجاني</b>'+ic('back','','ic-sm')+'</i></a>'+
       '</div></div>'+
     '<div class="sec" style="padding-top:0"><div class="note">'+
-      (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' ر.س</b>، و<b>تُخصم كاملة من قيمة الخدمة</b> لو أكملت معنا — يعني ما تخسر شي. والتسعير عبر الاتصال مجاني.'
+      (QUOTE_FEE?'قيمة زيارة المعاينة <b>'+QUOTE_FEE+' <i class="rs" role="img" aria-label="ريال"></i></b>، و<b>تُخصم كاملة من قيمة الخدمة</b> لو أكملت معنا — يعني ما تخسر شي. والتسعير عبر الاتصال مجاني.'
                 :'زيارة التسعير مجانية وما تلزمك بشي — تسمع السعر وتقرر.')+'</div></div>';
 }
 /* زيارة التسعير تمر بنفس خطوات الحجز وتحجز فترة فعلية — لأنها موعد حقيقي على فريقك */
@@ -2300,11 +2304,11 @@ function renderLadder(){
   if(!host||!discOk(CTV))return;
   var base=discBase(),cur=tierFor(base),nx=nextTier(base),top=TIERS[TIERS.length-1];
   var fill=Math.min(100,Math.round(base/top.at*100));
-  var line=nx?'أضف <b>'+(nx.at-base)+' ر.س</b> للوصول إلى خصم '+pct(nx.off)
+  var line=nx?'أضف <b>'+(nx.at-base)+' <i class="rs" role="img" aria-label="ريال"></i></b> للوصول إلى خصم '+pct(nx.off)
     :cur?'وصلت لأعلى خصم — <b>'+pct(cur.off)+'</b>'
     :'ابدأ بإضافة الأصناف اللي تبيها';
   /* الشريط المطوي أضيق: جملة أقصر حتى لا تُقصّ بثلاث نقاط */
-  var brief=nx?'أضف <b>'+(nx.at-base)+' ر.س</b> لخصم '+pct(nx.off)
+  var brief=nx?'أضف <b>'+(nx.at-base)+' <i class="rs" role="img" aria-label="ريال"></i></b> لخصم '+pct(nx.off)
     :cur?'وصلت لأعلى خصم'
     :'ابدأ وخصمك يكبر معك';
   if(!LADX){
@@ -2373,8 +2377,8 @@ function syncCartUI(){
   var own=['scService','scCart','scBook'].some(function(id){var e=$(id);return e&&e.classList.contains('on');});
   if(!n||own){bar.classList.add('hide');bar.innerHTML='';return;}
   bar.classList.remove('hide');
-  bar.innerHTML='<div class="cartbar-in"><div><s>'+n+' صنف'+(t.cut?' · وفّرت '+t.cut+' ر.س':'')+'</s>'+
-    '<b>'+t.tot.toLocaleString('en-US')+' ر.س</b></div>'+
+  bar.innerHTML='<div class="cartbar-in"><div><s>'+n+' صنف'+(t.cut?' · وفّرت '+t.cut+' <i class="rs" role="img" aria-label="ريال"></i>':'')+'</s>'+
+    '<b>'+t.tot.toLocaleString('en-US')+' <i class="rs" role="img" aria-label="ريال"></i></b></div>'+
     '<button class="go" onclick="go(\'scCart\');setTab(\'\')">عرض السلة'+ic('back','','ic-sm')+'</button></div>';
 }
 
@@ -2402,13 +2406,13 @@ function renderCart(){
             '<span>'+l.q+'</span>'+
             '<button onclick="setQty(\''+l.k+'\','+(l.q+1)+')" aria-label="زد">'+ic('plus','','ic-sm')+'</button></div>'+
             '<b style="font-size:14px">'+sar(l.sum)+'</b></div></div>';}).join('')+'</div>'+
-    (nx?'<div class="sec" style="border:none"><div class="note acc">أضف <b>'+(nx.at-t.base)+' ر.س</b> من '+esc(discNames())+' وتوصل خصم '+pct(nx.off)+' — يعني توفّر أكثر.</div></div>':'')+
+    (nx?'<div class="sec" style="border:none"><div class="note acc">أضف <b>'+(nx.at-t.base)+' <i class="rs" role="img" aria-label="ريال"></i></b> من '+esc(discNames())+' وتوصل خصم '+pct(nx.off)+' — يعني توفّر أكثر.</div></div>':'')+
     '<div class="sec"><div class="box">'+
       '<div class="tot"><span>المجموع</span><b>'+sar(t.sub)+'</b></div>'+
       (t.off?'<div class="tot"><span>خصم '+esc(discNames())+' '+pct(t.off)+'</span><b class="cut">− '+sar(t.cut)+'</b></div>':'')+
       '<div class="tot big"><span>الإجمالي التقديري</span><b>'+sar(t.tot)+'</b></div>'+
     '</div></div>'+
-    (t.tot<MIN_ORDER?'<div class="sec" style="border:none;padding-bottom:0"><div class="note acc">الحد الأدنى للطلب <b>'+MIN_ORDER+' ر.س</b> — أضف <b>'+(MIN_ORDER-t.tot)+' ر.س</b> وتقدر تكمل الحجز.</div></div>':'')+
+    (t.tot<MIN_ORDER?'<div class="sec" style="border:none;padding-bottom:0"><div class="note acc">الحد الأدنى للطلب <b>'+MIN_ORDER+' <i class="rs" role="img" aria-label="ريال"></i></b> — أضف <b>'+(MIN_ORDER-t.tot)+' <i class="rs" role="img" aria-label="ريال"></i></b> وتقدر تكمل الحجز.</div></div>':'')+
     '<div class="sec" style="border:none"><button class="btn" onclick="startBooking()"'+(t.tot<MIN_ORDER?' disabled':'')+'>أكمل الحجز</button>'+
       '<button class="btn btn-x btn-sm" style="margin-top:9px" onclick="clearCart()">'+ic('trash','','ic-sm')+'<span>أفرغ السلة</span></button></div>';
 }
@@ -2694,15 +2698,15 @@ function payCard(dep,o){
   /* بلا تحويل بنكي: الطلب الجديد له زر الدفع بس. طلب قديم بالتحويل (أو قبل حقل pay) يبقى له رفع الإيصال */
   if(tap&&o.pay==='tap')
     return '<div class="pay"><div class="pay-h"><span><b>الدفع لتثبيت الحجز</b>'+(o&&o.quote?'قيمة زيارة المعاينة':o&&Number(o.est)>Number(o.dep)?'عربون الحجز':'قيمة الطلب كاملة')+'</span>'+
-      '<strong class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></strong></div>'+
+      '<strong class="mono">'+dep.toLocaleString('en-US')+' <small><i class="rs" role="img" aria-label="ريال"></i></small></strong></div>'+
       '<div class="pay-b"><button type="button" class="tap-go" onclick="this.disabled=true;payStart(\''+o.id+'\','+(Number(o.no)||0)+')">'+apBtn()+'</button>'+
       '<div class="pm-ic" style="margin:-4px 0 6px"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div>'+
       '<p class="pay-n" style="text-align:center">موعدك يتثبت أول ما يكتمل الدفع.</p></div></div>';
   return '<div class="pay"><div class="pay-h"><span><b>الدفع لتثبيت الحجز</b>'+(o&&o.quote?'قيمة زيارة المعاينة':o&&Number(o.est)>Number(o.dep)?'عربون الحجز':'قيمة الطلب كاملة')+'</span>'+
-      '<strong class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></strong></div>'+
+      '<strong class="mono">'+dep.toLocaleString('en-US')+' <small><i class="rs" role="img" aria-label="ريال"></i></small></strong></div>'+
     '<div class="pay-b">'+
       (tap?'<button type="button" class="tap-go" onclick="this.disabled=true;payStart(\''+o.id+'\','+(Number(o.no)||0)+')">ادفع '+
-        dep.toLocaleString('en-US')+' ر.س</button>'+
+        dep.toLocaleString('en-US')+' <i class="rs" role="img" aria-label="ريال"></i></button>'+
         '<div class="pm-ic" style="margin:-4px 0 12px"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div>'+
         '<p class="pay-n" style="margin:0 0 10px;text-align:center">أو حوّل بنكياً وارفع الإيصال:</p>':'')+
       (o&&rcptDone(o.id)?'':
@@ -2777,7 +2781,7 @@ function bsOpt(dep){
         '<div class="po-r"><span>'+ic('check','','ic-sm')+'دفع آمن ومشفّر — يتأكد حجزك على طول</span></div>'+
         '<div class="pm-ic"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div>'+
       '</div>';}
-  var amt='<div class="o-b"><s>المستحق الآن</s><b class="mono">'+dep.toLocaleString('en-US')+' <small>ر.س</small></b></div>';
+  var amt='<div class="o-b"><s>المستحق الآن</s><b class="mono">'+dep.toLocaleString('en-US')+' <small><i class="rs" role="img" aria-label="ريال"></i></small></b></div>';
   if(!TAP_ON)PAYM='bank';
   return '<h3 class="bs-t">'+'طريقة الدفع'+'</h3>'+
     (TAP_ON?'<button type="button" class="bs-opt pick'+(PAYM==='tap'?'':' off')+'" id="pmTap" role="radio" aria-checked="'+(PAYM==='tap')+'" onclick="payPick(\'tap\','+dep+')"><span class="rd"><i></i></span>'+
@@ -2793,7 +2797,7 @@ function bsOpt(dep){
       '<div class="pay-r"><s>اسم الحساب</s><b>'+esc(BANK.name)+'</b></div>'+
       ibanBox()+
       '<ol class="pay-steps">'+
-        '<li><span><b>حوّل '+dep.toLocaleString('en-US')+' ر.س</b> للحساب أعلاه</span></li>'+
+        '<li><span><b>حوّل '+dep.toLocaleString('en-US')+' <i class="rs" role="img" aria-label="ريال"></i></b> للحساب أعلاه</span></li>'+
         '<li><span><b>ارفع صورة الإيصال</b> تحت وأرسل الطلب</span></li>'+
         '<li><span><b>نؤكد موعدك</b> بعد مراجعة الإيصال</span></li>'+
       '</ol>'+
@@ -2814,7 +2818,7 @@ function bsTail(due,label){
   var tap=due&&TAP_ON&&PAYM==='tap';
   BKBAR='<div class="paybar-in"><button class="btn'+(tap?' ap-btn':'')+'" id="bkGo" data-lb="'+esc(label)+'" onclick="submitOrder()"'+(due&&!tap&&!RCPT?' disabled':'')+'>'+
     (tap?apBtn():esc(label))+'</button>'+
-    '<div class="due"><s>المبلغ المستحق الآن</s><b class="mono">'+due.toLocaleString('en-US')+' <small>ر.س</small></b></div></div>';
+    '<div class="due"><s>المبلغ المستحق الآن</s><b class="mono">'+due.toLocaleString('en-US')+' <small><i class="rs" role="img" aria-label="ريال"></i></small></b></div></div>';
   return '<p class="bs-terms">بإرسال الطلب، أنت توافق على <button type="button" onclick="openTerms()">الشروط وسياسة الخصوصية</button>.</p>'+
     '<div style="height:70px"></div>';
 }
@@ -2857,12 +2861,12 @@ function stepConfirmQuote(){
     (ME.n?'':'<div class="fld">'+bsName()+'</div>')+
     '<div class="fld"><label class="lb" for="bkNt">ملاحظات إضافية (اختياري)</label>'+
       '<textarea class="in" id="bkNt" maxlength="600" placeholder="حالة المكان · متى تبي الخدمة · أي شي يفيد الفريق">'+esc(QW.nt||'')+'</textarea></div>'+
-    '<div class="note acc">'+(QUOTE_FEE?'تدفع <b>'+QUOTE_FEE+' ر.س</b> للمعاينة، و<b>تُخصم كاملة من قيمة الخدمة</b> لو أكملت معنا. وإن ما ناسبك السعر ما تلزمك بشي.'
+    '<div class="note acc">'+(QUOTE_FEE?'تدفع <b>'+QUOTE_FEE+' <i class="rs" role="img" aria-label="ريال"></i></b> للمعاينة، و<b>تُخصم كاملة من قيمة الخدمة</b> لو أكملت معنا. وإن ما ناسبك السعر ما تلزمك بشي.'
                                       :'الزيارة مجانية وما تلزمك بشي — تسمع السعر وتقرر.')+'</div>'+
     (QUOTE_FEE&&TAP_ON
       ?'<button class="btn ap-btn tap-go" style="margin-top:20px" id="bkGo" '+(qwReady()?'':'disabled')+' onclick="submitOrder()">'+apBtn()+'</button>'+
         '<div class="pm-ic" style="margin-top:2px"><span class="ap">Apple Pay</span><span>مدى</span><span>Visa</span><span>Mastercard</span></div>'+
-        '<p class="pay-n" style="text-align:center;margin-top:8px">تدفع <b>'+QUOTE_FEE+' ر.س</b> ويتأكد موعد المعاينة على طول.</p>'
+        '<p class="pay-n" style="text-align:center;margin-top:8px">تدفع <b>'+QUOTE_FEE+' <i class="rs" role="img" aria-label="ريال"></i></b> ويتأكد موعد المعاينة على طول.</p>'
       :'<button class="btn" style="margin-top:20px" id="bkGo" '+(qwReady()?'':'disabled')+
         ' onclick="submitOrder()">اطلب الزيارة</button>');
 }
@@ -3015,7 +3019,7 @@ function ordCard(o,live){
       (o.no?'<div class="ordno mono">طلب رقم '+o.no+'</div>':'')+'</div>'+
       '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>'+
     '<div class="meta">'+
-      (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — '+(o.est?o.est+' ر.س · تُخصم من الخدمة':'مجانية')+'</span></div>':
+      (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — '+(o.est?o.est+' <i class="rs" role="img" aria-label="ريال"></i> · تُخصم من الخدمة':'مجانية')+'</span></div>':
         isSub(o)?'<div>'+ic('repeat','','ic-sm')+'<span>يتكرر '+esc((o.pkg&&o.pkg.every)||'')+'</span></div>':
         n?'<div>'+ic('list','','ic-sm')+'<span>'+n+' صنف</span></div>':'')+
       '<div>'+ic('cal','','ic-sm')+'<span>'+(isSub(o)?'أول زيارة: ':'')+esc(fmtDate(o.date))+'</span></div>'+
@@ -3142,7 +3146,7 @@ function ordDetail(o){
   if(due&&TAP_ON&&o.pay==='tap')
     h+='<div class="od-pay"><p>'+ic('clock','','ic-sm')+'<span>بانتظار الدفع — موعدك يتثبت أول ما يكتمل</span></p>'+
       '<button type="button" class="btn ap-btn tap-go" onclick="this.disabled=true;payStart(\''+o.id+'\','+(Number(o.no)||0)+')">'+
-        '<span>ادفع '+due.toLocaleString('en-US')+' ر.س</span><span class="apw" dir="ltr">'+APL+'Pay</span></button></div>';
+        '<span>ادفع '+due.toLocaleString('en-US')+' <i class="rs" role="img" aria-label="ريال"></i></span><span class="apw" dir="ltr">'+APL+'Pay</span></button></div>';
   else if(due)h+=payCard(due,o);
   if(o.st==='cancelled'&&autoCut(o))h+='<p class="pay-n" style="margin:0 2px 12px;color:var(--mut)">أُلغي تلقائياً لأن الدفع ما اكتمل خلال ساعة، والموعد رجع متاح.</p>';
   h+='<div class="od-c">'+
