@@ -982,12 +982,21 @@ function startOrders(){
     var first=ORFIRST;ORFIRST=false;
     OR=[];snap.forEach(function(d){var o=d.data();o._id=d.id;OR.push(o);});
     rOr();
-    if(!first)snap.docChanges().forEach(function(ch){if(ch.type==='added')notifyOrder(ch.doc.data());});
+    /* التنبيه للطلب المدفوع بس: الدفع الإلكتروني يُحفظ قبل الدفع، فننبّه لما ينْدفع مو لما ينحفظ */
+    snap.docChanges().forEach(function(ch){
+      var o=ch.doc.data(),id=ch.doc.id;
+      if(orUnpaid(o)){UNPAID[id]=1;return;}
+      if(first)return;
+      if(ch.type==='added'||(ch.type==='modified'&&UNPAID[id]&&o.st!=='cancelled'))notifyOrder(o);
+      delete UNPAID[id];
+    });
   },function(e){
     if(e&&e.code==='permission-denied')console.log('قواعد orders غير منشورة — راجع app/README.md');
     else console.log('Orders live:',e&&e.code);
   });
 }
+var UNPAID={};
+function orUnpaid(o){return o.st==='new'&&o.pay==='tap'&&(Number(o.dep)||0)>(Number(o.paid)||0);}
 function notifyOrder(o){
   var nm=o.n||'عميل';
   showToast('🔔 طلب جديد من '+nm+' — '+(o.svc||''));
@@ -1008,7 +1017,7 @@ function orAddr(o){
 }
 function orLive(o){return o.st==='new'||o.st==='confirmed'||o.st==='on_way';}
 function rOr(){
-  var nw=OR.filter(function(o){return o.st==='new';}).length;
+  var nw=OR.filter(function(o){return o.st==='new'&&!orUnpaid(o);}).length;
   var live=OR.filter(orLive).length;
   var b=document.getElementById('ordBadge');
   b.textContent=nw||'';b.classList.toggle('hide',!nw);
@@ -1059,7 +1068,8 @@ function orCard(o){
   return '<div class="or'+(o.st==='new'?' new':'')+'">'+
     '<div class="or-h"><div><div class="or-n">'+(o.no?'<span class="or-no">#'+esc(o.no)+'</span>':'')+(o.quote?'📐 ':isSub(o)?'🔁 ':'')+esc(o.n||'عميل')+'</div>'+
       '<div class="or-p">+'+esc(o.ph||'')+'</div></div>'+
-      '<span class="or-st" style="background:'+c[0]+';color:'+c[1]+'">'+(ORST[o.st]||o.st)+'</span></div>'+
+      (orUnpaid(o)?'<span class="or-st" style="background:#fde8e8;color:#c0392b">⏳ بانتظار الدفع</span></div>'
+        :'<span class="or-st" style="background:'+c[0]+';color:'+c[1]+'">'+(ORST[o.st]||o.st)+'</span></div>')+
     '<div class="or-m"><b>'+esc(o.svc||'')+'</b><br>'+esc(orWhen(o))+'<br>'+esc(orAddr(o))+
       (o.nt?'<br>📝 '+esc(o.nt):'')+'</div>'+
     (o.quote?'<div class="or-it" style="background:#fdf3e1;color:#9a6206"><div>'+

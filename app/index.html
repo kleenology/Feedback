@@ -513,6 +513,7 @@ textarea.in{min-height:92px;resize:vertical;line-height:1.8}
 .meta .ic-sm{color:var(--blue);opacity:.75}
 .st{font-size:11.5px;font-weight:700;font-family:var(--dsp);padding:6px 13px;border-radius:999px;white-space:nowrap}
 .st-new{background:var(--warnl);color:var(--warn)}
+.st-unpaid{background:#fde8e8;color:#c0392b}
 .st-confirmed,.st-on_way{background:var(--blue-l);color:var(--blue-d)}
 .st-done{background:var(--okl);color:var(--ok)}
 .st-cancelled{background:var(--sunk);color:var(--faint)}
@@ -1330,7 +1331,7 @@ var CITIES=['الرياض','جدة','الدمام','الخبر','مكة','الم
    معه:  خريطة تفاعلية والعميل يسحب الدبوس لضبط موقعه بالضبط.
    المفتاح من console.cloud.google.com ← Maps JavaScript API (فيه طبقة مجانية شهرية). */
 var MAPS_KEY='';
-var APP_VER='2026.11.29.0500';
+var APP_VER='2026.11.29.0600';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1949,10 +1950,10 @@ function renderHome(){
   var live=ORD.filter(function(o){return o.st!=='done'&&o.st!=='cancelled';})[0];
   $('activeOrder').innerHTML=live
     ? '<div class="sec" style="padding-bottom:0"><button class="live-s" '+
-      'onclick="ORQF=\'\';go(\'scOrders\');setTab(\'scOrders\');renderOrders()">'+
+      'onclick="ORQF=\'\';go(\'scOrders\');setTab(\'scOrders\');renderOrders();'+(stK(live)==='unpaid'?'openOrd(\''+live.id+'\')':'')+'">'+
       '<span class="ls-t"><b>'+(live.no?'طلبك رقم <span class="mono">'+live.no+'</span>':'طلبك الحالي')+'</b>'+
       '<s>'+esc(fmtDate(live.date))+' · '+esc(slotOf(live.slot))+'</s></span>'+
-      '<span class="st st-'+live.st+'">'+STS[live.st]+'</span>'+ic('back','','ic-sm')+'</button></div>'
+      stPill(live)+ic('back','','ic-sm')+'</button></div>'
     : '';
   $('nameCard').innerHTML=ME.n?'':
     '<div class="sec" style="padding-bottom:0"><div class="card" style="padding:16px">'+
@@ -2934,12 +2935,15 @@ function payVerify(cid){
   }).then(function(r){return r.json().catch(function(){return {};});}).then(function(j){
     LS.set('payo',null);
     if(j&&j.ok)toast('تم الدفع ✓'+(j.no?' — طلبك رقم '+j.no+' محجوز':'')+'، ونأكد موعدك قريب');
-    else toast('ما اكتمل الدفع — تقدر تحاول مرة ثانية من بطاقة الطلب');
-    API.orders().then(function(){renderAll();});
+    else toast('ما اكتمل الدفع — طلبك محفوظ ساعة، ادفع عشان يتثبت موعدك');
+    API.orders().then(function(){renderAll();if(!(j&&j.ok)&&j&&j.order)openOrd(j.order);});
   }).catch(function(){toast('ما قدرنا نتأكد من الدفع الحين — يتحدّث الطلب تلقائياً لما يوصلنا');});
 }
 /* كم باقي من العربون؟ */
 function autoCut(o){var h=o.hist||[],l=h[h.length-1];return !!(l&&l.by==='auto'&&l.why==='unpaid');}
+/* الطلب المحفوظ اللي ما انْدفع: يطلع «بانتظار الدفع» مو «بانتظار التأكيد» — عشان ما يحسبه العميل محجوز */
+function stK(o){return o.st==='new'&&o.pay==='tap'&&depDue(o)>0?'unpaid':o.st;}
+function stPill(o){var k=stK(o);return '<span class="st st-'+k+'">'+(k==='unpaid'?'بانتظار الدفع':STS[o.st])+'</span>';}
 function depDue(o){return Math.max(0,(Number(o.dep)||0)-(Number(o.paid)||0));}
 /* بعد حفظ الطلب: نرفع الإيصال. لو فشل الرفع الطلب يبقى، وبطاقته في «طلباتي» فيها زر الرفع */
 function sendRcpt(o){
@@ -3017,7 +3021,7 @@ function ordCard(o,live){
   return '<article class="ord'+(live?' live':'')+'">'+
     '<div class="ord-h"><div><div class="ord-t"><span class="ico">'+(o.quote?ic('cal'):isSub(o)?ic('repeat'):il('cart'))+'</span><span>'+esc(o.svc||'طلب')+'</span></div>'+
       (o.no?'<div class="ordno mono">طلب رقم '+o.no+'</div>':'')+'</div>'+
-      '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>'+
+      stPill(o)+'</div>'+
     '<div class="meta">'+
       (o.quote?'<div>'+ic('cal','','ic-sm')+'<span>زيارة تسعير — '+(o.est?o.est+' <i class="rs" role="img" aria-label="ريال"></i> · تُخصم من الخدمة':'مجانية')+'</span></div>':
         isSub(o)?'<div>'+ic('repeat','','ic-sm')+'<span>يتكرر '+esc((o.pkg&&o.pkg.every)||'')+'</span></div>':
@@ -3126,8 +3130,8 @@ function ordRow(o){
   if(!o.quote&&!isSub(o)&&String(o.svc||'').indexOf(' · ')>0)t=String(o.svc);
   return '<button class="orow" onclick="openOrd(\''+o.id+'\')">'+
     '<span class="oi">'+(s?svcIc(s):il('cart'))+'</span>'+
-    '<span class="ot"><b>'+esc(t)+'</b><s>'+esc(fmtDate(o.date))+(sl?' • '+esc(sl.t)+' ('+esc(sl.s)+')':'')+'</s></span>'+
-    '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></button>';
+    '<span class="ot"><b>'+esc(t)+'</b><s>'+esc(fmtDate(o.date))+(sl?' • <span style="white-space:nowrap">'+esc(sl.t)+' ('+esc(sl.s)+')</span>':'')+'</s></span>'+
+    stPill(o)+'</button>';
 }
 function openOrd(id){
   var o=ORD.filter(function(x){return x.id===id;})[0];if(!o)return;
@@ -3141,7 +3145,7 @@ function ordDetail(o){
   var items=isSub(o)?[]:(o.items||[]);
   var h='<div class="od-h"><span class="oi">'+(s?svcIc(s):il('cart'))+'</span>'+
       '<span class="ot"><b>'+esc(t)+'</b>'+(o.no?'<s class="mono">طلب رقم '+o.no+'</s>':'')+'</span>'+
-      '<span class="st st-'+o.st+'">'+STS[o.st]+'</span></div>';
+      stPill(o)+'</div>';
   /* بانتظار الدفع: تنبيه مختصر وزر واحد */
   if(due&&TAP_ON&&o.pay==='tap')
     h+='<div class="od-pay"><p>'+ic('clock','','ic-sm')+'<span>بانتظار الدفع — موعدك يتثبت أول ما يكتمل</span></p>'+
