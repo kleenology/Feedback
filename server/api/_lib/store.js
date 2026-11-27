@@ -171,5 +171,45 @@ async function setTapStatus(id, chId, st) {
   });
 }
 
-module.exports = { userUid, setTapPending, applyTapPayment, setTapStatus, getPin, createPin, updatePin, markHook, findOrders, setOstaz, clearOstaz, setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
+/* ===== الإلغاء التلقائي للطلبات اللي ما انْدفعت ===== */
+/* بوابة: التنظيف يشتغل مرة كل كم دقيقة مهما كثرت الطلبات عليه */
+async function sweepGate(minMs) {
+  const ref = db().collection('pay_meta').doc('sweep');
+  return db().runTransaction(async tx => {
+    const s = await tx.get(ref);
+    const last = (s.exists && s.data().at) || 0;
+    if (Date.now() - last < minMs) return false;
+    tx.set(ref, { at: Date.now() });
+    return true;
+  });
+}
+/* طلبات الدفع الإلكتروني اللي للحين «جديدة» وما انْدفع منها شي وأقدم من المهلة */
+async function staleTapOrders(cutoffIso) {
+  const s = await db().collection('orders').where('pay', '==', 'tap').where('st', '==', 'new').limit(100).get();
+  return s.docs.map(d => Object.assign({ _id: d.id }, d.data()))
+    .filter(o => !(Number(o.paid) > 0) && String(o.at || '') < cutoffIso);
+}
+/* الإلغاء والموعد يتحرّر في معاملة وحدة — ولو انْدفع في آخر لحظة ما نلغيه */
+async function cancelUnpaid(id) {
+  const ref = db().collection('orders').doc(id);
+  return db().runTransaction(async tx => {
+    const s = await tx.get(ref);
+    if (!s.exists) return false;
+    const o = s.data();
+    if (o.st !== 'new' || Number(o.paid) > 0) return false;
+    let sref = null, cur = 0;
+    if (o.date && /^[0-9-]{8,12}$/.test(o.date) && ['am', 'pm', 'ev'].includes(o.slot)) {
+      sref = db().collection('slots').doc(o.date);
+      const sd = await tx.get(sref);
+      cur = (sd.exists && Number(sd.data()[o.slot])) || 0;
+    }
+    const now = new Date().toISOString();
+    const hist = (Array.isArray(o.hist) ? o.hist : []).concat([{ s: 'cancelled', at: now, by: 'auto', why: 'unpaid' }]);
+    tx.update(ref, { st: 'cancelled', hist });
+    if (sref && cur > 0) tx.update(sref, { [o.slot]: cur - 1 });
+    return true;
+  });
+}
+
+module.exports = { sweepGate, staleTapOrders, cancelUnpaid, userUid, setTapPending, applyTapPayment, setTapStatus, getPin, createPin, updatePin, markHook, findOrders, setOstaz, clearOstaz, setInvoiceStatus, getOtp, putOtp, dropOtp, bumpTries, bumpDaily, customToken, uidFor, app,
   adminUid, getOrder, lockInvoice, saveInvoice, unlockInvoice };

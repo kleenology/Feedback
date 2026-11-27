@@ -876,6 +876,8 @@ function payTestResult(){
 if(PAYTEST){var payUn=auth.onAuthStateChanged(function(u){if(u&&PAYTEST)openAdmin();else if(!u)go('pgLogin');payUn();});}
 function openAdmin(){
 go('pgAdm');
+/* تنظيف الطلبات اللي ما انْدفعت (الخادم يقرر، مرة كل ٥ دقائق بالكثير) */
+try{fetch(INV_API+'/api/pay/sweep',{method:'POST'}).catch(function(){});}catch(e){}
 if(PAYTEST)setTimeout(payTestResult,400);
 if(window.Notification&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
 /* التقييمات أولاً — هي أول ما تعرضه اللوحة، فما تنتظر بقية البيانات */
@@ -1022,6 +1024,9 @@ function isSub(o){return o.sub===true||!!o.pkg;}
 /* دفعات تاب: يسجّلها الخادم بعد ما يتأكد من تاب — مؤكدة، ما تحتاج مراجعة إيصال */
 var TAPSRC={APPLE_PAY:'Apple Pay',MADA:'مدى',VISA:'Visa',MASTERCARD:'Mastercard',STC_PAY:'STC Pay'};
 function orTapLine(o){
+  var hh=o.hist||[],hl=hh[hh.length-1];
+  if(o.st==='cancelled'&&hl&&hl.by==='auto'&&hl.why==='unpaid')
+    return '<div><span style="color:#9ab">⌛ أُلغي تلقائياً — ما انْدفع خلال ساعة، والموعد تحرّر</span><b></b></div>';
   var ps=(o.pays||[]).filter(function(p){return p&&p.m==='tap';});
   if(ps.length)return ps.map(function(p){return '<div><span style="color:#16a34a">✓ دفع إلكتروني'+(p.src?' ('+esc(TAPSRC[p.src]||p.src)+')':'')+'</span><b style="color:#16a34a">'+esc(p.amt)+' ر.س</b></div>';}).join('');
   if(o.pay==='tap'&&o.st==='new'&&!(Number(o.paid)>0))
