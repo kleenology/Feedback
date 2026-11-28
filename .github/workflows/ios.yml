@@ -1,0 +1,71 @@
+# بناء تطبيق الآيفون ورفعه على TestFlight — بدون ماك (على أجهزة آبل عند GitHub)
+# التشغيل: GitHub ← Actions ← «تطبيق الآيفون» ← Run workflow
+# يحتاج أسرار المستودع (Settings ← Secrets and variables ← Actions):
+#   APPLE_TEAM_ID   رقم الفريق من developer.apple.com (10 خانات)
+#   ASC_KEY_ID      رقم مفتاح App Store Connect API
+#   ASC_ISSUER_ID   Issuer ID من نفس الصفحة
+#   ASC_KEY_P8      محتوى ملف AuthKey_xxx.p8 كامل
+name: تطبيق الآيفون
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: رقم الإصدار اللي يشوفه العميل في المتجر
+        default: '1.0'
+        required: true
+permissions:
+  contents: read
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx cap sync ios
+      - name: مفتاح App Store Connect
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s' "$ASC_KEY_P8" > "$RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8"
+      - name: أرشفة
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KID: ${{ secrets.ASC_KEY_ID }}
+          ISS: ${{ secrets.ASC_ISSUER_ID }}
+          VER: ${{ inputs.version }}
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" archive \
+            -allowProvisioningUpdates -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_$KID.p8" \
+            -authenticationKeyID "$KID" -authenticationKeyIssuerID "$ISS" \
+            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="$VER" CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+      - name: رفع لـ TestFlight
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KID: ${{ secrets.ASC_KEY_ID }}
+          ISS: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/export.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/export.plist" -exportPath "$RUNNER_TEMP/out" \
+            -allowProvisioningUpdates -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_$KID.p8" \
+            -authenticationKeyID "$KID" -authenticationKeyIssuerID "$ISS"
