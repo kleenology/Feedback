@@ -22,6 +22,9 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <!-- الخط محفوظ مع التطبيق نفسه ويُحمَّل قبل أول رسم — قبل كان يجي من قوقل بعد الرسم
      فيتبدّل خط النظام بخطنا وتتحرك الأيقونات والكلام لحظة الفتح -->
+<!-- صورتا التأهيلية والمكاتب: تتحمّل مع الصفحة (وتنحفظ في الكاش) بدل ما تطلع بعد الرسم برمشة -->
+<link rel="preload" as="image" href="img/svc-post.png">
+<link rel="preload" as="image" href="img/svc-office.png">
 <link rel="preload" as="font" type="font/woff2" href="fonts/plex-ar-400.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="fonts/plex-ar-700.woff2" crossorigin>
 <style>
@@ -1459,7 +1462,7 @@ var AREA_MSG='حالياً نخدم مدينة الرياض فقط — وقري�
 var MAPS_KEY='';
 /* رقم الإصدار اللي يشوفه العميل — ترفعه يدوياً مع التحديثات الكبيرة. APP_VER تحت للتحديث التلقائي بس */
 var APP_LABEL='1.0';
-var APP_VER='2026.11.29.2300';
+var APP_VER='2026.11.30.0000';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1545,8 +1548,15 @@ function $(id){return document.getElementById(id);}
 function isCustomer(u){return !!(u&&(u.phoneNumber||String(u.uid||'').indexOf('ph_')===0||u.email));}
 function backTo(t){return '<span class="bk-i">'+ic('back')+'</span><span>'+esc(t)+'</span>';}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+/* نفكّ صورتي الخدمات قبل ما تختفي الشاشة الافتتاحية — عشان ما ترمش أول ما تطلع الرئيسية */
+var PICS=['img/svc-post.png','img/svc-office.png'].map(function(u){var i=new Image();i.src=u;return i;});
+var PICS_OK=false;
+Promise.race([Promise.all(PICS.map(function(i){return i.decode?i.decode().catch(function(){}):null;})),
+  new Promise(function(r){setTimeout(r,350);})]).then(function(){PICS_OK=true;if(SPLASH_WANT)hideSplash();});
+var SPLASH_WANT=false;
 function hideSplash(){
   var s=document.getElementById('splash');if(!s||s.classList.contains('out'))return;
+  if(!PICS_OK){SPLASH_WANT=true;return;}
   s.classList.add('out');setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},450);
 }
 function go(id){
