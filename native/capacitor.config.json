@@ -1,0 +1,18 @@
+{
+  "appId": "me.kleenology.app",
+  "appName": "كلينولوجي",
+  "webDir": "www",
+  "server": {
+    "url": "https://app.kleenology.me/app/",
+    "allowNavigation": ["app.kleenology.me", "*.tap.company", "*.gosell.io", "*"]
+  },
+  "ios": {
+    "scheme": "Kleenology",
+    "contentInset": "never",
+    "backgroundColor": "#F1F8FC",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "PushNotifications": { "presentationOptions": ["badge", "sound", "alert"] }
+  }
+}

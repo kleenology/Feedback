@@ -1139,6 +1139,12 @@ function orSet(id,patch){
   rOr();
   return db.collection('orders').doc(id).update(patch).catch(function(){showToast('تعذّر الحفظ — تحقق من الاتصال');});
 }
+/* إشعار للعميل على جواله (تطبيق الآيفون) بعد تغيير حالة طلبه — لو ما عنده التطبيق ما يصير شي */
+function pushNotify(id){
+  if(!INV_API||!auth||!auth.currentUser)return;
+  auth.currentUser.getIdToken().then(function(tk){return fetch(INV_API+'/api/pay/push',{method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({op:'notify',order:id})});}).catch(function(){});
+}
 function orAdvance(id){
   var o=OR.filter(function(x){return x._id===id;})[0];if(!o)return;
   var nx=ORNEXT[o.st];if(!nx)return;
@@ -1148,6 +1154,7 @@ function orAdvance(id){
   if(nx==='done'&&orRem(o)>0&&confirm('استلمت المتبقي '+orRem(o)+' ر.س من العميل؟\n(إلغاء = يبقى المتبقي مسجّلاً عليه)')){
     patch.paid=orTotal(o);patch.paidAt=new Date().toISOString();}
   orSet(id,patch).then(function(){
+    pushNotify(id);
     /* إتمام الخدمة: الفاتورة مباشرة بدل ما تروح لقائمة «مكتملة» وتدوّر الطلب */
     /* الفاتورة للطلب المدفوع كامل بس — لو باقي مبلغ ما انسجّل، ما نعرضها */
     var paidAll=!!patch.paid||orRem(o)===0;
@@ -1249,7 +1256,7 @@ function orCancel(id){
   if(!confirm('إلغاء طلب '+(o.n||'')+'؟\nالموعد يرجع متاحاً لغيره.'))return;
   var h=(o.hist||[]).concat([{s:'cancelled',at:new Date().toISOString()}]);
   orSet(id,{st:'cancelled',hist:h}).then(function(){
-    showToast('أُلغي الطلب');
+    showToast('أُلغي الطلب');pushNotify(id);
     if(!o.date||!o.slot)return;
     var sref=db.collection('slots').doc(o.date);
     db.runTransaction(function(tx){

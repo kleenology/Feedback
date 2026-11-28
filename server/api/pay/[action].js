@@ -1,5 +1,5 @@
 'use strict';
-/* /api/pay/{start|verify|hook|test|sweep|wallet} — دالة وحدة لكل عمليات الدفع.
+/* /api/pay/{start|verify|hook|test|sweep|wallet|push} — دالة وحدة لكل عمليات الدفع.
    الخطة المجانية في Vercel تسمح بـ ١٢ دالة بس، فنجمع الدفع هنا ونوزّع حسب آخر جزء من الرابط.
    كل عملية في ملفها داخل api/_pay (الملفات اللي تبدأ بـ _ ما تنحسب دوال). */
 const H = {
@@ -8,7 +8,8 @@ const H = {
   hook: require('../_pay/hook'),
   test: require('../_pay/test'),
   sweep: require('../_pay/sweep'),
-  wallet: require('../_pay/wallet')
+  wallet: require('../_pay/wallet'),
+  push: require('../_pay/push')
 };
 
 module.exports = function handler(req, res) {

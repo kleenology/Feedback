@@ -1574,7 +1574,7 @@ function toast(m){
   var bad=/تعذّر|تعذر|ما قدر|فشل|غلط|خطأ|ضعيف|انتهت|غير صحيح|سبقك|مرفوض|ما يكفي|غير متاح|خارج/.test(m);
   var t=document.createElement('div');t.className='toast'+(bad?' bad':'');t.setAttribute('role','status');
   t.innerHTML='<span class="ti">'+ic(bad?'close':'check')+'</span><span></span>';t.lastChild.textContent=m;
-  document.body.appendChild(t);TOAST=t;
+  document.body.appendChild(t);TOAST=t;if(typeof haptic==='function')haptic();
   requestAnimationFrame(function(){requestAnimationFrame(function(){t.classList.add('on');});});
   t.onclick=hide;var tm=setTimeout(hide,2800);
   function hide(){clearTimeout(tm);t.classList.remove('on');setTimeout(function(){t.remove();if(TOAST===t)TOAST=null;},420);}
@@ -2052,6 +2052,7 @@ function saveSnap(){
 function onSignedIn(uid){
   ME.uid=uid;AUTHED=true;GUEST=false;
   walWatch();
+  if(typeof NATIVE!=='undefined'&&NATIVE)setTimeout(pushSetup,1500);
   var w=$('lgWhy');if(w)w.classList.add('hide');
   CART=LS.get('cart',{});
   var snap=DEMO?null:LS.get('snap',null);
@@ -2147,6 +2148,7 @@ function refLink(){return 'https://app.kleenology.me/app/?ref='+encodeURICompone
 function refCopy(){var t=REF&&REF.code;if(!t)return;try{navigator.clipboard.writeText(t).then(function(){toast('نسخنا الكود ✓');});}catch(e){toast(t);}}
 function refShare(){
   if(!REF)return;var txt='جرّب كلينولوجي للتنظيف 🧽 — سجّل بكودي '+REF.code+' وتاخذ '+REF.friend+' ريال في محفظتك:';
+  var SH=nPlug('Share');if(SH){SH.share({title:'كلينولوجي',text:txt,url:refLink(),dialogTitle:'ادعُ صديقك'}).catch(function(){});return;}
   try{if(navigator.share){navigator.share({title:'كلينولوجي',text:txt,url:refLink()}).catch(function(){});return;}}catch(e){}
   try{navigator.clipboard.writeText(txt+' '+refLink()).then(function(){toast('نسخنا رسالة الدعوة — الصقها لأصحابك');});}catch(e){}
 }
@@ -2271,7 +2273,9 @@ function logoutGo(){
     AUTHED=false;ME={uid:'',ph:'',n:'',ok:false,em:''};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
     backToPhone();$('inPh').value='';guestHome();}
   if(DEMO){done();return;}
-  auth.signOut().then(done).catch(done);
+  /* جهاز الآيفون: نوقف إشعاراته لهذا الحساب قبل الخروج (بحد أقصى ثانيتين) */
+  Promise.race([typeof NATIVE!=='undefined'&&NATIVE?pushApi('unregister'):Promise.resolve(),new Promise(function(r){setTimeout(r,2000);})])
+    .then(function(){PUSHTOK='';return auth.signOut();}).then(done).catch(done);
 }
 </script>
 <script>
@@ -3827,6 +3831,44 @@ $('bkPh').innerHTML=ic('back','','ic-sm')+'<span>تغيير الرقم</span>';
 $('meBack').innerHTML='<span class="bk-i">'+ic('back')+'</span>';
 $('inPh').addEventListener('keydown',function(e){if(e.key==='Enter')sendCode();});
 renderTerms();
+/* ===== تطبيق الآيفون (Capacitor) =====
+   نفس هذي الصفحة تنفتح داخل تطبيق المتجر. هناك نستخدم ميزات الجوال نفسه:
+   إشعارات حالة الطلب، والمشاركة، والاهتزاز الخفيف. في المتصفح كل هذا يتجاهل بهدوء. */
+var NATIVE=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+var PUSHTOK='',PUSHOID='';
+function nPlug(n){return NATIVE&&Capacitor.Plugins?Capacitor.Plugins[n]:null;}
+function pushApi(op){
+  var u=auth&&auth.currentUser;if(!u||!PUSHTOK)return Promise.resolve();
+  return u.getIdToken().then(function(tk){return fetch(PAY_API+'/api/pay/push',{method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({op:op,token:PUSHTOK})});}).catch(function(){});
+}
+/* بعد الدخول: لو العميل وافق من قبل نسجّل الجهاز بصمت، ولو ما انسأل نشرح له أول بنافذتنا ثم نافذة آبل */
+function pushSetup(){
+  var P=nPlug('PushNotifications');if(!P||DEMO)return;
+  if(!pushSetup.on){pushSetup.on=true;
+    P.addListener('registration',function(t){PUSHTOK=t&&t.value||'';pushApi('register');});
+    P.addListener('pushNotificationActionPerformed',function(a){
+      var d=(a&&a.notification&&a.notification.data)||{};if(d.oid){PUSHOID=String(d.oid);pushOpen(0);}});
+    P.addListener('pushNotificationReceived',function(n){if(n&&n.title)toast(n.title);});
+  }
+  P.checkPermissions().then(function(st){
+    if(st.receive==='granted'){P.register();return;}
+    if(st.receive!=='prompt'&&st.receive!=='prompt-with-rationale')return;
+    if(LS.get('push_asked',0))return;LS.set('push_asked',1);
+    ask({t:'نبلغك بحالة طلبك؟',m:'إشعار لما يتأكد موعدك، ولما يكون الفريق في الطريق لك.',ok:'فعّل الإشعارات',no:'لاحقاً',icon:'clock'})
+      .then(function(y){if(!y)return;P.requestPermissions().then(function(r){if(r.receive==='granted')P.register();});});
+  }).catch(function(){});
+}
+/* ضغط على إشعار: نفتح الطلب نفسه — ننتظر لين تتحمّل الطلبات */
+function pushOpen(n){
+  if(!PUSHOID)return;
+  if(!AUTHED){if(n<20)setTimeout(function(){pushOpen(n+1);},500);return;}
+  go('scOrders');setTab('scOrders');renderOrders();
+  if(ORD.some(function(o){return o.id===PUSHOID;})){openOrd(PUSHOID);PUSHOID='';}
+  else if(n<20)setTimeout(function(){pushOpen(n+1);},500);
+}
+function haptic(){var H=nPlug('Haptics');if(H)H.impact({style:'LIGHT'}).catch(function(){});}
+
 /* ===== تثبيت التطبيق (PWA) =====
    أندرويد/كروم: نمسك حدث beforeinstallprompt ونطلق نافذة التثبيت من زرّنا.
    آيفون: سفاري ما يدعم التثبيت البرمجي، فنشرح «مشاركة ← إضافة إلى الشاشة الرئيسية». */

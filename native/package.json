@@ -1,0 +1,16 @@
+{
+  "name": "kleenology-native",
+  "private": true,
+  "description": "تغليف تطبيق العميل كتطبيق آيفون (Capacitor) — الواجهة نفسها تُحمَّل من app.kleenology.me/app",
+  "scripts": { "sync": "cap sync ios" },
+  "dependencies": {
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/push-notifications": "^7.0.0",
+    "@capacitor/share": "^7.0.0",
+    "@capacitor/haptics": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@capacitor/app": "^7.0.0"
+  },
+  "devDependencies": { "@capacitor/cli": "^7.0.0" }
+}
