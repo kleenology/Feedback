@@ -995,6 +995,7 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
 <!-- ===== الدخول ===== -->
 <section class="scr" id="scLogin">
   <div class="lg">
+    <button type="button" class="bk" id="lgBack" onclick="PENDING='';guestHome()"></button>
     <div class="lg-m"><img src="../logo.png" alt="كلينولوجي"></div>
     <div id="lgEmail" class="hide">
       <h1>أهلاً بك في <em>كلينولوجي</em></h1>
@@ -1015,8 +1016,6 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.a
       </div>
       <button class="btn" id="btnEm" onclick="emSubmit()">دخول</button>
       <button class="lnk" style="width:100%;justify-content:center;margin-top:6px" onclick="emForgot()" id="btnEmForgot">نسيت كلمة المرور؟</button>
-      <div class="lg-or"><span>أو</span></div>
-      <button type="button" class="btn btn-2" id="lgGuest" onclick="PENDING='';guestHome()">تصفّح الخدمات بدون تسجيل</button>
       <small>بالمتابعة أنت توافق على <a href="#" onclick="openTerms();return false">الشروط وسياسة الخصوصية</a></small>
     </div>
     <div id="lgAsk" class="hide">
@@ -1462,7 +1461,7 @@ var AREA_MSG='حالياً نخدم مدينة الرياض فقط — وقري�
 var MAPS_KEY='';
 /* رقم الإصدار اللي يشوفه العميل — ترفعه يدوياً مع التحديثات الكبيرة. APP_VER تحت للتحديث التلقائي بس */
 var APP_LABEL='1.0';
-var APP_VER='2026.11.30.0000';
+var APP_VER='2026.11.30.0100';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -1946,7 +1945,7 @@ function emForgot(){
 function askPhone(){
   go('scLogin');$('tabBar').classList.add('hide');
   ['lgPhone','lgCode','lgEmail'].forEach(function(id){$(id).classList.add('hide');});
-  $('lgAsk').classList.remove('hide');lgErr('');var nf=$('inAskN');if(nf&&ME.n)nf.value=ME.n;var f=$(ME.n?'inAsk':'inAskN');if(f)f.focus();
+  $('lgAsk').classList.remove('hide');lgBk(false);lgErr('');var nf=$('inAskN');if(nf&&ME.n)nf.value=ME.n;var f=$(ME.n?'inAsk':'inAskN');if(f)f.focus();
 }
 function askSave(){
   var p=norm($('inAsk').value),n=String($('inAskN').value||'').trim().slice(0,60);lgErr('');
@@ -2229,10 +2228,11 @@ function payGo(oid,no,useW){
    الزائر يشوف الخدمات والأسعار والباقات ويضيف للسلة. الدخول يُطلب بس عند الحجز أو «طلباتي» و«حسابي»،
    وبعده يكمل من نفس المكان (PENDING) والسلة محفوظة في جهازه */
 var GUEST=false,PENDING='';
-/* الصفحة الأولى للزائر: الدخول، ومنها «تصفّح الخدمات بدون تسجيل» */
+/* شاشة الدخول بدون سبب محدد (ما عادت أول صفحة — أول صفحة الرئيسية) */
+function lgBk(on){var b=$('lgBack');if(!b)return;if(!b.innerHTML)b.innerHTML=backTo('الرئيسية');b.classList.toggle('hide',!on);}
 function loginFirst(){
   GUEST=false;AUTHED=false;PENDING='';
-  go('scLogin');$('tabBar').classList.add('hide');syncCartUI();
+  go('scLogin');lgBk(true);$('tabBar').classList.add('hide');syncCartUI();
   if(emailOn())emShow();
   var w=$('lgWhy');if(w)w.classList.add('hide');
 }
@@ -2251,7 +2251,7 @@ function needLogin(next){
   if(!DEMO&&!auth){loadFB().catch(function(){});
     if(FBERR||FBFAIL){toast('تعذّر الاتصال — تأكد من الإنترنت وحاول مرة ثانية');return true;}}
   PENDING=next||'';
-  go('scLogin');$('tabBar').classList.add('hide');syncCartUI();
+  go('scLogin');lgBk(true);$('tabBar').classList.add('hide');syncCartUI();
   if(emailOn())emShow();
   var w=$('lgWhy');if(w){w.textContent=next==='scWallet'?'سجّل دخولك عشان تشوف رصيدك':/^sc/.test(next||'')?'سجّل دخولك عشان تشوف طلباتك وحسابك':'سجّل دخولك عشان تكمل حجزك — سلتك محفوظة';w.classList.remove('hide');}
   return true;
@@ -2269,7 +2269,7 @@ function logoutGo(){
   function done(){
     if(ORUN){ORUN();ORUN=null;}ORERR='';walStop();REF=null;
     AUTHED=false;ME={uid:'',ph:'',n:'',ok:false,em:''};ORD=[];ADR=[];CART={};LS.set('cart',{});LS.set('snap',null);
-    backToPhone();$('inPh').value='';loginFirst();}
+    backToPhone();$('inPh').value='';guestHome();}
   if(DEMO){done();return;}
   auth.signOut().then(done).catch(done);
 }
@@ -3897,7 +3897,7 @@ function boot(){
   if(sn&&sn.uid&&sn.ph){
     ME.uid=sn.uid;ME.n=sn.n||'';ME.ok=!!sn.ok;ME.ph=sn.ph;ORD=sn.ord||[];ADR=sn.adr||[];AUTHED=true;
     CART=LS.get('cart',{});$('tabBar').classList.remove('hide');renderAll();go('scHome');setTab('scHome');
-  }else loginFirst();
+  }else guestHome();   /* أول ما يفتح: الرئيسية. الدخول يُطلب بس عند الحجز أو طلباتي وحسابي */
   BOOTED=true;
 }
 function authWatch(u){
@@ -3905,9 +3905,9 @@ function authWatch(u){
     else if(String(u.uid).indexOf('ph_')===0)ME.ph=String(u.uid).slice(3);
     else{ME.ph='';ME.em=u.email||'';}   /* إيميل: الجوال من ملفه، أو نطلبه */
     onSignedIn(u.uid);}
-  else if(AUTHED)loginFirst();   /* خرج من حسابه من مكان ثاني. الزائر ما نحرّكه من مكانه */
+  else if(AUTHED)guestHome();   /* خرج من حسابه من مكان ثاني. الزائر ما نحرّكه من مكانه */
 }
-if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else loginFirst();}
+if(DEMO){var s=LS.get('me',null);if(s&&s.uid){ME=s;onSignedIn(s.uid);}else guestHome();}
 else{
   boot();
   loadFB().then(function(){
