@@ -185,10 +185,12 @@ service cloud.firestore {
           request.resource.data.dep >= 0 && request.resource.data.dep <= request.resource.data.est)) &&
         (!('off' in request.resource.data) || (request.resource.data.off is number &&
           request.resource.data.off >= 0 && request.resource.data.off <= 100)) &&
-        request.resource.data.svc is string && request.resource.data.svc.size() <= 120 &&
+        request.resource.data.svc is string && request.resource.data.svc.size() > 0 && request.resource.data.svc.size() <= 120 &&
         request.resource.data.nt is string && request.resource.data.nt.size() <= 600 &&
         // السلة: قائمة أصناف بحد معقول، والإجمالي تقديري لا يُلزم الشركة
         request.resource.data.items is list && request.resource.data.items.size() <= 60 &&
+        // طلب بلا أصناف ما يصير — إلا زيارة التسعير (المعاينة) اللي ما لها أصناف
+        (request.resource.data.items.size() > 0 || request.resource.data.get('quote', false) == true) &&
         request.resource.data.est is number && request.resource.data.est >= 0 &&
         // رقم الطلب: نفس قيمة العدّاد بعد زيادته في نفس المعاملة — ما يقدر أحد يكرر رقم طلب غيره
         (!('no' in request.resource.data) || (request.resource.data.no is int &&

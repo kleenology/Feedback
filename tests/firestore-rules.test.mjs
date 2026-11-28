@@ -30,6 +30,9 @@ await t('طلب فيه price يُرفض',assertFails(orderBatch(ua,'x4',{price:'
 await t('طلب برقم جوال غيري يُرفض',assertFails(orderBatch(ua,'x5',{ph:B},7)));
 await t('معرّف طلب فيه رموز (حقن في اللوحة) يُرفض',assertFails(orderBatch(ua,"x');alert(1)",{},7)));
 await t('رقم طلب مكرر/مزوّر يُرفض',assertFails(orderBatch(ua,'x6',{no:1004},7)));
+await t('طلب بلا أصناف يُرفض',assertFails(orderBatch(ua,'x9',{items:[],dep:0,est:0},7)));
+await t('طلب بلا اسم خدمة يُرفض',assertFails(orderBatch(ua,'x10',{svc:''},7)));
+await t('معاينة بلا أصناف تنقبل',assertSucceeds(orderBatch(ua,'q1',{items:[],quote:true,svc:'زيارة تسعير — مكاتب',est:29,dep:29,pay:'tap'},7)));
 await t('عربون أكبر من الإجمالي يُرفض',assertFails(orderBatch(ua,'x7',{dep:5000},7)));
 await t('خصم نصّي (حقن) يُرفض',assertFails(orderBatch(ua,'x8',{off:'<img src=x onerror=alert(1)>'},7)));
 await t('قراءة طلب عميل ثاني تُرفض',assertFails(getDoc(doc(ua,'orders/bOrder'))));
