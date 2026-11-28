@@ -2218,6 +2218,13 @@ function redeemCode(b){
    }).catch(function(){b.disabled=false;b.textContent='أضف للرصيد';toast('تعذّر الاتصال');});
 }
 /* الدفع: الرصيد أول (حتى الحد)، والباقي ببطاقة. لو الرصيد غطّى الكل ما نروح لصفحة الدفع */
+/* الطلب انحفظ وبنطلع لصفحة الدفع: نترك صفحة الحجز أول — لو انقطع التحويل أو سكّر التطبيق،
+   يرجع يلقى طلبه في «طلباتي» وفيه زر الدفع، بدل صفحة حجز معلّقة يقدر يرسلها مرة ثانية */
+function payAway(){renderAll();ORQF='';go('scOrders');setTab('scOrders');}
+/* رجع من صفحة الدفع بزر الرجوع (الصفحة من ذاكرة المتصفح): نفك أي زر معلّق على «جاري…» */
+window.addEventListener('pageshow',function(e){if(!e.persisted)return;
+  document.querySelectorAll('button[disabled]').forEach(function(x){if(/جاري|…/.test(x.textContent))x.disabled=false;});
+  if(AUTHED&&$('scBook').classList.contains('on'))payAway();});
 function payGo(oid,no,useW){
   if(!useW||DEMO){payStart(oid,no);return;}
   var u=auth&&auth.currentUser;if(!u){payStart(oid,no);return;}
@@ -3442,7 +3449,7 @@ function submitOrder(){
     var qPay=QUOTE_FEE&&TAP_ON;
     if(qPay){qo.dep=QUOTE_FEE;qo.pay='tap';}
     API.addOrder(qo).then(function(){
-      if(qPay){BK.quote=null;payStart(qo.id,qo.no);return;}
+      if(qPay){BK={};payAway();payStart(qo.id,qo.no);return;}
       BK.quote=null;renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(qo.no?'وصلنا طلبك رقم '+qo.no:'وصلنا طلبك');
     }).catch(function(e){b.disabled=false;if(QUOTE_FEE&&TAP_ON)b.innerHTML=apBtn();else b.textContent='اطلب الزيارة';onSubmitErr(e);});
     return;
@@ -3457,13 +3464,16 @@ function submitOrder(){
       nt:String($('bkNt').value||'').slice(0,600),st:'new',at:now,hist:[{s:'new',at:now}]};
     if(po.dep)po.pay=viaTap?'tap':'bank';
     API.addOrder(po).then(function(){
-      if(viaTap&&po.dep){BK.pkg=null;payGo(po.id,po.no,walUse(po.dep,po.dep));return;}
+      if(viaTap&&po.dep){BK={};payAway();payGo(po.id,po.no,walUse(po.dep,po.dep));return;}
       sendRcpt(po);
       BK.pkg=null;renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(po.no?'وصلنا اشتراكك رقم '+po.no:'وصلنا اشتراكك');
     }).catch(function(e){b.disabled=false;b.textContent='اشترك الآن';onSubmitErr(e);});
     return;
   }
   var L=cartLines(),t=cartTotals();
+  /* السلة فاضية (مثلاً: الطلب السابق انحفظ وطلع للدفع ثم رجع العميل لصفحة الحجز) — ما نرسل طلب بلا أصناف */
+  if(!L.length||!(t.tot>0)){b.disabled=false;b.textContent='أرسل الطلب';BK={};
+    renderAll();ORQF='';go('scOrders');setTab('scOrders');toast('سلتك فاضية — طلبك السابق محفوظ هنا');return;}
   var svs={};L.forEach(function(l){svs[l.sv]=1;});
   var o={uid:ME.uid,ph:ME.ph,n:ME.n||'',sub:false,
     svc:Object.keys(svs).map(function(k){return svcOf(k).t;}).join(' · '),
@@ -3474,7 +3484,7 @@ function submitOrder(){
   if(o.dep)o.pay=viaTap?'tap':'bank';
   API.addOrder(o).then(function(){
     CART={};LS.set('cart',{});
-    if(viaTap&&o.dep){payGo(o.id,o.no,walUse(o.dep,o.dep));return;}
+    if(viaTap&&o.dep){BK={};payAway();payGo(o.id,o.no,walUse(o.dep,o.dep));return;}
     sendRcpt(o);
     renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(o.no?'وصلنا طلبك رقم '+o.no:'وصلنا طلبك — نتواصل معك قريب');
   }).catch(function(e){b.disabled=false;b.textContent='أرسل الطلب';onSubmitErr(e);});
