@@ -1465,7 +1465,7 @@ var AREA_MSG='حالياً نخدم مدينة الرياض فقط — وقري�
 var MAPS_KEY='';
 /* رقم الإصدار اللي يشوفه العميل — ترفعه يدوياً مع التحديثات الكبيرة. APP_VER تحت للتحديث التلقائي بس */
 var APP_LABEL='1.0';
-var APP_VER='2026.11.30.0600';
+var APP_VER='2026.11.30.0700';
 var SLOTS=[{k:'am',t:'صباحاً',s:'8 – 12'},{k:'pm',t:'بعد الظهر',s:'12 – 4'},{k:'ev',t:'مساءً',s:'4 – 8'}];
 /* كم طلب يقدر فريقك ينفّذه في الفترة الواحدة. لو عندك فريقان اجعلها 2.
    ⚠️ لازم تطابق SLOT_CAP في firestore.rules — القاعدة هي الحارس الحقيقي. */
@@ -2222,7 +2222,9 @@ function redeemCode(b){
 /* الدفع: الرصيد أول (حتى الحد)، والباقي ببطاقة. لو الرصيد غطّى الكل ما نروح لصفحة الدفع */
 /* الطلب انحفظ وبنطلع لصفحة الدفع: نترك صفحة الحجز أول — لو انقطع التحويل أو سكّر التطبيق،
    يرجع يلقى طلبه في «طلباتي» وفيه زر الدفع، بدل صفحة حجز معلّقة يقدر يرسلها مرة ثانية */
-function payAway(){renderAll();ORQF='';go('scOrders');setTab('scOrders');}
+function payAway(){renderAll();ORQF='';go('scOrders');setTab('scOrders');
+  /* ضغطات زيادة على زر الدفع تنزل على شريط التبويبات بعد ما تتبدّل الشاشة — نتجاهلها لحظة */
+  document.body.style.pointerEvents='none';setTimeout(function(){document.body.style.pointerEvents='';},700);}
 /* رجع من صفحة الدفع بزر الرجوع (الصفحة من ذاكرة المتصفح): نفك أي زر معلّق على «جاري…» */
 window.addEventListener('pageshow',function(e){if(!e.persisted)return;
   document.querySelectorAll('button[disabled]').forEach(function(x){if(/جاري|…/.test(x.textContent))x.disabled=false;});
@@ -2382,7 +2384,7 @@ function svcCards(){
       '<span class="svc-t"><b>'+esc(s.t)+'</b><s>'+esc(s.s)+'</s></span></button>';}).join('');
 }
 /* ================= تفاصيل الخدمة ================= */
-function openService(k){CTV=k;go('scService');renderService();}
+function openService(k){CTV=k;go('scService');setTab('scHome');renderService();}
 
 /* مجموعات التسعير داخل الخدمة — شرائح فوق الجدول. صنف واحد يقدر ينتمي لمجموعتين */
 var SVG={};
@@ -2550,7 +2552,7 @@ function renderPkgs(){
         '</div></button></div>';
     }).join('');
 }
-function openPkg(k){PKG=pkgOf(k);if(!PKG)return;go('scPkg');renderPkg();}
+function openPkg(k){PKG=pkgOf(k);if(!PKG)return;go('scPkg');setTab('scPkgs');renderPkg();}
 function renderPkg(){
   var p=PKG;
   $('pkBack').innerHTML=backTo('الباقات');
@@ -2656,7 +2658,7 @@ function quoteSummary(){
   if(f.length)L.push(f.join(' · '));
   return L.join('\n');
 }
-function openQuote(k){CTV=k;go('scQuote');renderQuote();}
+function openQuote(k){CTV=k;go('scQuote');setTab('scHome');renderQuote();}
 function renderQuote(){
   var sv=svcOf(CTV);
   $('qBack').innerHTML=backTo(sv.t);
@@ -2757,7 +2759,10 @@ function sheetPick(list,cur,cb){
       '<span>'+esc(v)+'</span><span class="dot"></span></button>';}).join('');
 }
 function toggleLadder(){LADX=!LADX;LS.set('ladx',LADX);renderLadder();}
+/* حد معقول للصنف الواحد — كميات أكبر (مثلاً مبنى كامل) تحتاج معاينة وسعر خاص */
+var MAXQ=50;
 function setQty(k,q){
+  if(q>MAXQ){q=MAXQ;toast('الحد '+MAXQ+' للصنف — لكمية أكبر تواصل معنا');}
   if(q<=0)delete CART[k];else CART[k]=q;
   LS.set('cart',CART);
   /* نبدّل عدّاد هذا الصنف وحده — إعادة البناء تسحب الزر من تحت الإصبع */
@@ -3472,7 +3477,7 @@ function submitOrder(){
       if(viaTap&&po.dep){BK={};payAway();payGo(po.id,po.no,walUse(po.dep,po.dep));return;}
       sendRcpt(po);
       BK.pkg=null;renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(po.no?'وصلنا اشتراكك رقم '+po.no:'وصلنا اشتراكك');
-    }).catch(function(e){b.disabled=false;b.textContent='اشترك الآن';onSubmitErr(e);});
+    }).catch(function(e){b.disabled=false;if(viaTap&&po.dep)b.innerHTML=apBtn();else b.textContent='اشترك الآن';onSubmitErr(e);});
     return;
   }
   var L=cartLines(),t=cartTotals();
@@ -3492,7 +3497,7 @@ function submitOrder(){
     if(viaTap&&o.dep){BK={};payAway();payGo(o.id,o.no,walUse(o.dep,o.dep));return;}
     sendRcpt(o);
     renderAll();ORQF='';go('scOrders');setTab('scOrders');toast(o.no?'وصلنا طلبك رقم '+o.no:'وصلنا طلبك — نتواصل معك قريب');
-  }).catch(function(e){b.disabled=false;b.textContent='أرسل الطلب';onSubmitErr(e);});
+  }).catch(function(e){b.disabled=false;if(viaTap&&o.dep)b.innerHTML=apBtn();else b.textContent='أرسل الطلب';onSubmitErr(e);});
 }
 </script>
 <script>
